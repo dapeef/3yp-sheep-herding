@@ -42,7 +42,7 @@ class Boid(pg.sprite.Sprite):
         turnRate = 120 * dt  # about 120 seems ok
         margin = 42
         # Make list of nearby boids, sorted by distance
-        otherBoids = np.delete(self.data.array, self.bnum, 0)
+        otherBoids = np.delete(self.data, self.bnum, 0)
         array_dists = (self.pos.x - otherBoids[:,0])**2 + (self.pos.y - otherBoids[:,1])**2
         closeBoidIs = np.argsort(array_dists)[:7]
         neiboids = otherBoids[closeBoidIs]
@@ -93,11 +93,7 @@ class Boid(pg.sprite.Sprite):
         # Actually update position of boid
         self.rect.center = self.pos
         # Finally, output pos/ang to array
-        self.data.array[self.bnum,:3] = [self.pos[0], self.pos[1], self.ang]
-
-class BoidArray():  # Holds array to store positions and angles
-    def __init__(self):
-        self.array = np.zeros((BOIDZ, 4), dtype=float)
+        self.data[self.bnum,:3] = [self.pos[0], self.pos[1], self.ang]
 
 def main():
     pg.init()  # prepare window
@@ -112,7 +108,7 @@ def main():
     else: screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
 
     nBoids = pg.sprite.Group()
-    dataArray = BoidArray()
+    dataArray = np.zeros((BOIDZ, 4), dtype=float)
     for n in range(BOIDZ):
         nBoids.add(Boid(n, dataArray, screen))  # spawns desired # of boidz
 
