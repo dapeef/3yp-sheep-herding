@@ -10,7 +10,6 @@ Copyright (c) 2021  Nikolaus Stromberg  nikorasu85@gmail.com
 FLLSCRN = False         # True for Fullscreen, or False for Window
 BOIDZ = 150             # How many boids to spawn, too many may slow fps
 WRAP = False            # False avoids edges, True wraps to other side
-FISH = False            # True to turn boids into fish
 SPEED = 170             # Movement speed
 WIDTH = 1200            # Window Width (1200)
 HEIGHT = 800            # Window Height (800)
@@ -19,7 +18,7 @@ FPS = 60                # 30-90
 SHOWFPS = True          # show frame rate
 
 class Boid(pg.sprite.Sprite):
-    def __init__(self, boidNum, data, drawSurf, isFish=False, cHSV=None):
+    def __init__(self, boidNum, data, drawSurf, cHSV=None):
         super().__init__()
         self.data = data
         self.bnum = boidNum
@@ -28,11 +27,8 @@ class Boid(pg.sprite.Sprite):
         self.image.set_colorkey(0)
         self.color = pg.Color(0)  # preps color so we can use hsva
         self.color.hsva = (randint(0,360), 90, 90) if cHSV is None else cHSV # randint(5,55) #4goldfish
-        if isFish:  # (randint(120,300) + 180) % 360  #4noblues
-            pg.draw.polygon(self.image, self.color, ((7,0),(12,5),(3,14),(11,14),(2,5),(7,0)), width=3)
-            self.image = pg.transform.scale(self.image, (16, 24))
-        else : pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0)))
-        self.bSize = 22 if isFish else 17
+        pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0)))
+        self.bSize = 17
         self.orig_image = pg.transform.rotate(self.image.copy(), -90)
         self.dir = pg.Vector2(1, 0)  # sets up forward direction
         maxW, maxH = self.drawSurf.get_size()
@@ -118,7 +114,7 @@ def main():
     nBoids = pg.sprite.Group()
     dataArray = BoidArray()
     for n in range(BOIDZ):
-        nBoids.add(Boid(n, dataArray, screen, FISH))  # spawns desired # of boidz
+        nBoids.add(Boid(n, dataArray, screen))  # spawns desired # of boidz
 
     clock = pg.time.Clock()
     if SHOWFPS : font = pg.font.Font(None, 30)
