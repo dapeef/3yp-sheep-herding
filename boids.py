@@ -20,16 +20,19 @@ SHOWFPS = True          # show frame rate
 class Boid(pg.sprite.Sprite):
     def __init__(self, boidNum, data, drawSurf, cHSV=None):
         super().__init__()
-        self.data = data
-        self.bnum = boidNum
-        self.drawSurf = drawSurf
-        self.image = pg.Surface((15, 15)).convert()
+
+        self.data = data # Stores positions & rotations of all boids
+        self.bnum = boidNum # This boid's number (ID)
+        self.drawSurf = drawSurf # Main screen surface
+
+        self.image = pg.Surface((15, 15)).convert() # Area to render boid onto
         self.image.set_colorkey(0)
         self.color = pg.Color(0)  # preps color so we can use hsva
         self.color.hsva = (randint(0,360), 90, 90) if cHSV is None else cHSV # randint(5,55) #4goldfish
-        pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0)))
-        self.bSize = 17
+        pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
         self.orig_image = pg.transform.rotate(self.image.copy(), -90)
+
+        self.bSize = 17 # "personal space" size
         self.dir = pg.Vector2(1, 0)  # sets up forward direction
         maxW, maxH = self.drawSurf.get_size()
         self.rect = self.image.get_rect(center=(randint(50, maxW - 50), randint(50, maxH - 50)))
@@ -38,60 +41,78 @@ class Boid(pg.sprite.Sprite):
 
     def update(self, dt, speed, ejWrap=False):
         maxW, maxH = self.drawSurf.get_size()
-        turnDir = xvt = yvt = yat = xat = 0
-        turnRate = 120 * dt  # about 120 seems ok
-        margin = 42
+        turnDir = yat = xat = 0
+        turnRate = 120 * dt  # about 120 degrees/sec seems ok
+        margin = 42 # Padding distance around the edge, in which boids will turn around
+
         # Make list of nearby boids, sorted by distance
         otherBoids = np.delete(self.data, self.bnum, 0)
-        array_dists = (self.pos.x - otherBoids[:,0])**2 + (self.pos.y - otherBoids[:,1])**2
-        closeBoidIs = np.argsort(array_dists)[:7]
+        array_dists = (self.pos.x - otherBoids[:,0])**2 + (self.pos.y - otherBoids[:,1])**2 # distance^2 to save computation time
+        closeBoidIs = np.argsort(array_dists)[:7] # Look at 7 closest boids only
         neiboids = otherBoids[closeBoidIs]
         neiboids[:,3] = np.sqrt(array_dists[closeBoidIs])
         neiboids = neiboids[neiboids[:,3] < self.bSize*12]
-        if neiboids.size > 1:  # if has neighborS, do math and sim rules
+
+        if neiboids.size > 1:  # if has neighbors, do math and sim rules
+            # averages the positions and angles of neighbors
             yat = np.sum(np.sin(np.deg2rad(neiboids[:,2])))
             xat = np.sum(np.cos(np.deg2rad(neiboids[:,2])))
-            # averages the positions and angles of neighbors
-            tAvejAng = np.rad2deg(np.arctan2(yat, xat))
+            tAvejAng = np.rad2deg(np.arctan2(yat, xat)) # arctan etc is necessary because of 360 degree wrapping
+
             targetV = (np.mean(neiboids[:,0]), np.mean(neiboids[:,1]))
+
             # if too close, move away from closest neighbor
             if neiboids[0,3] < self.bSize : targetV = (neiboids[0,0], neiboids[0,1])
+
             # get angle differences for steering
             tDiff = pg.Vector2(targetV) - self.pos
             tDistance, tAngle = pg.math.Vector2.as_polar(tDiff)
+
             # if boid is close enough to neighbors, match their average angle
             if tDistance < self.bSize*6 : tAngle = tAvejAng
+
             # computes the difference to reach target angle, for smooth steering
             angleDiff = (tAngle - self.ang) + 180
             if abs(tAngle - self.ang) > 1.2: turnDir = (angleDiff / 360 - (angleDiff // 360)) * 360 - 180
+
             # if boid gets too close to target, steer away
             if tDistance < self.bSize and targetV == (neiboids[0,0], neiboids[0,1]) : turnDir = -turnDir
+
         # Avoid edges of screen by turning toward the edge normal-angle
         if not ejWrap and min(self.pos.x, self.pos.y, maxW - self.pos.x, maxH - self.pos.y) < margin:
+            # If in the zone near edge
             if self.pos.x < margin : tAngle = 0
             elif self.pos.x > maxW - margin : tAngle = 180
             if self.pos.y < margin : tAngle = 90
             elif self.pos.y > maxH - margin : tAngle = 270
+
             angleDiff = (tAngle - self.ang) + 180  # if in margin, increase turnRate to ensure stays on screen
             turnDir = (angleDiff / 360 - (angleDiff // 360)) * 360 - 180
             edgeDist = min(self.pos.x, self.pos.y, maxW - self.pos.x, maxH - self.pos.y)
             turnRate = turnRate + (1 - edgeDist / margin) * (20 - turnRate) #minRate+(1-dist/margin)*(maxRate-minRate)
+
         if turnDir != 0:  # steers based on turnDir, handles left or right
             self.ang += turnRate * abs(turnDir) / turnDir
             self.ang %= 360  # ensures that the angle stays within 0-360
+
         # Adjusts angle of boid image to match heading
         self.image = pg.transform.rotate(self.orig_image, -self.ang)
         self.rect = self.image.get_rect(center=self.rect.center)  # recentering fix
         self.dir = pg.Vector2(1, 0).rotate(self.ang).normalize()
+
+        # Change position based on velocity
         self.pos += self.dir * dt * (speed + (7 - neiboids.size) * 2)  # movement speed
+
         # Optional screen wrap
         if ejWrap and not self.drawSurf.get_rect().contains(self.rect):
             if self.rect.bottom < 0 : self.pos.y = maxH
             elif self.rect.top > maxH : self.pos.y = 0
             if self.rect.right < 0 : self.pos.x = maxW
             elif self.rect.left > maxW : self.pos.x = 0
+
         # Actually update position of boid
         self.rect.center = self.pos
+
         # Finally, output pos/ang to array
         self.data[self.bnum,:3] = [self.pos[0], self.pos[1], self.ang]
 
