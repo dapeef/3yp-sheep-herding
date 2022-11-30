@@ -2,20 +2,39 @@
 from random import randint
 import pygame as pg
 import numpy as np
+
 '''
 PyNBoids - a Boids simulation - github.com/Nikorasu/PyNBoids
 Uses numpy array math instead of math lib, more efficient.
 Copyright (c) 2021  Nikolaus Stromberg  nikorasu85@gmail.com
 '''
+
 FLLSCRN = False         # True for Fullscreen, or False for Window
-BOIDZ = 150             # How many boids to spawn, too many may slow fps
+BOIDZ = 50             # How many boids to spawn, too many may slow fps
 WRAP = False            # False avoids edges, True wraps to other side
-SPEED = 170             # Movement speed
+MAX_SPEED = 170         # Max movement speed
+MAX_FORCE = 1.7         # Max acceleration force
 WIDTH = 1200            # Window Width (1200)
 HEIGHT = 800            # Window Height (800)
 BGCOLOR = (0, 0, 0)     # Background color in RGB
-FPS = 60                # 30-90
-SHOWFPS = True          # show frame rate
+FPS = 90                # 30-90
+SHOWFPS = True          # Show frame rate
+WEIGHTINGS = {          # Force weightings
+    'sep': 1.25,
+    'ali': 1,
+    'coh': 1
+}
+
+
+def clamp_magnitude(vector, magnitude):
+    # Clamps the magnitude of a vector
+
+    if vector.magnitude() > magnitude:
+        return vector.normalize() * magnitude
+    
+    else:
+        return vector
+
 
 class Boid(pg.sprite.Sprite):
     def __init__(self, boidNum, data, drawSurf, cHSV=None):
@@ -37,9 +56,10 @@ class Boid(pg.sprite.Sprite):
         maxW, maxH = self.drawSurf.get_size()
         self.rect = self.image.get_rect(center=(randint(50, maxW - 50), randint(50, maxH - 50)))
         self.ang = randint(0, 360)  # random start angle, & position ^
+        self.vel = pg.Vector2(0,0)# pg.Vector2(randint(-100, 100), randint(-100, 100))
         self.pos = pg.Vector2(self.rect.center)
 
-    def update_old(self, dt, speed, ejWrap=False):
+    def _update_old(self, dt, speed, ejWrap=False):
         maxW, maxH = self.drawSurf.get_size()
         turnDir = yat = xat = 0
         turnRate = 120 * dt  # about 120 degrees/sec seems ok
@@ -116,7 +136,16 @@ class Boid(pg.sprite.Sprite):
         # Finally, output pos/ang to array
         self.data[self.bnum,:3] = [self.pos[0], self.pos[1], self.ang]
 
-    def update(self, dt, speed, weightings, ejWrap=False):
+    def update(self, dt, max_speed, max_force, weightings, ejWrap=False):
+        def get_force(steer):
+            if steer.magnitude() != 0:
+                steer = steer.normalize()
+                steer *= max_speed
+                steer -= self.vel
+                steer = clamp_magnitude(steer, max_force)
+
+            return steer
+        
         maxW, maxH = self.drawSurf.get_size()
         turnDir = yat = xat = 0
         turnRate = 120 * dt  # about 120 degrees/sec seems ok
@@ -130,80 +159,78 @@ class Boid(pg.sprite.Sprite):
         array_dists = (self.pos.x - otherBoids[:,0])**2 + (self.pos.y - otherBoids[:,1])**2 # distance^2 to save computation time
         closeBoidIs = np.argsort(array_dists)[:7] # Look at 7 closest boids only
         neiboids = otherBoids[closeBoidIs]
-        neiboids[:,3] = np.sqrt(array_dists[closeBoidIs])
-        neiboids = neiboids[neiboids[:,3] < influence_dist]
+        neiboids[:,4] = np.sqrt(array_dists[closeBoidIs])
+        neiboids = neiboids[neiboids[:,4] < influence_dist]
 
         sep_steer = pg.Vector2(0,0)
         ali_steer = pg.Vector2(0,0)
         coh_steer = pg.Vector2(0,0)
 
-        sep_count = 0
-        ali_count = 0
-
         if neiboids.size > 1:  # if has neighbors, do math and sim rules
-            # Iterate through boids and apply the 3 criteria - separation, cohesion, alignment
+            # Apply the 3 criteria - separation, cohesion, alignment
 
+            # Separation
+            sep_count = 0
             for boid in neiboids:
-                #print(boid[3])
-
-                # Separation
-                if (boid[3] < target_dist):
+                if (boid[4] < target_dist):
                     # Get normalised direction of force
                     direction = (self.pos - pg.Vector2(boid[0:2].tolist())).normalize()
-
                     # Weight by distance and add to sum
-                    sep_steer += direction / boid[3]
-
+                    sep_steer += direction / boid[4]
                     sep_count += 1
-
-                # Alignment
-                if (boid[3] < target_dist):
-                    # Get normalised direction of force
-                    direction = (self.pos - pg.Vector2(boid[0:2].tolist())).normalize()
-
-                    # Weight by distance and add to sum
-                    ali_steer += direction / boid[3]
-
-                    ali_count += 1
-
-
             # Normalise by number of boids influencing
             if sep_count > 0: sep_steer /= sep_count
-            if ali_count > 0: ali_steer /= ali_count
+
+
+            # Alignment
+            ali_steer = pg.Vector2(np.mean(neiboids[:,2]), np.mean(neiboids[:,3]))
+
 
             # Cohesion
             avg_pos = (np.mean(neiboids[:,0]), np.mean(neiboids[:,1]))
-            
-            coh_steer = (pg.Vector2(avg_pos) - self.pos).normalize()
+            coh_steer = pg.Vector2(avg_pos) - self.pos
 
+            # Get forces from steer vectors, including weightings
+            sep_force = get_force(sep_steer) * weightings["sep"]
+            ali_force = get_force(ali_steer) * weightings["ali"]
+            coh_force = get_force(coh_steer) * weightings["coh"]
 
+            # Sum forces
+            force = sep_force + ali_force + coh_force
 
+            # Adjust velocity to reflect force
+            self.vel += force
 
 
         # Avoid edges of screen by turning toward the edge normal-angle
-        if not ejWrap and min(self.pos.x, self.pos.y, maxW - self.pos.x, maxH - self.pos.y) < margin:
-            # If in the zone near edge
-            if self.pos.x < margin : tAngle = 0
-            elif self.pos.x > maxW - margin : tAngle = 180
-            if self.pos.y < margin : tAngle = 90
-            elif self.pos.y > maxH - margin : tAngle = 270
+        # if not ejWrap and min(self.pos.x, self.pos.y, maxW - self.pos.x, maxH - self.pos.y) < margin:
+        #     # If in the zone near edge
+        #     if self.pos.x < margin : tAngle = 0
+        #     elif self.pos.x > maxW - margin : tAngle = 180
+        #     if self.pos.y < margin : tAngle = 90
+        #     elif self.pos.y > maxH - margin : tAngle = 270
 
-            angleDiff = (tAngle - self.ang) + 180  # if in margin, increase turnRate to ensure stays on screen
-            turnDir = (angleDiff / 360 - (angleDiff // 360)) * 360 - 180
-            edgeDist = min(self.pos.x, self.pos.y, maxW - self.pos.x, maxH - self.pos.y)
-            turnRate = turnRate + (1 - edgeDist / margin) * (20 - turnRate) #minRate+(1-dist/margin)*(maxRate-minRate)
+        #     angleDiff = (tAngle - self.ang) + 180  # if in margin, increase turnRate to ensure stays on screen
+        #     turnDir = (angleDiff / 360 - (angleDiff // 360)) * 360 - 180
+        #     edgeDist = min(self.pos.x, self.pos.y, maxW - self.pos.x, maxH - self.pos.y)
+        #     turnRate = turnRate + (1 - edgeDist / margin) * (20 - turnRate) #minRate+(1-dist/margin)*(maxRate-minRate)
 
-        if turnDir != 0:  # steers based on turnDir, handles left or right
-            self.ang += turnRate * abs(turnDir) / turnDir
-            self.ang %= 360  # ensures that the angle stays within 0-360
+        # if turnDir != 0:  # steers based on turnDir, handles left or right
+        #     self.ang += turnRate * abs(turnDir) / turnDir
+        #     self.ang %= 360  # ensures that the angle stays within 0-360
+
+        self.ang = self.vel.as_polar()[1]
 
         # Adjusts angle of boid image to match heading
         self.image = pg.transform.rotate(self.orig_image, -self.ang)
         self.rect = self.image.get_rect(center=self.rect.center)  # recentering fix
         self.dir = pg.Vector2(1, 0).rotate(self.ang).normalize()
+        
+        # Ensure max_speed is not exceeded
+        self.vel = clamp_magnitude(self.vel, max_speed)
 
         # Change position based on velocity
-        self.pos += self.dir * dt * (speed + (7 - neiboids.size) * 2)  # movement speed
+        self.pos += self.vel * dt
 
         # Optional screen wrap
         if ejWrap and not self.drawSurf.get_rect().contains(self.rect):
@@ -216,7 +243,8 @@ class Boid(pg.sprite.Sprite):
         self.rect.center = self.pos
 
         # Finally, output pos/ang to array
-        self.data[self.bnum,:3] = [self.pos[0], self.pos[1], self.ang]
+        self.data[self.bnum,:4] = [self.pos[0], self.pos[1], self.vel[0], self.vel[1]]
+
 
 def main():
     pg.init()  # prepare window
@@ -231,7 +259,7 @@ def main():
     else: screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
 
     nBoids = pg.sprite.Group()
-    dataArray = np.zeros((BOIDZ, 4), dtype=float)
+    dataArray = np.zeros((BOIDZ, 5), dtype=float)
     for n in range(BOIDZ):
         nBoids.add(Boid(n, dataArray, screen))  # spawns desired # of boidz
 
@@ -246,7 +274,7 @@ def main():
 
         dt = clock.tick(FPS) / 1000
         screen.fill(BGCOLOR)
-        nBoids.update(dt, SPEED, WRAP)
+        nBoids.update(dt, MAX_SPEED, MAX_FORCE, WEIGHTINGS, WRAP)
         nBoids.draw(screen)
 
         if SHOWFPS : screen.blit(font.render(str(int(clock.get_fps())), True, [0,200,0]), (8, 8))
