@@ -11,7 +11,6 @@ Copyright (c) 2021  Nikolaus Stromberg  nikorasu85@gmail.com
 
 FLLSCRN = False         # True for Fullscreen, or False for Window
 BOIDZ = 50             # How many boids to spawn, too many may slow fps
-WRAP = False            # False avoids edges, True wraps to other side
 MAX_SPEED = 170         # Max movement speed
 MAX_FORCE = 1.7         # Max acceleration force
 WIDTH = 1200            # Window Width (1200)
@@ -136,7 +135,7 @@ class Boid(pg.sprite.Sprite):
         # Finally, output pos/ang to array
         self.data[self.bnum,:3] = [self.pos[0], self.pos[1], self.ang]
 
-    def update(self, dt, max_speed, max_force, weightings, ejWrap=False):
+    def update(self, dt, max_speed, max_force, weightings):
         def get_force(steer):
             if steer.magnitude() != 0:
                 steer = steer.normalize()
@@ -145,11 +144,6 @@ class Boid(pg.sprite.Sprite):
                 steer = clamp_magnitude(steer, max_force)
 
             return steer
-        
-        maxW, maxH = self.drawSurf.get_size()
-        turnDir = yat = xat = 0
-        turnRate = 120 * dt  # about 120 degrees/sec seems ok
-        margin = 42 # Padding distance around the edge, in which boids will turn around
 
         target_dist = 40 # Ideal separation from other boids
         influence_dist = target_dist * 4
@@ -162,11 +156,12 @@ class Boid(pg.sprite.Sprite):
         neiboids[:,4] = np.sqrt(array_dists[closeBoidIs])
         neiboids = neiboids[neiboids[:,4] < influence_dist]
 
+        # Initialise steering vectors
         sep_steer = pg.Vector2(0,0)
         ali_steer = pg.Vector2(0,0)
         coh_steer = pg.Vector2(0,0)
 
-        if neiboids.size > 1:  # if has neighbors, do math and sim rules
+        if neiboids.size > 1:  # if has neighbours, do math and sim rules
             # Apply the 3 criteria - separation, cohesion, alignment
 
             # Separation
@@ -202,23 +197,6 @@ class Boid(pg.sprite.Sprite):
             self.vel += force
 
 
-        # Avoid edges of screen by turning toward the edge normal-angle
-        # if not ejWrap and min(self.pos.x, self.pos.y, maxW - self.pos.x, maxH - self.pos.y) < margin:
-        #     # If in the zone near edge
-        #     if self.pos.x < margin : tAngle = 0
-        #     elif self.pos.x > maxW - margin : tAngle = 180
-        #     if self.pos.y < margin : tAngle = 90
-        #     elif self.pos.y > maxH - margin : tAngle = 270
-
-        #     angleDiff = (tAngle - self.ang) + 180  # if in margin, increase turnRate to ensure stays on screen
-        #     turnDir = (angleDiff / 360 - (angleDiff // 360)) * 360 - 180
-        #     edgeDist = min(self.pos.x, self.pos.y, maxW - self.pos.x, maxH - self.pos.y)
-        #     turnRate = turnRate + (1 - edgeDist / margin) * (20 - turnRate) #minRate+(1-dist/margin)*(maxRate-minRate)
-
-        # if turnDir != 0:  # steers based on turnDir, handles left or right
-        #     self.ang += turnRate * abs(turnDir) / turnDir
-        #     self.ang %= 360  # ensures that the angle stays within 0-360
-
         self.ang = self.vel.as_polar()[1]
 
         # Adjusts angle of boid image to match heading
@@ -232,14 +210,7 @@ class Boid(pg.sprite.Sprite):
         # Change position based on velocity
         self.pos += self.vel * dt
 
-        # Optional screen wrap
-        if ejWrap and not self.drawSurf.get_rect().contains(self.rect):
-            if self.rect.bottom < 0 : self.pos.y = maxH
-            elif self.rect.top > maxH : self.pos.y = 0
-            if self.rect.right < 0 : self.pos.x = maxW
-            elif self.rect.left > maxW : self.pos.x = 0
-
-        # Actually update position of boid
+        # Update position of rendered boid
         self.rect.center = self.pos
 
         # Finally, output pos/ang to array
@@ -274,7 +245,7 @@ def main():
 
         dt = clock.tick(FPS) / 1000
         screen.fill(BGCOLOR)
-        nBoids.update(dt, MAX_SPEED, MAX_FORCE, WEIGHTINGS, WRAP)
+        nBoids.update(dt, MAX_SPEED, MAX_FORCE, WEIGHTINGS)
         nBoids.draw(screen)
 
         if SHOWFPS : screen.blit(font.render(str(int(clock.get_fps())), True, [0,200,0]), (8, 8))
