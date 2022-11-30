@@ -26,8 +26,12 @@ TUNING = {
         'fear': 2
     },
     "target_dist": 40,      # Target separation
-    "influence_dist": 200,  # "visibility" distance for the boids
-    "fear_decay": 2         # 1/r^k relationship (where k is decay)
+    "influence_dist": {
+        "boid": 200,        # "visibility" distance for the boids
+        "fear": 200
+    },
+    "fear_decay": 1,        # 1/r^k relationship (where k is decay)
+    "fear_const": .05        # constant by which distance is divided when calculating fear force
 }
 
 
@@ -86,7 +90,7 @@ class Boid(pg.sprite.Sprite):
         closeBoidIs = np.argsort(array_dists)[:7] # Look at 7 closest boids only
         neiboids = otherBoids[closeBoidIs]
         neiboids[:,4] = np.sqrt(array_dists[closeBoidIs])
-        neiboids = neiboids[neiboids[:,4] < influence_dist]
+        neiboids = neiboids[neiboids[:,4] < influence_dist["boid"]]
 
         # Initialise steering vectors
         sep_steer = pg.Vector2(0,0)
@@ -119,11 +123,11 @@ class Boid(pg.sprite.Sprite):
         # Fear
         self.data.fears[:,2] = np.sqrt((self.pos.x - self.data.fears[:,0])**2 + (self.pos.y - self.data.fears[:,1])**2)
         for fear in self.data.fears:
-            if (fear[2] < influence_dist):
+            if (fear[2] < influence_dist["fear"]):
                 # Get normalised direction of force
                 direction = (self.pos - pg.Vector2(fear[0:2].tolist())).normalize()
                 # Weight by distance and add to sum
-                fear_steer += direction / fear[2]**tuning["fear_decay"]
+                fear_steer += direction / (fear[2] / tuning["fear_const"])**tuning["fear_decay"]
 
         # Get forces from steer vectors, including weightings
         weightings = tuning["weightings"]
@@ -160,9 +164,9 @@ class Boid(pg.sprite.Sprite):
 
 
 class Data():
-    def __init__(self, n_boids, n_fears=1000):
+    def __init__(self, n_boids, n_fears=1):
         self.boids = np.zeros((n_boids, 5), dtype=float)
-        self.fears = np.zeros((1, 3), dtype=float)
+        self.fears = np.zeros((n_fears, 3), dtype=float)
 
 
 def main():
@@ -196,20 +200,16 @@ def main():
                 return
             
             if e.type == pg.MOUSEBUTTONDOWN:
-                print("click!")
-
                 data.fears = np.append(data.fears, [[mouse_pos[0], mouse_pos[1], 0]], axis=0)
-
-                print(data.fears)
         
         data.fears[0][0] = mouse_pos[0]
         data.fears[0][1] = mouse_pos[1]
 
         dt = clock.tick(FPS) / 1000
         screen.fill(BGCOLOR)
-        nBoids.update(dt, TUNING)
         for fear in data.fears:
             pg.draw.circle(screen, (255, 0, 0), (fear[0], fear[1]), 5) # Draw red circle on mouse position
+        nBoids.update(dt, TUNING)
         nBoids.draw(screen)
 
         if SHOWFPS : screen.blit(font.render(str(int(clock.get_fps())), True, [0,200,0]), (8, 8))
