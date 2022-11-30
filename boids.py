@@ -11,17 +11,21 @@ Copyright (c) 2021  Nikolaus Stromberg  nikorasu85@gmail.com
 
 FLLSCRN = False         # True for Fullscreen, or False for Window
 BOIDZ = 50              # How many boids to spawn, too many may slow fps
-MAX_SPEED = 150         # Max movement speed
-MAX_FORCE = 1.5         # Max acceleration force
 WIDTH = 1200            # Window Width (1200)
 HEIGHT = 800            # Window Height (800)
 BGCOLOR = (0, 0, 0)     # Background color in RGB
-FPS = 90                # 30-90
+FPS = 60               # 30-90
 SHOWFPS = True          # Show frame rate
-WEIGHTINGS = {          # Force weightings
-    'sep': 2,
-    'ali': 1,
-    'coh': 1
+TUNING = {
+    "max_speed": 150,       # Max movement speed
+    "max_force": 5,         # Max acceleration force
+    "weightings": {         # Force weightings
+        'sep': 2,
+        'ali': 1,
+        'coh': 1
+    },
+    "target_dist": 40,      # Target separation
+    "influence_dist": 500   # "visibility" distance for the boids
 }
 
 
@@ -135,7 +139,10 @@ class Boid(pg.sprite.Sprite):
         # Finally, output pos/ang to array
         self.data[self.bnum,:3] = [self.pos[0], self.pos[1], self.ang]
 
-    def update(self, dt, max_speed, max_force, weightings):
+    def update(self, dt, tuning):
+        max_speed = tuning["max_speed"]
+        max_force = tuning["max_force"]
+
         def get_force(steer):
             if steer.magnitude() != 0:
                 steer = steer.normalize()
@@ -145,8 +152,8 @@ class Boid(pg.sprite.Sprite):
 
             return steer
 
-        target_dist = 40 # Ideal separation from other boids
-        influence_dist = target_dist * 4
+        target_dist = tuning["target_dist"] # Ideal separation from other boids
+        influence_dist = tuning["influence_dist"]
 
         # Make list of nearby boids, sorted by distance
         otherBoids = np.delete(self.data, self.bnum, 0)
@@ -186,6 +193,7 @@ class Boid(pg.sprite.Sprite):
             coh_steer = pg.Vector2(avg_pos) - self.pos
 
             # Get forces from steer vectors, including weightings
+            weightings = tuning["weightings"]
             sep_force = get_force(sep_steer) * weightings["sep"]
             ali_force = get_force(ali_steer) * weightings["ali"]
             coh_force = get_force(coh_steer) * weightings["coh"]
@@ -245,7 +253,7 @@ def main():
 
         dt = clock.tick(FPS) / 1000
         screen.fill(BGCOLOR)
-        nBoids.update(dt, MAX_SPEED, MAX_FORCE, WEIGHTINGS)
+        nBoids.update(dt, TUNING)
         nBoids.draw(screen)
 
         if SHOWFPS : screen.blit(font.render(str(int(clock.get_fps())), True, [0,200,0]), (8, 8))
