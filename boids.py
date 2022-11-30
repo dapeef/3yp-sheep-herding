@@ -14,8 +14,9 @@ BOIDZ = 50              # How many boids to spawn, too many may slow fps
 WIDTH = 1200            # Window Width (1200)
 HEIGHT = 800            # Window Height (800)
 BGCOLOR = (0, 0, 0)     # Background color in RGB
-FPS = 60               # 30-90
+FPS = 60                # 30-90
 SHOWFPS = True          # Show frame rate
+MOUSEFEAR = True        # Is there a fear node on the cursor
 TUNING = {
     "max_speed": 150,       # Max movement speed
     "max_force": 5,         # Max acceleration force
@@ -31,7 +32,7 @@ TUNING = {
         "fear": 200
     },
     "fear_decay": 1,        # 1/r^k relationship (where k is decay)
-    "fear_const": .05        # constant by which distance is divided when calculating fear force
+    "fear_const": .05       # constant by which distance is divided when calculating fear force
 }
 
 
@@ -177,8 +178,13 @@ def main():
     if FLLSCRN:
         currentRez = (pg.display.Info().current_w, pg.display.Info().current_h)
         screen = pg.display.set_mode(currentRez, pg.SCALED)
+        pg.mouse.set_visible(False)
     else: screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
-    pg.mouse.set_visible(False)
+
+    # If mouse controls fear
+    if MOUSEFEAR:
+        pg.mouse.set_visible(False)
+    
 
     # Set up boids and their data
     nBoids = pg.sprite.Group()
@@ -191,19 +197,20 @@ def main():
 
     # main loop
     while True:
-        # Get mouse position
-        mouse_pos = pg.mouse.get_pos()
+        # Get mouse position if MOUSEFEAR
+        if MOUSEFEAR:
+            mouse_pos = pg.mouse.get_pos()
+            
+            data.fears[0][0] = mouse_pos[0]
+            data.fears[0][1] = mouse_pos[1]
 
         for e in pg.event.get():
             # Handle quitting
             if e.type == pg.QUIT or e.type == pg.KEYDOWN and e.key == pg.K_ESCAPE:
                 return
             
-            if e.type == pg.MOUSEBUTTONDOWN:
+            if e.type == pg.MOUSEBUTTONDOWN and MOUSEFEAR:
                 data.fears = np.append(data.fears, [[mouse_pos[0], mouse_pos[1], 0]], axis=0)
-        
-        data.fears[0][0] = mouse_pos[0]
-        data.fears[0][1] = mouse_pos[1]
 
         dt = clock.tick(FPS) / 1000
         screen.fill(BGCOLOR)
