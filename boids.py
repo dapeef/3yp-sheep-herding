@@ -23,10 +23,11 @@ TUNING = {
         'sep': 2,
         'ali': 1,
         'coh': 1,
-        'fear': 1.5
+        'fear': 2
     },
     "target_dist": 40,      # Target separation
-    "influence_dist": 500   # "visibility" distance for the boids
+    "influence_dist": 200,  # "visibility" distance for the boids
+    "fear_decay": 2         # 1/r^k relationship (where k is decay)
 }
 
 
@@ -123,7 +124,7 @@ class Boid(pg.sprite.Sprite):
                 # Get normalised direction of force
                 direction = (self.pos - pg.Vector2(fear[0:2].tolist())).normalize()
                 # Weight by distance and add to sum
-                fear_steer += direction / fear[2]**7
+                fear_steer += direction / fear[2]**tuning["fear_decay"]
 
         # Get forces from steer vectors, including weightings
         weightings = tuning["weightings"]
@@ -167,8 +168,8 @@ def main():
     if FLLSCRN:
         currentRez = (pg.display.Info().current_w, pg.display.Info().current_h)
         screen = pg.display.set_mode(currentRez, pg.SCALED)
-        pg.mouse.set_visible(False)
     else: screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
+    pg.mouse.set_visible(False)
 
     # Set up boids and their data
     nBoids = pg.sprite.Group()
