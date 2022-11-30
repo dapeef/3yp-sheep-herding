@@ -22,7 +22,8 @@ TUNING = {
     "weightings": {         # Force weightings
         'sep': 2,
         'ali': 1,
-        'coh': 1
+        'coh': 1,
+        'fear': 1.5
     },
     "target_dist": 40,      # Target separation
     "influence_dist": 500   # "visibility" distance for the boids
@@ -40,10 +41,11 @@ def clamp_magnitude(vector, magnitude):
 
 
 class Boid(pg.sprite.Sprite):
-    def __init__(self, boidNum, data, drawSurf, cHSV=None):
+    def __init__(self, boidNum, boid_data, fear_data, drawSurf, cHSV=None):
         super().__init__()
 
-        self.data = data # Stores positions & rotations of all boids
+        self.boid_data = boid_data # Stores positions & rotations of all boids
+        self.fear_data = fear_data # Stores positions & rotations of all fear nodes
         self.bnum = boidNum # This boid's number (ID)
         self.drawSurf = drawSurf # Main screen surface
 
@@ -79,7 +81,7 @@ class Boid(pg.sprite.Sprite):
         influence_dist = tuning["influence_dist"]
 
         # Make list of nearby boids, sorted by distance
-        otherBoids = np.delete(self.data, self.bnum, 0)
+        otherBoids = np.delete(self.boid_data, self.bnum, 0)
         array_dists = (self.pos.x - otherBoids[:,0])**2 + (self.pos.y - otherBoids[:,1])**2 # distance^2 to save computation time
         closeBoidIs = np.argsort(array_dists)[:7] # Look at 7 closest boids only
         neiboids = otherBoids[closeBoidIs]
@@ -90,6 +92,7 @@ class Boid(pg.sprite.Sprite):
         sep_steer = pg.Vector2(0,0)
         ali_steer = pg.Vector2(0,0)
         coh_steer = pg.Vector2(0,0)
+        fear_steer = pg.Vector2(0,0)
 
         if neiboids.size > 1:  # if has neighbours, do math and sim rules
             # Apply the 3 criteria - separation, cohesion, alignment
@@ -106,28 +109,36 @@ class Boid(pg.sprite.Sprite):
             # Normalise by number of boids influencing
             if sep_count > 0: sep_steer /= sep_count
 
-
             # Alignment
             ali_steer = pg.Vector2(np.mean(neiboids[:,2]), np.mean(neiboids[:,3]))
-
 
             # Cohesion
             avg_pos = (np.mean(neiboids[:,0]), np.mean(neiboids[:,1]))
             coh_steer = pg.Vector2(avg_pos) - self.pos
+        
+        # Fear
+        self.fear_data[:,2] = np.sqrt((self.pos.x - self.fear_data[:,0])**2 + (self.pos.y - self.fear_data[:,1])**2)
+        for fear in self.fear_data:
+            if (fear[2] < influence_dist):
+                # Get normalised direction of force
+                direction = (self.pos - pg.Vector2(fear[0:2].tolist())).normalize()
+                # Weight by distance and add to sum
+                fear_steer += direction / fear[2]**7
 
-            # Get forces from steer vectors, including weightings
-            weightings = tuning["weightings"]
-            sep_force = get_force(sep_steer) * weightings["sep"]
-            ali_force = get_force(ali_steer) * weightings["ali"]
-            coh_force = get_force(coh_steer) * weightings["coh"]
+        # Get forces from steer vectors, including weightings
+        weightings = tuning["weightings"]
+        sep_force = get_force(sep_steer) * weightings["sep"]
+        ali_force = get_force(ali_steer) * weightings["ali"]
+        coh_force = get_force(coh_steer) * weightings["coh"]
+        fear_force = get_force(fear_steer) * weightings["fear"]
 
-            # Sum forces
-            force = sep_force + ali_force + coh_force
+        # Sum forces
+        force = sep_force + ali_force + coh_force + fear_force
 
-            # Adjust velocity to reflect force
-            self.vel += force
+        # Adjust velocity to reflect force
+        self.vel += force
 
-
+        # Get angle of velocity for rendering
         self.ang = self.vel.as_polar()[1]
 
         # Adjusts angle of boid image to match heading
@@ -144,15 +155,14 @@ class Boid(pg.sprite.Sprite):
         # Update position of rendered boid
         self.rect.center = self.pos
 
-        # Finally, output pos/ang to array
-        self.data[self.bnum,:4] = [self.pos[0], self.pos[1], self.vel[0], self.vel[1]]
+        # Finally, output pos and vel to array
+        self.boid_data[self.bnum,:4] = [self.pos[0], self.pos[1], self.vel[0], self.vel[1]]
 
 
 def main():
     pg.init()  # prepare window
-    pg.display.set_caption("PyNBoids")
-    try: pg.display.set_icon(pg.image.load("nboids.png"))
-    except: print("FYI: nboids.png icon not found, skipping..")
+    pg.display.set_caption("Sheeeeeeep") # Window title
+
     # setup fullscreen or window mode
     if FLLSCRN:
         currentRez = (pg.display.Info().current_w, pg.display.Info().current_h)
@@ -160,23 +170,32 @@ def main():
         pg.mouse.set_visible(False)
     else: screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
 
+    # Set up boids and their data
     nBoids = pg.sprite.Group()
-    dataArray = np.zeros((BOIDZ, 5), dtype=float)
+    boidArray = np.zeros((BOIDZ, 5), dtype=float)
+    fearArray = np.zeros((1, 3), dtype=float)
     for n in range(BOIDZ):
-        nBoids.add(Boid(n, dataArray, screen))  # spawns desired # of boidz
+        nBoids.add(Boid(n, boidArray, fearArray, screen))  # spawns desired # of boidz
 
     clock = pg.time.Clock()
     if SHOWFPS : font = pg.font.Font(None, 30)
 
     # main loop
     while True:
+        # Handle quitting
         for e in pg.event.get():
             if e.type == pg.QUIT or e.type == pg.KEYDOWN and e.key == pg.K_ESCAPE:
                 return
+        
+        (mouse_x, mouse_y) = pg.mouse.get_pos()
+
+        fearArray[0][0] = mouse_x
+        fearArray[0][1] = mouse_y
 
         dt = clock.tick(FPS) / 1000
         screen.fill(BGCOLOR)
         nBoids.update(dt, TUNING)
+        pg.draw.circle(screen, (255, 0, 0), (mouse_x, mouse_y), 5) # Draw red circle on mouse position
         nBoids.draw(screen)
 
         if SHOWFPS : screen.blit(font.render(str(int(clock.get_fps())), True, [0,200,0]), (8, 8))
