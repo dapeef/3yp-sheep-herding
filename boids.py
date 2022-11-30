@@ -10,16 +10,16 @@ Copyright (c) 2021  Nikolaus Stromberg  nikorasu85@gmail.com
 '''
 
 FLLSCRN = False         # True for Fullscreen, or False for Window
-BOIDZ = 50             # How many boids to spawn, too many may slow fps
-MAX_SPEED = 170         # Max movement speed
-MAX_FORCE = 1.7         # Max acceleration force
+BOIDZ = 50              # How many boids to spawn, too many may slow fps
+MAX_SPEED = 150         # Max movement speed
+MAX_FORCE = 1.5         # Max acceleration force
 WIDTH = 1200            # Window Width (1200)
 HEIGHT = 800            # Window Height (800)
 BGCOLOR = (0, 0, 0)     # Background color in RGB
 FPS = 90                # 30-90
 SHOWFPS = True          # Show frame rate
 WEIGHTINGS = {          # Force weightings
-    'sep': 1.25,
+    'sep': 2,
     'ali': 1,
     'coh': 1
 }
