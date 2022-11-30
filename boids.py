@@ -31,8 +31,8 @@ TUNING = {
         "boid": 200,        # "visibility" distance for the boids
         "fear": 200
     },
-    "fear_decay": 1,        # 1/r^k relationship (where k is decay)
-    "fear_const": .05       # constant by which distance is divided when calculating fear force
+    "fear_decay": 1,        # see below
+    "fear_const": .05       # 1/(r/k)^a -> k is const, a is decay
 }
 
 
