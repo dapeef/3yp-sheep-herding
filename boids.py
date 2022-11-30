@@ -42,11 +42,10 @@ def clamp_magnitude(vector, magnitude):
 
 
 class Boid(pg.sprite.Sprite):
-    def __init__(self, boidNum, boid_data, fear_data, drawSurf, cHSV=None):
+    def __init__(self, boidNum, data, drawSurf, cHSV=None):
         super().__init__()
 
-        self.boid_data = boid_data # Stores positions & rotations of all boids
-        self.fear_data = fear_data # Stores positions & rotations of all fear nodes
+        self.data = data # Stores positions & rotations of all boids and fears
         self.bnum = boidNum # This boid's number (ID)
         self.drawSurf = drawSurf # Main screen surface
 
@@ -82,7 +81,7 @@ class Boid(pg.sprite.Sprite):
         influence_dist = tuning["influence_dist"]
 
         # Make list of nearby boids, sorted by distance
-        otherBoids = np.delete(self.boid_data, self.bnum, 0)
+        otherBoids = np.delete(self.data.boids, self.bnum, 0)
         array_dists = (self.pos.x - otherBoids[:,0])**2 + (self.pos.y - otherBoids[:,1])**2 # distance^2 to save computation time
         closeBoidIs = np.argsort(array_dists)[:7] # Look at 7 closest boids only
         neiboids = otherBoids[closeBoidIs]
@@ -118,8 +117,8 @@ class Boid(pg.sprite.Sprite):
             coh_steer = pg.Vector2(avg_pos) - self.pos
         
         # Fear
-        self.fear_data[:,2] = np.sqrt((self.pos.x - self.fear_data[:,0])**2 + (self.pos.y - self.fear_data[:,1])**2)
-        for fear in self.fear_data:
+        self.data.fears[:,2] = np.sqrt((self.pos.x - self.data.fears[:,0])**2 + (self.pos.y - self.data.fears[:,1])**2)
+        for fear in self.data.fears:
             if (fear[2] < influence_dist):
                 # Get normalised direction of force
                 direction = (self.pos - pg.Vector2(fear[0:2].tolist())).normalize()
@@ -157,7 +156,13 @@ class Boid(pg.sprite.Sprite):
         self.rect.center = self.pos
 
         # Finally, output pos and vel to array
-        self.boid_data[self.bnum,:4] = [self.pos[0], self.pos[1], self.vel[0], self.vel[1]]
+        self.data.boids[self.bnum,:4] = [self.pos[0], self.pos[1], self.vel[0], self.vel[1]]
+
+
+class Data():
+    def __init__(self, n_boids, n_fears=1000):
+        self.boids = np.zeros((n_boids, 5), dtype=float)
+        self.fears = np.zeros((1, 3), dtype=float)
 
 
 def main():
@@ -173,30 +178,38 @@ def main():
 
     # Set up boids and their data
     nBoids = pg.sprite.Group()
-    boidArray = np.zeros((BOIDZ, 5), dtype=float)
-    fearArray = np.zeros((1, 3), dtype=float)
+    data = Data(BOIDZ)
     for n in range(BOIDZ):
-        nBoids.add(Boid(n, boidArray, fearArray, screen))  # spawns desired # of boidz
+        nBoids.add(Boid(n, data, screen))  # spawns desired # of boidz
 
     clock = pg.time.Clock()
     if SHOWFPS : font = pg.font.Font(None, 30)
 
     # main loop
     while True:
-        # Handle quitting
+        # Get mouse position
+        mouse_pos = pg.mouse.get_pos()
+
         for e in pg.event.get():
+            # Handle quitting
             if e.type == pg.QUIT or e.type == pg.KEYDOWN and e.key == pg.K_ESCAPE:
                 return
-        
-        (mouse_x, mouse_y) = pg.mouse.get_pos()
+            
+            if e.type == pg.MOUSEBUTTONDOWN:
+                print("click!")
 
-        fearArray[0][0] = mouse_x
-        fearArray[0][1] = mouse_y
+                data.fears = np.append(data.fears, [[mouse_pos[0], mouse_pos[1], 0]], axis=0)
+
+                print(data.fears)
+        
+        data.fears[0][0] = mouse_pos[0]
+        data.fears[0][1] = mouse_pos[1]
 
         dt = clock.tick(FPS) / 1000
         screen.fill(BGCOLOR)
         nBoids.update(dt, TUNING)
-        pg.draw.circle(screen, (255, 0, 0), (mouse_x, mouse_y), 5) # Draw red circle on mouse position
+        for fear in data.fears:
+            pg.draw.circle(screen, (255, 0, 0), (fear[0], fear[1]), 5) # Draw red circle on mouse position
         nBoids.draw(screen)
 
         if SHOWFPS : screen.blit(font.render(str(int(clock.get_fps())), True, [0,200,0]), (8, 8))
