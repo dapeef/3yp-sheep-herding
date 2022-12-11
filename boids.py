@@ -21,7 +21,7 @@ TUNING = {
     "max_speed": 150,       # Max movement speed
     "max_force": 5,         # Max acceleration force
     "weightings": {         # Force weightings
-        'sep': 2,
+        'sep': 1.8,
         'ali': 1,
         'coh': 1,
         'fear': 2
@@ -77,6 +77,13 @@ class Boid(pg.sprite.Sprite):
         max_speed = tuning["max_speed"]
         max_force = tuning["max_force"]
 
+
+        def sep_function(distance):
+            y_int = 1 # y intercept
+            x_int = tuning["target_dist"] # x intercept
+
+            return - y_int / x_int * distance + y_int 
+
         def get_force(steer):
             if steer.magnitude() != 0:
                 steer = steer.normalize()
@@ -113,15 +120,23 @@ class Boid(pg.sprite.Sprite):
                     # Get normalised direction of force
                     direction = (self.pos - pg.Vector2(boid[0:2].tolist())).normalize()
                     # Weight by distance and add to sum
-                    sep_steer += direction / boid[4]
+                    sep_steer += direction * sep_function(boid[4])
                     sep_count += 1
             # Normalise by number of boids influencing
             if sep_count > 0: sep_steer /= sep_count
 
             # Alignment
-            ali_steer = pg.Vector2(np.mean(neiboids[:,2]), np.mean(neiboids[:,3]))
+            ali_steer = pg.Vector2(np.mean(neiboids[:,2] / neiboids[:,4]), np.mean(neiboids[:,3] / neiboids[:,4]))
+
 
             # Cohesion
+            # Weighted averages
+            # denom = np.sum(1 / neiboids[:,4])
+            # avg_pos_x = np.mean(neiboids[:,0] / neiboids[:,4]) / denom
+            # avg_pos_y = np.mean(neiboids[:,1] / neiboids[:,4]) / denom
+            # avg_pos = pg.Vector2(avg_pos_x, avg_pos_y)
+            # coh_steer = avg_pos - self.pos
+
             avg_pos = (np.mean(neiboids[:,0]), np.mean(neiboids[:,1]))
             coh_steer = pg.Vector2(avg_pos) - self.pos
         
