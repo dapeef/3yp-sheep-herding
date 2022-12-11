@@ -32,7 +32,8 @@ TUNING = {
         "fear": 200
     },
     "fear_decay": 1,        # see below
-    "fear_const": .05       # 1/(r/k)^a -> k is const, a is decay
+    "fear_const": .05,      # 1/(r/k)^a -> k is const, a is decay
+    "speed_decay": 2        # Decay rate of speed -> v /= speed_decay * dt
 }
 
 
@@ -154,6 +155,8 @@ class Boid(pg.sprite.Sprite):
         # Ensure max_speed is not exceeded
         self.vel = clamp_magnitude(self.vel, max_speed)
 
+        # Add speed decay
+        self.vel /= tuning["speed_decay"] ** dt
         # Change position based on velocity
         self.pos += self.vel * dt
 
