@@ -4,4 +4,6 @@ function add_marker(lat, long) {
         position: {lat: lat, lng: long},
         map: map,
     });
+
+    return "Woo, here's the return value!";
 };

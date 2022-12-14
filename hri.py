@@ -23,15 +23,15 @@ class Ui(QMainWindow):
         self.stop_all.clicked.connect(self.button_click)
 
         # Initiate HTML elements for maps
-        self.webEngineView = QWebEngineView(self.map_box)
-        self.webEngineView.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\map.html'))
-        self.map_layout.addWidget(self.webEngineView)
+        self.browser = QWebEngineView(self.map_box)
+        self.browser.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\map.html'))
+        self.map_layout.addWidget(self.browser)
 
 
     def button_click(self):
         print("Mmm, clickeroo")
 
-        self.webEngineView.page().runJavaScript("add_marker(51.6255863, -2.5121819);")
+        self.browser.page().runJavaScript("add_marker(51.6255863, -2.5121819);", print)
 
 
 app = QApplication(sys.argv)
