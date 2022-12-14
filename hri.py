@@ -1,6 +1,9 @@
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
+from PyQt5.QtWebEngineWidgets import QWebEngineView
+from PyQt5.QtCore import QUrl
 import sys
+import os
 
 
 class Ui(QMainWindow):
@@ -18,6 +21,11 @@ class Ui(QMainWindow):
 
         # Tether buttons to functions
         self.stop_all.clicked.connect(self.button_click)
+
+        # Initiate HTML elements for maps
+        self.webEngineView = QWebEngineView(self.map_box)
+        self.webEngineView.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\map.html'))
+        self.map_layout.addWidget(self.webEngineView)
 
 
     def button_click(self):

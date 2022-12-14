@@ -39,8 +39,8 @@
           <property name="title">
            <string>Map</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_5">
-           <item row="0" column="0">
+          <layout class="QVBoxLayout" name="map_layout">
+           <item>
             <widget class="QLabel" name="map_placeholder">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -293,8 +293,8 @@ ALL</string>
           <property name="title">
            <string>Map</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_7">
-           <item row="0" column="0">
+          <layout class="QVBoxLayout" name="map_layout_2">
+           <item>
             <widget class="QLabel" name="map_placeholder_2">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -508,8 +508,8 @@ new pin</string>
           <property name="title">
            <string>Map</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_6">
-           <item row="0" column="0">
+          <layout class="QVBoxLayout" name="map_layout_3">
+           <item>
             <widget class="QLabel" name="map_placeholder_3">
              <property name="styleSheet">
               <string notr="true">font: 20pt;</string>
