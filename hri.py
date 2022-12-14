@@ -31,6 +31,8 @@ class Ui(QMainWindow):
     def button_click(self):
         print("Mmm, clickeroo")
 
+        self.webEngineView.page().runJavaScript("add_marker(51.6255863, -2.5121819);")
+
 
 app = QApplication(sys.argv)
 
