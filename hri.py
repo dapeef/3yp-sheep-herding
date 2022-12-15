@@ -23,23 +23,24 @@ class Ui(QMainWindow):
         self.browser_home = QWebEngineView(self.map_box)
         self.browser_home.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\web\index-home.html'))
         self.map_layout_home.addWidget(self.browser_home)
-        self.browser_home.loadFinished.connect(self.onLoadFinished) # Once loaded, connect buttons
+        self.browser_home.loadFinished.connect(self.onLoadFinishedHome) # Once loaded, connect buttons
 
 
-    def onLoadFinished(self):
+    def onLoadFinishedHome(self):
         # Once map is loaded, connect buttons to functions
         self.stop_all.clicked.connect(self.buttonClick)
 
         print("Ready!")
 
+        # Draw sheep, herding and monitor drones
+        self.drawTestHome()
+
 
     def buttonClick(self):
         print("Mmm, clickeroo")
 
-        self.drawTest()
 
-
-    def drawTest(self):
+    def drawTestHome(self):
         sheep_locations = [
             [51.6255863, -2.5121819],
             [51.626060, -2.512327],
