@@ -15,15 +15,15 @@ class Ui(QMainWindow):
         self.show()
 
         # Remove placeholders
-        self.map_placeholder.deleteLater()
-        self.map_placeholder_2.deleteLater()
-        self.map_placeholder_3.deleteLater()
+        self.map_placeholder_home.deleteLater()
+        self.map_placeholder_route.deleteLater()
+        self.map_placeholder_map.deleteLater()
 
         # Initiate HTML elements for maps
-        self.browser = QWebEngineView(self.map_box)
-        self.browser.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\map.html'))
-        self.map_layout.addWidget(self.browser)
-        self.browser.loadFinished.connect(self.onLoadFinished) # Once loaded, connect buttons
+        self.browser_home = QWebEngineView(self.map_box)
+        self.browser_home.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\web\index-home.html'))
+        self.map_layout_home.addWidget(self.browser_home)
+        self.browser_home.loadFinished.connect(self.onLoadFinished) # Once loaded, connect buttons
 
 
     def onLoadFinished(self):
@@ -33,7 +33,7 @@ class Ui(QMainWindow):
         print("Ready!")
 
 
-    def buttonClick(self):        
+    def buttonClick(self):
         print("Mmm, clickeroo")
 
         self.drawTest()
@@ -65,13 +65,13 @@ class Ui(QMainWindow):
         self.drawMonitorDrones(monitor_drone_locations)
 
     def drawSheep(self, locations):
-        self.browser.page().runJavaScript("addMarkers(" + str(locations) + ", 'sheep');")
+        self.browser_home.page().runJavaScript("addMarkers(" + str(locations) + ", 'sheep');")
 
     def drawHerdingDrones(self, locations):
-        self.browser.page().runJavaScript("addMarkers(" + str(locations) + ", 'herding_drones');")
+        self.browser_home.page().runJavaScript("addMarkers(" + str(locations) + ", 'herding_drones');")
 
     def drawMonitorDrones(self, locations):
-        self.browser.page().runJavaScript("addMarkers(" + str(locations) + ", 'monitor_drones');")
+        self.browser_home.page().runJavaScript("addMarkers(" + str(locations) + ", 'monitor_drones');")
 
 
 app = QApplication(sys.argv)

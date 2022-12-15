@@ -39,9 +39,9 @@
           <property name="title">
            <string>Map</string>
           </property>
-          <layout class="QVBoxLayout" name="map_layout">
+          <layout class="QVBoxLayout" name="map_layout_home">
            <item>
-            <widget class="QLabel" name="map_placeholder">
+            <widget class="QLabel" name="map_placeholder_home">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                <horstretch>0</horstretch>
@@ -283,7 +283,7 @@ ALL</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
-         <widget class="QGroupBox" name="map_box_2">
+         <widget class="QGroupBox" name="map_box_route">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -293,9 +293,9 @@ ALL</string>
           <property name="title">
            <string>Map</string>
           </property>
-          <layout class="QVBoxLayout" name="map_layout_2">
+          <layout class="QVBoxLayout" name="map_layout_route">
            <item>
-            <widget class="QLabel" name="map_placeholder_2">
+            <widget class="QLabel" name="map_placeholder_route">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
                <horstretch>0</horstretch>
@@ -498,7 +498,7 @@ new pin</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QGroupBox" name="map_box_3">
+         <widget class="QGroupBox" name="map_box_map">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -508,9 +508,9 @@ new pin</string>
           <property name="title">
            <string>Map</string>
           </property>
-          <layout class="QVBoxLayout" name="map_layout_3">
+          <layout class="QVBoxLayout" name="map_layout_map">
            <item>
-            <widget class="QLabel" name="map_placeholder_3">
+            <widget class="QLabel" name="map_placeholder_map">
              <property name="styleSheet">
               <string notr="true">font: 20pt;</string>
              </property>
