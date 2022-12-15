@@ -237,14 +237,14 @@ Drone</string>
               </widget>
              </item>
              <item row="1" column="0">
-              <widget class="QPushButton" name="movement_3">
+              <widget class="QPushButton" name="movement3">
                <property name="text">
                 <string>[Movement 3]</string>
                </property>
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QPushButton" name="movement_2">
+              <widget class="QPushButton" name="movement2">
                <property name="text">
                 <string>[Movement 2]</string>
                </property>

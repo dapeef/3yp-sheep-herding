@@ -27,6 +27,11 @@ class Ui(QMainWindow):
         self.save_no_fly.setHidden(True)
         self.cancel_no_fly.setHidden(True)
 
+        # Disable buttons until maps are loaded
+        self.toggleButtonsEnabledHome(False)
+        self.toggleButtonsEnabledRoute(False)
+        self.toggleButtonsEnabledMap(False)
+
         # Initiate HTML elements for maps
         # Home
         self.browser_home = QWebEngineView(self.map_box_home)
@@ -51,6 +56,9 @@ class Ui(QMainWindow):
         # Once map is loaded, connect buttons to functions
         self.stop_all.clicked.connect(self.stopAllClick)
 
+        # Enable all buttons
+        self.toggleButtonsEnabledHome(True)
+
         # Draw sheep, herding and monitor drones
         self.drawTestHome()
 
@@ -59,18 +67,20 @@ class Ui(QMainWindow):
 
         # Once map is loaded, connect buttons to functions
         #self.stop_all.clicked.connect(self.buttonClick)
+        
+        # Enable all buttons
+        self.toggleButtonsEnabledRoute(True)
 
     def onLoadFinishedMap(self):
         print("Map edit map ready!")
 
-        # Populate lists from json file
+        # Get data from json file
         self.data = self.readInfData()
-        for wall in self.data["walls"]:
-            self.walls_list_widget.addItem(wall["name"])
-        for gate in self.data["gates"]:
-            self.gates_list_widget.addItem(gate["name"])
-        for no_fly in self.data["no_fly"]:
-            self.no_fly_list_widget.addItem(no_fly["name"])
+
+        # Populate lists from data
+        for wall in self.data["walls"]: self.walls_list_widget.addItem(wall["name"])
+        for gate in self.data["gates"]: self.gates_list_widget.addItem(gate["name"])
+        for no_fly in self.data["no_fly"]: self.no_fly_list_widget.addItem(no_fly["name"])
 
         # Once map is loaded, connect buttons to functions
         self.add_wall.clicked.connect(self.addWall)
@@ -81,6 +91,9 @@ class Ui(QMainWindow):
         self.cancel_gate.clicked.connect(self.cancelGate)
         self.add_no_fly.clicked.connect(self.addNoFly)
         self.remove_no_fly.clicked.connect(self.removeNoFly)
+
+        # Enable all buttons
+        self.toggleButtonsEnabledMap(True)
 
 
     # Home tab
@@ -120,6 +133,23 @@ class Ui(QMainWindow):
 
     def drawMonitorDrones(self, locations):
         self.browser_home.page().runJavaScript("addMarkers(" + str(locations) + ", 'monitor_drones');")
+
+    def toggleButtonsEnabledHome(self, value):
+        self.land_button1.setEnabled(value)
+        self.land_button2.setEnabled(value)
+        self.land_button3.setEnabled(value)
+        self.land_button4.setEnabled(value)
+        self.come_by.setEnabled(value)
+        self.movement2.setEnabled(value)
+        self.movement3.setEnabled(value)
+        self.collect.setEnabled(value)
+        self.stop_all.setEnabled(value)
+
+
+    # Route tab
+    def toggleButtonsEnabledRoute(self, value):
+        self.pushButton_18.setEnabled(value)
+        self.pushButton_19.setEnabled(value)
 
 
     # Map edit tab
@@ -227,6 +257,7 @@ class Ui(QMainWindow):
         with open('infrastructure-data.json', 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
     
+    # Handle buttons enabled
     def toggleButtonsEnabledMap(self, value):
         self.add_wall.setEnabled(value)
         self.remove_wall.setEnabled(value)
