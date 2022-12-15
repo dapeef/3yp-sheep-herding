@@ -4,6 +4,7 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QUrl
 import sys
 import os
+import json
 
 
 class Ui(QMainWindow):
@@ -55,6 +56,15 @@ class Ui(QMainWindow):
     def onLoadFinishedMap(self):
         print("Map edit map ready!")
 
+        # Populate lists from json file
+        self.data = self.readInfData()
+        for wall in self.data["walls"]:
+            self.walls_list_widget.addItem(wall["name"])
+        for gate in self.data["gates"]:
+            self.gates_list_widget.addItem(gate["name"])
+        for no_fly in self.data["no_fly"]:
+            self.no_fly_list_widget.addItem(no_fly["name"])
+
         # Once map is loaded, connect buttons to functions
         self.add_wall.clicked.connect(self.addWall)
         self.remove_wall.clicked.connect(self.removeWall)
@@ -64,11 +74,9 @@ class Ui(QMainWindow):
         self.remove_no_fly.clicked.connect(self.removeNoFly)
 
 
-
     # Home tab
     def stopAllClick(self):
         print("Mmm, clickeroo")
-
 
     def drawTestHome(self):
         sheep_locations = [
@@ -109,7 +117,10 @@ class Ui(QMainWindow):
     def addWall(self):
         print("Omg let's make a new wall!")
 
-        self.walls_list_widget.addItem("Wall " + str(self.walls_list_widget.count()))
+        name = "Wall " + str(self.walls_list_widget.count())
+        self.walls_list_widget.addItem(name)
+        self.data["walls"].append({"name": name})
+        self.writeInfData()
 
     def removeWall(self):
         print("Omg let's remove a wall!")
@@ -118,15 +129,17 @@ class Ui(QMainWindow):
         
         for item in selected_items:
             index = self.walls_list_widget.row(item)
-
             self.walls_list_widget.takeItem(index)
-
-            print(index)
+            self.data["walls"].pop(index)
+            self.writeInfData()
 
     def addGate(self):
         print("Omg let's make a new gate!")
 
-        self.gates_list_widget.addItem("Gate " + str(self.gates_list_widget.count()))
+        name = "Gate " + str(self.gates_list_widget.count())
+        self.gates_list_widget.addItem(name)
+        self.data["gates"].append({"name": name})
+        self.writeInfData()
 
     def removeGate(self):
         print("Omg let's remove a gate!")
@@ -135,15 +148,17 @@ class Ui(QMainWindow):
         
         for item in selected_items:
             index = self.gates_list_widget.row(item)
-
             self.gates_list_widget.takeItem(index)
-
-            print(index)
+            self.data["gates"].pop(index)
+            self.writeInfData()
 
     def addNoFly(self):
         print("Omg let's make a new no fly zone!")
 
-        self.no_fly_list_widget.addItem("No fly zone " + str(self.no_fly_list_widget.count()))
+        name = "No fly zone " + str(self.no_fly_list_widget.count())
+        self.no_fly_list_widget.addItem(name)
+        self.data["no_fly"].append({"name": name})
+        self.writeInfData()
 
     def removeNoFly(self):
         print("Omg let's remove a no fly zone!")
@@ -152,10 +167,19 @@ class Ui(QMainWindow):
         
         for item in selected_items:
             index = self.no_fly_list_widget.row(item)
-
             self.no_fly_list_widget.takeItem(index)
+            self.data["no_fly"].pop(index)
+            self.writeInfData()
 
-            print(index)
+    # Read and write infrastructure-data.json
+    def readInfData(self):
+        return json.load(open('infrastructure-data.json'))
+
+    def writeInfData(self, data=None):
+        if data == None: data = self.data
+
+        with open('infrastructure-data.json', 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
 
 
 app = QApplication(sys.argv)
