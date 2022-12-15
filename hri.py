@@ -13,12 +13,19 @@ class Ui(QMainWindow):
 
         # Load UI
         uic.loadUi("hri.ui", self)
-        self.show()
 
         # Remove placeholders
         self.map_placeholder_home.deleteLater()
         self.map_placeholder_route.deleteLater()
         self.map_placeholder_map.deleteLater()
+
+        # Hide buttons in map edit tab
+        self.save_wall.setHidden(True)
+        self.cancel_wall.setHidden(True)
+        self.save_gate.setHidden(True)
+        self.cancel_gate.setHidden(True)
+        self.save_no_fly.setHidden(True)
+        self.cancel_no_fly.setHidden(True)
 
         # Initiate HTML elements for maps
         # Home
@@ -70,6 +77,8 @@ class Ui(QMainWindow):
         self.remove_wall.clicked.connect(self.removeWall)
         self.add_gate.clicked.connect(self.addGate)
         self.remove_gate.clicked.connect(self.removeGate)
+        self.save_gate.clicked.connect(self.saveGate)
+        self.cancel_gate.clicked.connect(self.cancelGate)
         self.add_no_fly.clicked.connect(self.addNoFly)
         self.remove_no_fly.clicked.connect(self.removeNoFly)
 
@@ -135,12 +144,22 @@ class Ui(QMainWindow):
 
     def addGate(self):
         print("Omg let's make a new gate!")
+        
+        # Change gate button options
+        self.save_gate.setHidden(False)
+        self.cancel_gate.setHidden(False)
+        self.add_gate.setHidden(True)
+        self.remove_gate.setHidden(True)
 
-        name = "Gate " + str(self.gates_list_widget.count())
-        self.gates_list_widget.addItem(name)
-        self.data["gates"].append({"name": name})
-        self.writeInfData()
+        # Disable other buttons
+        self.toggleButtonsEnabledMap(False)
 
+        # Change instructions
+        self.instructions_label.setText("Click 2 points on either side of the gate, starting with the hinge end, then press Save")
+
+        # Call javascript
+        self.browser_map.page().runJavaScript("makeGate();")
+    
     def removeGate(self):
         print("Omg let's remove a gate!")
 
@@ -151,6 +170,33 @@ class Ui(QMainWindow):
             self.gates_list_widget.takeItem(index)
             self.data["gates"].pop(index)
             self.writeInfData()
+
+    def saveGate(self):
+        self.browser_map.page().runJavaScript("saveGate();", self.saveGateCallback)
+
+    def saveGateCallback(self, points):
+        # Revert button states
+        self.resetAllButtonsMap()
+
+        if len(points) == 2:
+            name = "Gate " + str(self.gates_list_widget.count())
+            self.gates_list_widget.addItem(name)
+            self.data["gates"].append({
+                "name": name,
+                "points": points
+            })
+            self.writeInfData()
+            
+            self.instructions_label.setText("Successfully added gate")
+        
+        else:
+            self.instructions_label.setText("Wrong number of points selected; 2 required, " + str(len(points)) + " selected")
+
+    def cancelGate(self):
+        self.browser_map.page().runJavaScript("saveGate();")
+
+        # Revert button states
+        self.resetAllButtonsMap()
 
     def addNoFly(self):
         print("Omg let's make a new no fly zone!")
@@ -180,10 +226,42 @@ class Ui(QMainWindow):
 
         with open('infrastructure-data.json', 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
+    
+    def toggleButtonsEnabledMap(self, value):
+        self.add_wall.setEnabled(value)
+        self.remove_wall.setEnabled(value)
+        self.add_gate.setEnabled(value)
+        self.remove_gate.setEnabled(value)
+        self.add_no_fly.setEnabled(value)
+        self.remove_no_fly.setEnabled(value)
+    
+    def resetAllButtonsMap(self):
+        # Wall
+        self.save_wall.setHidden(True)
+        self.cancel_wall.setHidden(True)
+        self.add_wall.setHidden(False)
+        self.remove_wall.setHidden(False)
+        # Gate
+        self.save_gate.setHidden(True)
+        self.cancel_gate.setHidden(True)
+        self.add_gate.setHidden(False)
+        self.remove_gate.setHidden(False)
+        # No fly
+        self.save_no_fly.setHidden(True)
+        self.cancel_no_fly.setHidden(True)
+        self.add_no_fly.setHidden(False)
+        self.remove_no_fly.setHidden(False)
+
+        # Enable other buttons
+        self.toggleButtonsEnabledMap(True)
+
+        # Reset instructions
+        self.instructions_label.setText("Click a button to start")
 
 
 app = QApplication(sys.argv)
 
 window = Ui()
+window.show()
 
 app.exec()
