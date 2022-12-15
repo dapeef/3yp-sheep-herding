@@ -38,28 +38,35 @@ class Ui(QMainWindow):
 
 
     def onLoadFinishedHome(self):
-        # Once map is loaded, connect buttons to functions
-        self.stop_all.clicked.connect(self.buttonClick)
-
         print("Home map ready!")
+
+        # Once map is loaded, connect buttons to functions
+        self.stop_all.clicked.connect(self.stopAllClick)
 
         # Draw sheep, herding and monitor drones
         self.drawTestHome()
 
     def onLoadFinishedRoute(self):
-        # Once map is loaded, connect buttons to functions
-        #self.stop_all.clicked.connect(self.buttonClick)
-
         print("Route edit map ready!")
 
-    def onLoadFinishedMap(self):
         # Once map is loaded, connect buttons to functions
         #self.stop_all.clicked.connect(self.buttonClick)
 
+    def onLoadFinishedMap(self):
         print("Map edit map ready!")
 
+        # Once map is loaded, connect buttons to functions
+        self.add_wall.clicked.connect(self.addWall)
+        self.remove_wall.clicked.connect(self.removeWall)
+        self.add_gate.clicked.connect(self.addGate)
+        self.remove_gate.clicked.connect(self.removeGate)
+        self.add_no_fly.clicked.connect(self.addNoFly)
+        self.remove_no_fly.clicked.connect(self.removeNoFly)
 
-    def buttonClick(self):
+
+
+    # Home tab
+    def stopAllClick(self):
         print("Mmm, clickeroo")
 
 
@@ -96,6 +103,59 @@ class Ui(QMainWindow):
 
     def drawMonitorDrones(self, locations):
         self.browser_home.page().runJavaScript("addMarkers(" + str(locations) + ", 'monitor_drones');")
+
+
+    # Map edit tab
+    def addWall(self):
+        print("Omg let's make a new wall!")
+
+        self.walls_list_widget.addItem("Wall " + str(self.walls_list_widget.count()))
+
+    def removeWall(self):
+        print("Omg let's remove a wall!")
+
+        selected_items = self.walls_list_widget.selectedItems()
+        
+        for item in selected_items:
+            index = self.walls_list_widget.row(item)
+
+            self.walls_list_widget.takeItem(index)
+
+            print(index)
+
+    def addGate(self):
+        print("Omg let's make a new gate!")
+
+        self.gates_list_widget.addItem("Gate " + str(self.gates_list_widget.count()))
+
+    def removeGate(self):
+        print("Omg let's remove a gate!")
+
+        selected_items = self.gates_list_widget.selectedItems()
+        
+        for item in selected_items:
+            index = self.gates_list_widget.row(item)
+
+            self.gates_list_widget.takeItem(index)
+
+            print(index)
+
+    def addNoFly(self):
+        print("Omg let's make a new no fly zone!")
+
+        self.no_fly_list_widget.addItem("No fly zone " + str(self.no_fly_list_widget.count()))
+
+    def removeNoFly(self):
+        print("Omg let's remove a no fly zone!")
+
+        selected_items = self.no_fly_list_widget.selectedItems()
+        
+        for item in selected_items:
+            index = self.no_fly_list_widget.row(item)
+
+            self.no_fly_list_widget.takeItem(index)
+
+            print(index)
 
 
 app = QApplication(sys.argv)

@@ -21,7 +21,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="home_tab">
        <attribute name="title">
@@ -541,14 +541,32 @@ FOR MAP]</string>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_7">
                 <item>
-                 <widget class="QColumnView" name="walls_view">
+                 <widget class="QListWidget" name="walls_list_widget">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                  </widget>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_5">
+                  <item>
+                   <widget class="QPushButton" name="add_wall">
+                    <property name="text">
+                     <string>Add wall</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="remove_wall">
+                    <property name="text">
+                     <string>Remove selected</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                </layout>
               </widget>
@@ -558,16 +576,34 @@ FOR MAP]</string>
                <property name="title">
                 <string>Gates</string>
                </property>
-               <layout class="QVBoxLayout" name="verticalLayout_8">
+               <layout class="QVBoxLayout" name="verticalLayout_2">
                 <item>
-                 <widget class="QColumnView" name="gates_view">
+                 <widget class="QListWidget" name="gates_list_widget">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                  </widget>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_6">
+                  <item>
+                   <widget class="QPushButton" name="add_gate">
+                    <property name="text">
+                     <string>Add gate</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="remove_gate">
+                    <property name="text">
+                     <string>Remove selected</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                </layout>
               </widget>
@@ -577,16 +613,34 @@ FOR MAP]</string>
                <property name="title">
                 <string>No fly zones</string>
                </property>
-               <layout class="QVBoxLayout" name="verticalLayout_9">
+               <layout class="QVBoxLayout" name="verticalLayout_3">
                 <item>
-                 <widget class="QColumnView" name="no_fly_view">
+                 <widget class="QListWidget" name="no_fly_list_widget">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
                  </widget>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_7">
+                  <item>
+                   <widget class="QPushButton" name="add_no_fly">
+                    <property name="text">
+                     <string>Add no fly zone</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="remove_no_fly">
+                    <property name="text">
+                     <string>Remove selected</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                </layout>
               </widget>
@@ -595,42 +649,21 @@ FOR MAP]</string>
            </widget>
           </item>
           <item>
-           <widget class="QGroupBox" name="add_items_box">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
+           <widget class="QGroupBox" name="groupBox">
             <property name="title">
-             <string>Add items to map</string>
+             <string>Instructions</string>
             </property>
-            <layout class="QGridLayout" name="gridLayout_3">
-             <item row="0" column="0">
-              <widget class="QPushButton" name="add_wall">
-               <property name="text">
-                <string>Add wall</string>
+            <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <item>
+              <widget class="QLabel" name="label">
+               <property name="styleSheet">
+                <string notr="true">font: 14pt;</string>
                </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QPushButton" name="add_no_fly">
                <property name="text">
-                <string>Add no fly zone</string>
+                <string>Click a button to start</string>
                </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QPushButton" name="add_gate">
-               <property name="text">
-                <string>Add gate</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QPushButton" name="add_">
-               <property name="text">
-                <string>Add ...</string>
+               <property name="wordWrap">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
