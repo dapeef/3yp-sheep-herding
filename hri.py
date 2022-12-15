@@ -82,6 +82,9 @@ class Ui(QMainWindow):
         for gate in self.data["gates"]: self.gates_list_widget.addItem(gate["name"])
         for no_fly in self.data["no_fly"]: self.no_fly_list_widget.addItem(no_fly["name"])
 
+        # Draw infrastructure
+        self.drawInfrastructure()
+
         # Once map is loaded, connect buttons to functions
         self.add_wall.clicked.connect(self.addWall)
         self.remove_wall.clicked.connect(self.removeWall)
@@ -153,6 +156,7 @@ class Ui(QMainWindow):
 
 
     # Map edit tab
+    # Walls
     def addWall(self):
         print("Omg let's make a new wall!")
 
@@ -172,6 +176,7 @@ class Ui(QMainWindow):
             self.data["walls"].pop(index)
             self.writeInfData()
 
+    # Gates
     def addGate(self):
         print("Omg let's make a new gate!")
         
@@ -200,6 +205,8 @@ class Ui(QMainWindow):
             self.gates_list_widget.takeItem(index)
             self.data["gates"].pop(index)
             self.writeInfData()
+        
+        self.drawInfrastructure()
 
     def saveGate(self):
         self.browser_map.page().runJavaScript("saveGate();", self.saveGateCallback)
@@ -217,10 +224,13 @@ class Ui(QMainWindow):
             })
             self.writeInfData()
             
-            self.instructions_label.setText("Successfully added gate")
+            self.instructions_label.setText("Successfully added " + name)
         
         else:
             self.instructions_label.setText("Wrong number of points selected; 2 required, " + str(len(points)) + " selected")
+        
+        # Redraw infrastructure
+        self.drawInfrastructure()
 
     def cancelGate(self):
         self.browser_map.page().runJavaScript("saveGate();")
@@ -228,6 +238,7 @@ class Ui(QMainWindow):
         # Revert button states
         self.resetAllButtonsMap()
 
+    # No fly
     def addNoFly(self):
         print("Omg let's make a new no fly zone!")
 
@@ -289,6 +300,11 @@ class Ui(QMainWindow):
         # Reset instructions
         self.instructions_label.setText("Click a button to start")
 
+    # Render infrastructure
+    def drawInfrastructure(self, data=None):
+        if data == None: data = self.data
+
+        self.browser_map.page().runJavaScript("draw(" + str(data) + ");")
 
 app = QApplication(sys.argv)
 

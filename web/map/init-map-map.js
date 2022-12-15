@@ -3,6 +3,11 @@ let last_clicked;
 let mode;
 let points = [];
 let markers = [];
+let items = {
+    "walls": [],
+    "gates": [],
+    "no_fly": []
+}
 
 // Initialize and add the map
 function initMap() {
