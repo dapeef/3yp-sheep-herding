@@ -20,20 +20,43 @@ class Ui(QMainWindow):
         self.map_placeholder_map.deleteLater()
 
         # Initiate HTML elements for maps
-        self.browser_home = QWebEngineView(self.map_box)
-        self.browser_home.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\web\index-home.html'))
+        # Home
+        self.browser_home = QWebEngineView(self.map_box_home)
+        self.browser_home.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\web\home\index-home.html'))
         self.map_layout_home.addWidget(self.browser_home)
         self.browser_home.loadFinished.connect(self.onLoadFinishedHome) # Once loaded, connect buttons
+        # Route edit
+        self.browser_route = QWebEngineView(self.map_box_route)
+        self.browser_route.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\web\route\index-route.html'))
+        self.map_layout_route.addWidget(self.browser_route)
+        self.browser_route.loadFinished.connect(self.onLoadFinishedRoute) # Once loaded, connect buttons
+        # Map edit
+        self.browser_map = QWebEngineView(self.map_box_map)
+        self.browser_map.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\web\map\index-map.html'))
+        self.map_layout_map.addWidget(self.browser_map)
+        self.browser_map.loadFinished.connect(self.onLoadFinishedMap) # Once loaded, connect buttons
 
 
     def onLoadFinishedHome(self):
         # Once map is loaded, connect buttons to functions
         self.stop_all.clicked.connect(self.buttonClick)
 
-        print("Ready!")
+        print("Home map ready!")
 
         # Draw sheep, herding and monitor drones
         self.drawTestHome()
+
+    def onLoadFinishedRoute(self):
+        # Once map is loaded, connect buttons to functions
+        #self.stop_all.clicked.connect(self.buttonClick)
+
+        print("Route edit map ready!")
+
+    def onLoadFinishedMap(self):
+        # Once map is loaded, connect buttons to functions
+        #self.stop_all.clicked.connect(self.buttonClick)
+
+        print("Map edit map ready!")
 
 
     def buttonClick(self):

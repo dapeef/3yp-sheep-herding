@@ -8,6 +8,7 @@ function initMap() {
       center: {lat: 51.6255863, lng: -2.5121819}, // Near Wantage
       mapTypeId: 'hybrid',
     });
+    
     // google.maps.event.addListener(map, 'click', function (event) {
     //     new google.maps.Marker({
     //         position: event.latLng,
