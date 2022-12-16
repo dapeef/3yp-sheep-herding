@@ -163,9 +163,7 @@ class Ui(QMainWindow):
 
     # Map edit tab
     # Walls
-    def addWall(self):
-        print("Omg let's make a new wall!")
-        
+    def addWall(self):        
         # Change wall button options
         self.save_wall.setHidden(False)
         self.cancel_wall.setHidden(False)
@@ -182,8 +180,6 @@ class Ui(QMainWindow):
         self.browser_map.page().runJavaScript("makeWall();")
 
     def removeWall(self):
-        print("Omg let's remove a wall!")
-
         selected_items = self.walls_list_widget.selectedItems()
         
         for item in selected_items:
@@ -221,9 +217,7 @@ class Ui(QMainWindow):
         self.resetAllButtonsMap()
 
     # Gates
-    def addGate(self):
-        print("Omg let's make a new gate!")
-        
+    def addGate(self):        
         # Change gate button options
         self.save_gate.setHidden(False)
         self.cancel_gate.setHidden(False)
@@ -240,8 +234,6 @@ class Ui(QMainWindow):
         self.browser_map.page().runJavaScript("makeGate();")
     
     def removeGate(self):
-        print("Omg let's remove a gate!")
-
         selected_items = self.gates_list_widget.selectedItems()
         
         for item in selected_items:
@@ -284,16 +276,12 @@ class Ui(QMainWindow):
 
     # No fly
     def addNoFly(self):
-        print("Omg let's make a new no fly zone!")
-
         name = "No fly zone " + str(self.no_fly_list_widget.count())
         self.no_fly_list_widget.addItem(name)
         self.data["no_fly"].append({"name": name})
         self.writeInfData()
 
     def removeNoFly(self):
-        print("Omg let's remove a no fly zone!")
-
         selected_items = self.no_fly_list_widget.selectedItems()
         
         for item in selected_items:

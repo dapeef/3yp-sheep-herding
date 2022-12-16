@@ -53,11 +53,11 @@ function draw(data) {
     // Create new items
     // Walls
     for (let i = 0; i < data["walls"].length; i++) {
-        items["walls"].push(drawLine(data["walls"][i]["points"], "#FF0"));
+        items["walls"].push(drawLine(data["walls"][i]["points"], "#F0F"));
     };
     // Gates
     for (let i = 0; i < data["gates"].length; i++) {
-        items["gates"].push(drawLine(data["gates"][i]["points"], "#FFF"));
+        items["gates"].push(drawLine(data["gates"][i]["points"], "#FF0"));
     };
 };
 

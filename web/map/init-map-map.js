@@ -50,7 +50,7 @@ function initMap() {
                     path: points,
                     editable: true,
                     geodesic: true,
-                    strokeColor: "#FFFFFF",
+                    strokeColor: "#ff96ff",
                     strokeOpacity: 1.0,
                     strokeWeight: 4,
                 });
