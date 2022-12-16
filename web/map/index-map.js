@@ -1,3 +1,22 @@
+function makeWall() {
+    mode = "wall";
+
+    points = [];
+}
+
+function saveWall() {
+    path = line.getPath().getArray();
+    coords = [];
+
+    for (let i = 0; i < path.length; i++) {        
+        coords.push([path[i].lat(), path[i].lng()]);
+    };
+
+    line.setMap(null);
+
+    return coords;
+}
+
 function makeGate() {
     mode = "gate";
 
@@ -8,10 +27,7 @@ function saveGate() {
     mode = null;
 
     // Delete all markers
-    for (let i = 0; i < markers.length; i++) {
-        markers[i].setMap(null);
-    };
-    markers.length = 0;
+    deleteMarkers();
 
     return points;
 }
@@ -35,20 +51,13 @@ function draw(data) {
     items["no_fly"].length = 0;
 
     // Create new items
+    // Walls
+    for (let i = 0; i < data["walls"].length; i++) {
+        items["walls"].push(drawLine(data["walls"][i]["points"], "#FF0"));
+    };
     // Gates
     for (let i = 0; i < data["gates"].length; i++) {
-        items["gates"].push(new google.maps.Polyline({
-            path: arrayToLatLng(data["gates"][i]["points"]),
-            geodesic: true,
-            strokeColor: "#FFFFFF",
-            strokeOpacity: 1.0,
-            strokeWeight: 4,
-        }));
-
-        items["gates"][i].setMap(map)
-
-        //return arrayToLatLng(data["gates"][i]["points"])
-        //return items["gates"][0]
+        items["gates"].push(drawLine(data["gates"][i]["points"], "#FFF"));
     };
 };
 
@@ -61,3 +70,24 @@ function arrayToLatLng(points) {
 
     return latLngs;
 };
+
+function deleteMarkers() {
+    for (let i = 0; i < markers.length; i++) {
+        markers[i].setMap(null);
+    };
+    markers.length = 0;
+}
+
+function drawLine(raw_points, colour) {
+    let drawn_line = new google.maps.Polyline({
+        path: arrayToLatLng(raw_points),
+        geodesic: true,
+        strokeColor: colour,
+        strokeOpacity: 1.0,
+        strokeWeight: 4,
+    });
+
+    drawn_line.setMap(map)
+
+    return drawn_line
+}

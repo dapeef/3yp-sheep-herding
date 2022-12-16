@@ -2,6 +2,7 @@ let map;
 let last_clicked;
 let mode;
 let points = [];
+let line;
 let markers = [];
 let items = {
     "walls": [],
@@ -20,7 +21,7 @@ function initMap() {
     
     google.maps.event.addListener(map, 'click', function (event) {
         if (mode == null) {
-            console.log("NULLLLLL")
+            console.log("NULLLLLL");
         } else if (mode == "gate") {
             markers.push(new google.maps.Marker({
                 position: event.latLng,
@@ -28,6 +29,33 @@ function initMap() {
             }));
 
             points.push([event.latLng.lat(), event.latLng.lng()]);
+
+            if (points.length >= 2) {
+                mode = "gate_max";
+            };
+        } else if (mode == "wall") {
+            markers.push(new google.maps.Marker({
+                position: event.latLng,
+                map: map,
+            }));
+
+            points.push(event.latLng);
+
+            if (points.length >= 2) {
+                mode = "wall_line";
+
+                deleteMarkers()
+
+                line = new google.maps.Polyline({
+                    path: points,
+                    editable: true,
+                    geodesic: true,
+                    strokeColor: "#FFFFFF",
+                    strokeOpacity: 1.0,
+                    strokeWeight: 4,
+                });
+                line.setMap(map);
+            };
         };
     });
 };

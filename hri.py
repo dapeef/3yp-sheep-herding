@@ -50,6 +50,7 @@ class Ui(QMainWindow):
         self.browser_map.loadFinished.connect(self.onLoadFinishedMap) # Once loaded, connect buttons
 
 
+    # On map load
     def onLoadFinishedHome(self):
         print("Home map ready!")
 
@@ -86,12 +87,17 @@ class Ui(QMainWindow):
         self.drawInfrastructure()
 
         # Once map is loaded, connect buttons to functions
+        # Walls
         self.add_wall.clicked.connect(self.addWall)
         self.remove_wall.clicked.connect(self.removeWall)
+        self.save_wall.clicked.connect(self.saveWall)
+        self.cancel_wall.clicked.connect(self.cancelWall)
+        # Gates
         self.add_gate.clicked.connect(self.addGate)
         self.remove_gate.clicked.connect(self.removeGate)
         self.save_gate.clicked.connect(self.saveGate)
         self.cancel_gate.clicked.connect(self.cancelGate)
+        # No fly zones
         self.add_no_fly.clicked.connect(self.addNoFly)
         self.remove_no_fly.clicked.connect(self.removeNoFly)
 
@@ -159,11 +165,21 @@ class Ui(QMainWindow):
     # Walls
     def addWall(self):
         print("Omg let's make a new wall!")
+        
+        # Change wall button options
+        self.save_wall.setHidden(False)
+        self.cancel_wall.setHidden(False)
+        self.add_wall.setHidden(True)
+        self.remove_wall.setHidden(True)
 
-        name = "Wall " + str(self.walls_list_widget.count())
-        self.walls_list_widget.addItem(name)
-        self.data["walls"].append({"name": name})
-        self.writeInfData()
+        # Disable other buttons
+        self.toggleButtonsEnabledMap(False)
+
+        # Change instructions
+        self.instructions_label.setText("Click 2 points to start the wall. When you're finished editing, press Save")
+
+        # Call javascript
+        self.browser_map.page().runJavaScript("makeWall();")
 
     def removeWall(self):
         print("Omg let's remove a wall!")
@@ -175,6 +191,34 @@ class Ui(QMainWindow):
             self.walls_list_widget.takeItem(index)
             self.data["walls"].pop(index)
             self.writeInfData()
+        
+        self.drawInfrastructure()
+
+    def saveWall(self):
+        self.browser_map.page().runJavaScript("saveWall();", self.saveWallCallback)
+
+    def saveWallCallback(self, points):
+        # Revert button states
+        self.resetAllButtonsMap()
+
+        name = "Wall " + str(self.walls_list_widget.count())
+        self.walls_list_widget.addItem(name)
+        self.data["walls"].append({
+            "name": name,
+            "points": points
+        })
+        self.writeInfData()
+        
+        self.instructions_label.setText("Successfully added " + name)
+        
+        # Redraw infrastructure
+        self.drawInfrastructure()
+
+    def cancelWall(self):
+        self.browser_map.page().runJavaScript("saveWall();")
+
+        # Revert button states
+        self.resetAllButtonsMap()
 
     # Gates
     def addGate(self):
@@ -305,6 +349,7 @@ class Ui(QMainWindow):
         if data == None: data = self.data
 
         self.browser_map.page().runJavaScript("draw(" + str(data) + ");")
+
 
 app = QApplication(sys.argv)
 
