@@ -32,43 +32,6 @@ function saveGate() {
     return points;
 }
 
-function drawInfrastructure(data) {
-    // Delete all items
-    // Walls
-    for (let i = 0; i < items["walls"].length; i++) {
-        items["walls"][i].setMap(null);
-    };
-    items["walls"].length = 0;
-    // Gates - lines
-    for (let i = 0; i < items["gates"]["lines"].length; i++) {
-        items["gates"]["lines"][i].setMap(null);
-    };
-    items["gates"]["lines"].length = 0;
-    // Gates - dots
-    for (let i = 0; i < items["gates"]["dots"].length; i++) {
-        items["gates"]["dots"][i].setMap(null);
-    };
-    items["gates"]["dots"].length = 0;
-    // No fly zones
-    for (let i = 0; i < items["no_fly"].length; i++) {
-        items["no_fly"][i].setMap(null);
-    };
-    items["no_fly"].length = 0;
-
-    // Create new items
-    // Walls
-    for (let i = 0; i < data["walls"].length; i++) {
-        items["walls"].push(drawLine(data["walls"][i]["points"], "#F0F"));
-    };
-    // Gates
-    for (let i = 0; i < data["gates"].length; i++) {
-        // Draw line of gate
-        items["gates"]["lines"].push(drawLine(data["gates"][i]["points"], "#FF0"));
-
-        // Draw spots at end of line to mark hinge end
-        items["gates"]["dots"].push(addMarker(data["gates"][i]["points"][0], "#FF0", 4, 1));
-    };
-};
 
 function arrayToLatLng(points) {
     latLngs = [];

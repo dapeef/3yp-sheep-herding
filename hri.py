@@ -347,7 +347,7 @@ class Ui(QMainWindow):
     def drawInfrastructure(self, data=None):
         if data == None: data = self.data
 
-        self.browser_map.page().runJavaScript("draw(" + str(data) + ");")
+        self.browser_map.page().runJavaScript("drawInfrastructure(" + str(data) + ");")
 
 
 app = QApplication(sys.argv)
