@@ -32,7 +32,7 @@ function saveGate() {
     return points;
 }
 
-function draw(data) {
+function drawInfrastructure(data) {
     // Delete all items
     // Walls
     for (let i = 0; i < items["walls"].length; i++) {
@@ -100,21 +100,3 @@ function drawLine(raw_points, colour) {
 
     return drawn_line
 }
-
-function addMarker(lat_long, colour, size, opacity) {
-    let marker = new google.maps.Marker({
-        position: {lat: lat_long[0], lng: lat_long[1]},
-        map: map,
-        icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            fillColor: colour,
-            fillOpacity: opacity,
-            strokeColor: colour,
-            strokeOpacity: 0.9,
-            strokeWeight: 1,
-            scale: size
-        }
-    });
-
-    return marker;
-};
