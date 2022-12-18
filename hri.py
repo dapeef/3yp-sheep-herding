@@ -183,7 +183,7 @@ class Ui(QMainWindow):
 
     # Map edit tab
     # Walls
-    def addWall(self):        
+    def addWall(self):
         # Change wall button options
         self.save_wall.setHidden(False)
         self.cancel_wall.setHidden(False)
@@ -205,11 +205,15 @@ class Ui(QMainWindow):
         
         for item in selected_items:
             index = self.walls_list_widget.row(item)
+            name = self.data["walls"][index]["name"]
             self.walls_list_widget.takeItem(index)
             self.data["walls"].pop(index)
             self.writeInfData()
         
         self.drawInfrastructure()
+
+        # Change instructions
+        self.instructions_label.setText("Successfully removed " + name)
 
     def saveWall(self):
         self.browser_map.page().runJavaScript("saveWall();", self.saveWallCallback)
@@ -238,7 +242,7 @@ class Ui(QMainWindow):
         self.resetAllButtonsMap()
 
     # Gates
-    def addGate(self):        
+    def addGate(self):
         # Change gate button options
         self.save_gate.setHidden(False)
         self.cancel_gate.setHidden(False)
@@ -260,11 +264,15 @@ class Ui(QMainWindow):
         
         for item in selected_items:
             index = self.gates_list_widget.row(item)
+            name = self.data["gates"][index]["name"]
             self.gates_list_widget.takeItem(index)
             self.data["gates"].pop(index)
             self.writeInfData()
         
         self.drawInfrastructure()
+
+        # Change instructions
+        self.instructions_label.setText("Successfully removed " + name)
 
     def saveGate(self):
         self.browser_map.page().runJavaScript("saveGate();", self.saveGateCallback)
@@ -308,9 +316,13 @@ class Ui(QMainWindow):
         
         for item in selected_items:
             index = self.no_fly_list_widget.row(item)
+            name = self.data["no_fly"][index]["name"]
             self.no_fly_list_widget.takeItem(index)
             self.data["no_fly"].pop(index)
             self.writeInfData()
+
+        # Change instructions
+        self.instructions_label.setText("Successfully removed " + name)
 
     # Read and write infrastructure-data.json
     def readInfData(self):
