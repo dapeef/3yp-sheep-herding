@@ -39,11 +39,16 @@ function draw(data) {
         items["walls"][i].setMap(null);
     };
     items["walls"].length = 0;
-    // Gates
-    for (let i = 0; i < items["gates"].length; i++) {
-        items["gates"][i].setMap(null);
+    // Gates - lines
+    for (let i = 0; i < items["gates"]["lines"].length; i++) {
+        items["gates"]["lines"][i].setMap(null);
     };
-    items["gates"].length = 0;
+    items["gates"]["lines"].length = 0;
+    // Gates - dots
+    for (let i = 0; i < items["gates"]["dots"].length; i++) {
+        items["gates"]["dots"][i].setMap(null);
+    };
+    items["gates"]["dots"].length = 0;
     // No fly zones
     for (let i = 0; i < items["no_fly"].length; i++) {
         items["no_fly"][i].setMap(null);
@@ -61,7 +66,7 @@ function draw(data) {
         items["gates"]["lines"].push(drawLine(data["gates"][i]["points"], "#FF0"));
 
         // Draw spots at end of line to mark hinge end
-        items["gates"]["dots"] = addMarker(data["gates"][i]["points"][0], "#FF0", 4, 1)
+        items["gates"]["dots"].push(addMarker(data["gates"][i]["points"][0], "#FF0", 4, 1));
     };
 };
 
