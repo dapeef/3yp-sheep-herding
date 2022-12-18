@@ -6,10 +6,7 @@ let markers = {
 
 function addMarkers(locations, type) {
     // Delete all markers
-    for (let i = 0; i < markers[type].length; i++) {
-        markers[type][i].setMap(null);
-    };
-    markers[type].length = 0;
+    deleteItems(markers[type]);
 
     // Draw new markers
     let colour;

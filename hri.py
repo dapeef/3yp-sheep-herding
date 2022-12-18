@@ -112,6 +112,8 @@ class Ui(QMainWindow):
     def stopAllClick(self):
         print("Mmm, clickeroo")
 
+        self.drawTestHome()
+
     def drawTestHome(self):
         sheep_locations = [
             [51.6255863, -2.5121819],

@@ -21,26 +21,10 @@ function addMarker(lat_long, colour, size, opacity=0.6) {
 // Draw infrastructure - walls, gates, no-fly zones
 function drawInfrastructure(data) {
     // Delete all items
-    // Walls
-    for (let i = 0; i < items["walls"].length; i++) {
-        items["walls"][i].setMap(null);
-    };
-    items["walls"].length = 0;
-    // Gates - lines
-    for (let i = 0; i < items["gates"]["lines"].length; i++) {
-        items["gates"]["lines"][i].setMap(null);
-    };
-    items["gates"]["lines"].length = 0;
-    // Gates - dots
-    for (let i = 0; i < items["gates"]["dots"].length; i++) {
-        items["gates"]["dots"][i].setMap(null);
-    };
-    items["gates"]["dots"].length = 0;
-    // No fly zones
-    for (let i = 0; i < items["no_fly"].length; i++) {
-        items["no_fly"][i].setMap(null);
-    };
-    items["no_fly"].length = 0;
+    deleteItems(items["walls"]);
+    deleteItems(items["gates"]["lines"]);
+    deleteItems(items["gates"]["dots"]);
+    deleteItems(items["no_fly"]);
 
     // Create new items
     // Walls
@@ -49,11 +33,12 @@ function drawInfrastructure(data) {
     };
     // Gates
     for (let i = 0; i < data["gates"].length; i++) {
+        let colour = "#FF0"
         // Draw line of gate
-        items["gates"]["lines"].push(drawLine(data["gates"][i]["points"], "#FF0"));
+        items["gates"]["lines"].push(drawLine(data["gates"][i]["points"], colour));
 
         // Draw spots at end of line to mark hinge end
-        items["gates"]["dots"].push(addMarker(data["gates"][i]["points"][0], "#FF0", 4, 1));
+        items["gates"]["dots"].push(addMarker(data["gates"][i]["points"][0], colour, 4, 1));
     };
 };
 
