@@ -35,17 +35,17 @@ class Ui(QMainWindow):
         # Initiate HTML elements for maps
         # Home
         self.browser_home = QWebEngineView(self.map_box_home)
-        self.browser_home.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\web\home\index-home.html'))
+        self.browser_home.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\web\home-index.html'))
         self.map_layout_home.addWidget(self.browser_home)
         self.browser_home.loadFinished.connect(self.onLoadFinishedHome) # Once loaded, connect buttons
         # Route edit
         self.browser_route = QWebEngineView(self.map_box_route)
-        self.browser_route.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\web\route\index-route.html'))
+        self.browser_route.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\web\route-index.html'))
         self.map_layout_route.addWidget(self.browser_route)
         self.browser_route.loadFinished.connect(self.onLoadFinishedRoute) # Once loaded, connect buttons
         # Map edit
         self.browser_map = QWebEngineView(self.map_box_map)
-        self.browser_map.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\web\map\index-map.html'))
+        self.browser_map.load(QUrl().fromLocalFile(os.path.split(os.path.abspath(__file__))[0] + r'\web\map-index.html'))
         self.map_layout_map.addWidget(self.browser_map)
         self.browser_map.loadFinished.connect(self.onLoadFinishedMap) # Once loaded, connect buttons
 
