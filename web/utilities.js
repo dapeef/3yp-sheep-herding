@@ -56,3 +56,37 @@ function drawInfrastructure(data) {
         items["gates"]["dots"].push(addMarker(data["gates"][i]["points"][0], "#FF0", 4, 1));
     };
 };
+
+// Draw a polyline
+function drawLine(raw_points, colour) {
+    let drawn_line = new google.maps.Polyline({
+        path: arrayToLatLng(raw_points),
+        geodesic: true,
+        strokeColor: colour,
+        strokeOpacity: 1.0,
+        strokeWeight: 4,
+    });
+
+    drawn_line.setMap(map)
+
+    return drawn_line
+}
+
+// Delete all items in an array
+function deleteItems(items) {
+    for (let i = 0; i < items.length; i++) {
+        items[i].setMap(null);
+    };
+    items.length = 0;
+}
+
+// Takes an array of points [x, y] and returns array of points {lat: x, lng: y}
+function arrayToLatLng(points) {
+    latLngs = [];
+
+    for (let i = 0; i < points.length; i++) {
+        latLngs.push({"lat": points[i][0], "lng": points[i][1]});
+    };
+
+    return latLngs;
+};

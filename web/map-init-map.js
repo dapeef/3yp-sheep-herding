@@ -47,7 +47,7 @@ function initMap() {
             if (points.length >= 2) {
                 mode = "wall_line";
 
-                deleteMarkers()
+                deleteItems(markers)
 
                 line = new google.maps.Polyline({
                     path: points,
