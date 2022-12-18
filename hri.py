@@ -104,6 +104,9 @@ class Ui(QMainWindow):
         # Enable all buttons
         self.toggleButtonsEnabledMap(True)
 
+        # Change instruction
+        self.instructions_label.setText("Press a button to begin")
+
 
     # Home tab
     def stopAllClick(self):
@@ -168,6 +171,7 @@ class Ui(QMainWindow):
         self.save_wall.setHidden(False)
         self.cancel_wall.setHidden(False)
         self.add_wall.setHidden(True)
+        self.edit_wall.setHidden(True)
         self.remove_wall.setHidden(True)
 
         # Disable other buttons
@@ -222,6 +226,7 @@ class Ui(QMainWindow):
         self.save_gate.setHidden(False)
         self.cancel_gate.setHidden(False)
         self.add_gate.setHidden(True)
+        self.edit_gate.setHidden(True)
         self.remove_gate.setHidden(True)
 
         # Disable other buttons
@@ -303,10 +308,13 @@ class Ui(QMainWindow):
     # Handle buttons enabled
     def toggleButtonsEnabledMap(self, value):
         self.add_wall.setEnabled(value)
+        self.edit_wall.setEnabled(value)
         self.remove_wall.setEnabled(value)
         self.add_gate.setEnabled(value)
+        self.edit_gate.setEnabled(value)
         self.remove_gate.setEnabled(value)
         self.add_no_fly.setEnabled(value)
+        self.edit_no_fly.setEnabled(value)
         self.remove_no_fly.setEnabled(value)
     
     def resetAllButtonsMap(self):
@@ -314,16 +322,19 @@ class Ui(QMainWindow):
         self.save_wall.setHidden(True)
         self.cancel_wall.setHidden(True)
         self.add_wall.setHidden(False)
+        self.edit_wall.setHidden(False)
         self.remove_wall.setHidden(False)
         # Gate
         self.save_gate.setHidden(True)
         self.cancel_gate.setHidden(True)
         self.add_gate.setHidden(False)
+        self.edit_gate.setHidden(False)
         self.remove_gate.setHidden(False)
         # No fly
         self.save_no_fly.setHidden(True)
         self.cancel_no_fly.setHidden(True)
         self.add_no_fly.setHidden(False)
+        self.edit_no_fly.setHidden(False)
         self.remove_no_fly.setHidden(False)
 
         # Enable other buttons

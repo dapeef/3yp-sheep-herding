@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>997</width>
+    <width>969</width>
     <height>768</height>
    </rect>
   </property>
@@ -562,28 +562,35 @@ FOR MAP]</string>
                 </item>
                 <item>
                  <layout class="QGridLayout" name="gridLayout_4">
-                  <item row="0" column="0">
-                   <widget class="QPushButton" name="add_wall">
+                  <item row="0" column="2" colspan="2">
+                   <widget class="QPushButton" name="edit_wall">
                     <property name="text">
-                     <string>Add wall</string>
+                     <string>Edit wall</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="1">
+                  <item row="0" column="4" colspan="2">
                    <widget class="QPushButton" name="remove_wall">
                     <property name="text">
                      <string>Remove selected</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="0">
+                  <item row="1" column="0" colspan="3">
                    <widget class="QPushButton" name="save_wall">
                     <property name="text">
                      <string>Save</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="1">
+                  <item row="0" column="0" colspan="2">
+                   <widget class="QPushButton" name="add_wall">
+                    <property name="text">
+                     <string>Add wall</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="3" colspan="3">
                    <widget class="QPushButton" name="cancel_wall">
                     <property name="text">
                      <string>Cancel</string>
@@ -613,28 +620,35 @@ FOR MAP]</string>
                 </item>
                 <item>
                  <layout class="QGridLayout" name="gridLayout_3">
-                  <item row="0" column="0">
+                  <item row="0" column="2" colspan="2">
+                   <widget class="QPushButton" name="edit_gate">
+                    <property name="text">
+                     <string>Edit gate</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0" colspan="2">
                    <widget class="QPushButton" name="add_gate">
                     <property name="text">
                      <string>Add gate</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="1">
+                  <item row="0" column="4" colspan="2">
                    <widget class="QPushButton" name="remove_gate">
                     <property name="text">
                      <string>Remove selected</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="0">
+                  <item row="1" column="0" colspan="3">
                    <widget class="QPushButton" name="save_gate">
                     <property name="text">
                      <string>Save</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="1">
+                  <item row="1" column="3" colspan="3">
                    <widget class="QPushButton" name="cancel_gate">
                     <property name="text">
                      <string>Cancel</string>
@@ -664,31 +678,38 @@ FOR MAP]</string>
                 </item>
                 <item>
                  <layout class="QGridLayout" name="gridLayout_5">
-                  <item row="0" column="1">
+                  <item row="0" column="4" colspan="2">
                    <widget class="QPushButton" name="remove_no_fly">
                     <property name="text">
                      <string>Remove selected</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="0">
+                  <item row="0" column="0" colspan="2">
                    <widget class="QPushButton" name="add_no_fly">
                     <property name="text">
-                     <string>Add no fly zone</string>
+                     <string>Add no fly</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="1">
-                   <widget class="QPushButton" name="cancel_no_fly">
+                  <item row="0" column="2" colspan="2">
+                   <widget class="QPushButton" name="edit_no_fly">
                     <property name="text">
-                     <string>Cancel</string>
+                     <string>Edit no fly</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="0">
+                  <item row="1" column="0" colspan="3">
                    <widget class="QPushButton" name="save_no_fly">
                     <property name="text">
                      <string>Save</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="3" colspan="3">
+                   <widget class="QPushButton" name="cancel_no_fly">
+                    <property name="text">
+                     <string>Cancel</string>
                     </property>
                    </widget>
                   </item>
@@ -724,7 +745,7 @@ FOR MAP]</string>
                 <string notr="true">font: 14pt;</string>
                </property>
                <property name="text">
-                <string>Click a button to start</string>
+                <string>Loading map...</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -750,7 +771,7 @@ FOR MAP]</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>997</width>
+     <width>969</width>
      <height>21</height>
     </rect>
    </property>
