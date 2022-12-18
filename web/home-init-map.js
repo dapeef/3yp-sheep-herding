@@ -1,4 +1,12 @@
 let map;
+let items = {
+  "walls": [],
+  "gates": {
+      "lines": [],
+      "dots": []
+  },
+  "no_fly": []
+}
 
 // Initialize and add the map
 function initMap() {

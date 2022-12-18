@@ -14,6 +14,9 @@ class Ui(QMainWindow):
         # Load UI
         uic.loadUi("hri.ui", self)
 
+        # Get data from json file
+        self.data = self.readInfData()
+
         # Remove placeholders
         self.map_placeholder_home.deleteLater()
         self.map_placeholder_route.deleteLater()
@@ -57,6 +60,9 @@ class Ui(QMainWindow):
         # Once map is loaded, connect buttons to functions
         self.stop_all.clicked.connect(self.stopAllClick)
 
+        # Draw infrastructure
+        self.drawInfrastructure()
+
         # Enable all buttons
         self.toggleButtonsEnabledHome(True)
 
@@ -69,14 +75,14 @@ class Ui(QMainWindow):
         # Once map is loaded, connect buttons to functions
         #self.stop_all.clicked.connect(self.buttonClick)
         
+        # Draw infrastructure
+        self.drawInfrastructure()
+
         # Enable all buttons
         self.toggleButtonsEnabledRoute(True)
 
     def onLoadFinishedMap(self):
         print("Map edit map ready!")
-
-        # Get data from json file
-        self.data = self.readInfData()
 
         # Populate lists from data
         for wall in self.data["walls"]: self.walls_list_widget.addItem(wall["name"])
@@ -106,6 +112,15 @@ class Ui(QMainWindow):
 
         # Change instruction
         self.instructions_label.setText("Press a button to begin")
+
+
+    # Draw infrastructure on all maps
+    def drawInfrastructure(self, data=None):
+        if data == None: data = self.data
+
+        self.browser_home.page().runJavaScript("drawInfrastructure(" + str(data) + ");")
+        self.browser_route.page().runJavaScript("drawInfrastructure(" + str(data) + ");")
+        self.browser_map.page().runJavaScript("drawInfrastructure(" + str(data) + ");")
 
 
     # Home tab
@@ -344,12 +359,6 @@ class Ui(QMainWindow):
 
         # Reset instructions
         self.instructions_label.setText("Click a button to start")
-
-    # Render infrastructure
-    def drawInfrastructure(self, data=None):
-        if data == None: data = self.data
-
-        self.browser_map.page().runJavaScript("drawInfrastructure(" + str(data) + ");")
 
 
 app = QApplication(sys.argv)
