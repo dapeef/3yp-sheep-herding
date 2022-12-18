@@ -57,7 +57,11 @@ function draw(data) {
     };
     // Gates
     for (let i = 0; i < data["gates"].length; i++) {
-        items["gates"].push(drawLine(data["gates"][i]["points"], "#FF0"));
+        // Draw line of gate
+        items["gates"]["lines"].push(drawLine(data["gates"][i]["points"], "#FF0"));
+
+        // Draw spots at end of line to mark hinge end
+        items["gates"]["dots"] = addMarker(data["gates"][i]["points"][0], "#FF0", 4, 1)
     };
 };
 
@@ -91,3 +95,21 @@ function drawLine(raw_points, colour) {
 
     return drawn_line
 }
+
+function addMarker(lat_long, colour, size, opacity) {
+    let marker = new google.maps.Marker({
+        position: {lat: lat_long[0], lng: lat_long[1]},
+        map: map,
+        icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            fillColor: colour,
+            fillOpacity: opacity,
+            strokeColor: colour,
+            strokeOpacity: 0.9,
+            strokeWeight: 1,
+            scale: size
+        }
+    });
+
+    return marker;
+};

@@ -6,7 +6,10 @@ let line;
 let markers = [];
 let items = {
     "walls": [],
-    "gates": [],
+    "gates": {
+        "lines": [],
+        "dots": []
+    },
     "no_fly": []
 }
 
@@ -20,9 +23,7 @@ function initMap() {
     });
     
     google.maps.event.addListener(map, 'click', function (event) {
-        if (mode == null) {
-            console.log("NULLLLLL");
-        } else if (mode == "gate") {
+        if (mode == "gate") { // If in gate creation mode
             markers.push(new google.maps.Marker({
                 position: event.latLng,
                 map: map,
@@ -33,14 +34,16 @@ function initMap() {
             if (points.length >= 2) {
                 mode = "gate_max";
             };
-        } else if (mode == "wall") {
+        } else if (mode == "wall") { // If in wall creation mode
+            // Drop 2 markers
             markers.push(new google.maps.Marker({
                 position: event.latLng,
                 map: map,
             }));
 
             points.push(event.latLng);
-
+            
+            // When there are 2 markers, create editable polyline
             if (points.length >= 2) {
                 mode = "wall_line";
 

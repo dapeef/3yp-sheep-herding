@@ -4,9 +4,9 @@ let markers = {
     "monitor_drones": []
 };
 
-function addMarker(lat, long, colour, size) {
+function addMarker(lat_long, colour, size) {
     let marker = new google.maps.Marker({
-        position: {lat: lat, lng: long},
+        position: {lat: lat_long[0], lng: lat_long[1]},
         map: map,
         icon: {
             path: google.maps.SymbolPath.CIRCLE,
@@ -45,7 +45,7 @@ function addMarkers(locations, type) {
     };
     // Draw markers
     for (let i = 0; i < locations.length; i++) {
-        markers[type].push(addMarker(locations[i][0], locations[i][1], colour, size));
+        markers[type].push(addMarker(locations[i], colour, size));
     };
 }
 
