@@ -107,6 +107,11 @@ class Ui(QMainWindow):
         self.add_no_fly.clicked.connect(self.addNoFly)
         self.remove_no_fly.clicked.connect(self.removeNoFly)
 
+        # Connect on-change for list widgets
+        self.walls_list_widget.currentItemChanged.connect(self.selectWall)
+        self.gates_list_widget.itemSelectionChanged.connect(self.selectGate)
+        self.no_fly_list_widget.itemSelectionChanged.connect(self.selectNoFly)
+
         # Enable all buttons
         self.toggleButtonsEnabledMap(True)
 
