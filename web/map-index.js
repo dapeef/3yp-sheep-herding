@@ -17,6 +17,15 @@ function saveWall() {
     return coords;
 }
 
+function cancelWall() {
+    if (mode == "wall_line") {
+        line.setMap(null);
+    } else {
+        deleteItems(markers);
+    }
+}
+
+
 function makeGate() {
     mode = "gate";
 

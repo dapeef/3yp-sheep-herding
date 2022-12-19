@@ -236,7 +236,7 @@ class Ui(QMainWindow):
         self.drawInfrastructure()
 
     def cancelWall(self):
-        self.browser_map.page().runJavaScript("saveWall();")
+        self.browser_map.page().runJavaScript("cancelWall();")
 
         # Revert button states
         self.resetAllButtonsMap()
