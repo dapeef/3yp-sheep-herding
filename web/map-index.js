@@ -31,7 +31,7 @@ function selectWall(points) {
         deleteItems(selected_wall);
     } catch (e) {}
 
-    selected_wall.push(drawLine(points, "#0F0", 8));
+    selected_wall.push(drawLine(points, "#0F0", 10));
     selected_wall.push(drawLine(points, "#F0F", 4));
 }
 
@@ -64,8 +64,10 @@ function selectGate(points) {
         deleteItems(selected_gate);
     } catch (e) {}
 
-    selected_gate.push(drawLine(points, "#0F0", 8));
-    selected_gate.push(drawLine(points, "#F0F", 4));
+    selected_gate.push(drawLine(points, "#000", 10));
+    selected_gate.push(addMarker(points[0], "#000", 8, 1));
+    selected_gate.push(drawLine(points, "#FF0", 4));
+    selected_gate.push(addMarker(points[0], "#FF0", 4, 1));
 }
 
 function deselectGate() {

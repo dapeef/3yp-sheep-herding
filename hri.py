@@ -112,8 +112,8 @@ class Ui(QMainWindow):
 
         # Connect on-change for list widgets
         self.walls_list_widget.currentItemChanged.connect(self.selectWall)
-        self.gates_list_widget.itemSelectionChanged.connect(self.selectGate)
-        self.no_fly_list_widget.itemSelectionChanged.connect(self.selectNoFly)
+        self.gates_list_widget.currentItemChanged.connect(self.selectGate)
+        self.no_fly_list_widget.currentItemChanged.connect(self.selectNoFly)
 
         # Enable all buttons
         self.toggleButtonsEnabledMap(True)
@@ -338,8 +338,10 @@ class Ui(QMainWindow):
         # Revert button states
         self.resetAllButtonsMap()
 
-    def selectGate(self):
-        print("Gate selected")
+    def selectGate(self, item):
+        index = self.gates_list_widget.row(item)
+
+        self.browser_map.page().runJavaScript("selectGate(" + str(self.data["gates"][index]["points"]) + ");")
 
     def gateKeyPress(self, event):
         key = event.key()
@@ -382,7 +384,7 @@ class Ui(QMainWindow):
         # Change instructions
         self.instructions_label.setText("Successfully removed " + name)
 
-    def selectNoFly(self):
+    def selectNoFly(self, item):
         print("No fly zone selected")
 
     def noFlyKeyPress(self, event):
@@ -458,8 +460,6 @@ class Ui(QMainWindow):
         try:
             item = widget.selectedItems()[0]
             row = widget.row(item)
-
-            print(widget.selectedItems())
 
             row = min(max(0, row + row_diff), widget.count()-1)
 
