@@ -241,6 +241,11 @@ class Ui(QMainWindow):
         # Revert button states
         self.resetAllButtonsMap()
 
+    def selectWall(self, item):
+        index = self.walls_list_widget.row(item)
+
+        self.browser_map.page().runJavaScript("selectWall(" + str(self.data["walls"][index]["points"]) + ");")
+
     # Gates
     def addGate(self):
         # Change gate button options
@@ -304,6 +309,9 @@ class Ui(QMainWindow):
         # Revert button states
         self.resetAllButtonsMap()
 
+    def selectGate(self):
+        print("Gate selected")
+
     # No fly
     def addNoFly(self):
         name = "No fly zone " + str(self.no_fly_list_widget.count())
@@ -323,6 +331,9 @@ class Ui(QMainWindow):
 
         # Change instructions
         self.instructions_label.setText("Successfully removed " + name)
+
+    def selectNoFly(self):
+        print("No fly zone selected")
 
     # Read and write infrastructure-data.json
     def readInfData(self):

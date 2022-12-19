@@ -12,6 +12,7 @@ let items = {
     },
     "no_fly": []
 }
+let selected_line = [];
 
 // Initialize and add the map
 function initMap() {

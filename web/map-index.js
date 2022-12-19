@@ -25,6 +25,15 @@ function cancelWall() {
     }
 }
 
+function selectWall(points) {
+    try {
+        deleteItems(selected_line);
+    } catch (e) {}
+
+    selected_line.push(drawLine(points, "#0F0", 8));
+    selected_line.push(drawLine(points, "#F0F", 4));
+}
+
 
 function makeGate() {
     mode = "gate";

@@ -558,6 +558,12 @@ FOR MAP]</string>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="cursor" stdset="0">
+                   <cursorShape>PointingHandCursor</cursorShape>
+                  </property>
+                  <property name="frameShadow">
+                   <enum>QFrame::Sunken</enum>
+                  </property>
                  </widget>
                 </item>
                 <item>
@@ -616,6 +622,9 @@ FOR MAP]</string>
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="cursor" stdset="0">
+                   <cursorShape>PointingHandCursor</cursorShape>
+                  </property>
                  </widget>
                 </item>
                 <item>
@@ -673,6 +682,9 @@ FOR MAP]</string>
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="cursor" stdset="0">
+                   <cursorShape>PointingHandCursor</cursorShape>
                   </property>
                  </widget>
                 </item>

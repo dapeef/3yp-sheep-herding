@@ -43,13 +43,13 @@ function drawInfrastructure(data) {
 };
 
 // Draw a polyline
-function drawLine(raw_points, colour) {
+function drawLine(raw_points, colour, thickness=4) {
     let drawn_line = new google.maps.Polyline({
         path: arrayToLatLng(raw_points),
         geodesic: true,
         strokeColor: colour,
         strokeOpacity: 1.0,
-        strokeWeight: 4,
+        strokeWeight: thickness,
     });
 
     drawn_line.setMap(map)
