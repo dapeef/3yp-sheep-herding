@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtCore import QUrl
+from PyQt5.QtCore import QUrl, Qt
 import sys
 import os
 import json
@@ -92,18 +92,21 @@ class Ui(QMainWindow):
         # Draw infrastructure
         self.drawInfrastructure()
 
-        # Once map is loaded, connect buttons to functions
+        # Connect buttons to functions
         # Walls
+        self.walls_list_widget.keyPressEvent = self.wallKeyPress
         self.add_wall.clicked.connect(self.addWall)
         self.remove_wall.clicked.connect(self.removeWall)
         self.save_wall.clicked.connect(self.saveWall)
         self.cancel_wall.clicked.connect(self.cancelWall)
         # Gates
+        self.gates_list_widget.keyPressEvent = self.gateKeyPress
         self.add_gate.clicked.connect(self.addGate)
         self.remove_gate.clicked.connect(self.removeGate)
         self.save_gate.clicked.connect(self.saveGate)
         self.cancel_gate.clicked.connect(self.cancelGate)
         # No fly zones
+        self.no_fly_list_widget.keyPressEvent = self.noFlyKeyPress
         self.add_no_fly.clicked.connect(self.addNoFly)
         self.remove_no_fly.clicked.connect(self.removeNoFly)
 
@@ -251,6 +254,27 @@ class Ui(QMainWindow):
 
         self.browser_map.page().runJavaScript("selectWall(" + str(self.data["walls"][index]["points"]) + ");")
 
+    def wallKeyPress(self, event):
+        key = event.key()
+
+        if key in [Qt.Key_Delete, Qt.Key_Backspace]:
+            self.removeWall()
+        
+            self.walls_list_widget.clearSelection()
+
+            self.browser_map.page().runJavaScript("deselectWall()")
+
+        elif key == Qt.Key_Escape:
+            self.walls_list_widget.clearSelection()
+
+            self.browser_map.page().runJavaScript("deselectWall()")
+
+        elif key == Qt.Key_Up:
+            self.moveInListWidget(self.walls_list_widget, -1)
+
+        elif key == Qt.Key_Down:
+            self.moveInListWidget(self.walls_list_widget, +1)
+
     # Gates
     def addGate(self):
         # Change gate button options
@@ -317,6 +341,27 @@ class Ui(QMainWindow):
     def selectGate(self):
         print("Gate selected")
 
+    def gateKeyPress(self, event):
+        key = event.key()
+
+        if key in [Qt.Key_Delete, Qt.Key_Backspace]:
+            self.removeGate()
+        
+            self.gates_list_widget.clearSelection()
+
+            self.browser_map.page().runJavaScript("deselectGate()")
+
+        elif key == Qt.Key_Escape:
+            self.gates_list_widget.clearSelection()
+
+            self.browser_map.page().runJavaScript("deselectGate()")
+
+        elif key == Qt.Key_Up:
+            self.moveInListWidget(self.gates_list_widget, -1)
+
+        elif key == Qt.Key_Down:
+            self.moveInListWidget(self.gates_list_widget, +1)
+
     # No fly
     def addNoFly(self):
         name = "No fly zone " + str(self.no_fly_list_widget.count())
@@ -339,6 +384,27 @@ class Ui(QMainWindow):
 
     def selectNoFly(self):
         print("No fly zone selected")
+
+    def noFlyKeyPress(self, event):
+        key = event.key()
+
+        if key in [Qt.Key_Delete, Qt.Key_Backspace]:
+            self.removeNoFly()
+        
+            self.no_fly_list_widget.clearSelection()
+
+            self.browser_map.page().runJavaScript("deselectNoFly()")
+
+        elif key == Qt.Key_Escape:
+            self.no_fly_list_widget.clearSelection()
+
+            self.browser_map.page().runJavaScript("deselectNoFly()")
+
+        elif key == Qt.Key_Up:
+            self.moveInListWidget(self.no_fly_list_widget, -1)
+
+        elif key == Qt.Key_Down:
+            self.moveInListWidget(self.no_fly_list_widget, +1)
 
     # Read and write infrastructure-data.json
     def readInfData(self):
@@ -388,6 +454,19 @@ class Ui(QMainWindow):
         # Reset instructions
         self.instructions_label.setText("Click a button to start")
 
+    def moveInListWidget(self, widget, row_diff):
+        try:
+            item = widget.selectedItems()[0]
+            row = widget.row(item)
+
+            print(widget.selectedItems())
+
+            row = min(max(0, row + row_diff), widget.count()-1)
+
+            widget.setCurrentRow(row)
+
+        except IndexError:
+            pass
 
 app = QApplication(sys.argv)
 

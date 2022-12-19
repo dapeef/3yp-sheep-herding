@@ -12,7 +12,9 @@ let items = {
     },
     "no_fly": []
 }
-let selected_line = [];
+let selected_wall = [];
+let selected_gate = [];
+let selected_no_fly = [];
 
 // Initialize and add the map
 function initMap() {
