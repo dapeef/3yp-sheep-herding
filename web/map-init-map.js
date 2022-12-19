@@ -30,9 +30,8 @@ function initMap() {
             markers.push(new google.maps.Marker({
                 position: event.latLng,
                 map: map,
+                draggable: true
             }));
-
-            points.push([event.latLng.lat(), event.latLng.lng()]);
 
             if (points.length >= 2) {
                 mode = "gate_max";

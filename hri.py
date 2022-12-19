@@ -288,7 +288,7 @@ class Ui(QMainWindow):
         self.toggleButtonsEnabledMap(False)
 
         # Change instructions
-        self.instructions_label.setText("Click 2 points on either side of the gate, starting with the hinge end, then press Save")
+        self.instructions_label.setText("Click 2 points on either side of the gate, starting with the hinge end. These markers are draggable. When finished, press Save.")
 
         # Call javascript
         self.browser_map.page().runJavaScript("makeGate();")

@@ -53,7 +53,14 @@ function makeGate() {
 function saveGate() {
     mode = null;
 
-    // Delete all markers
+    points = [];
+
+    for (let i = 0; i < markers.length; i++) {
+        let pos = markers[i].getPosition();
+
+        points.push([pos.lat(), pos.lng()])
+    }
+
     deleteItems(markers);
 
     return points;
@@ -65,7 +72,7 @@ function selectGate(points) {
     } catch (e) {}
 
     selected_gate.push(drawLine(points, "#000", 10));
-    selected_gate.push(addMarker(points[0], "#000", 8, 1));
+    selected_gate.push(addMarker(points[0], "#000", 7, 1));
     selected_gate.push(drawLine(points, "#FF0", 4));
     selected_gate.push(addMarker(points[0], "#FF0", 4, 1));
 }
