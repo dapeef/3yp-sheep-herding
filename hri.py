@@ -240,10 +240,9 @@ class Ui(QMainWindow):
             self.browser_map.page().runJavaScript("editWall(" + str(index) + ");")
 
     def removeWall(self):
-        selected_items = self.walls_list_widget.selectedItems()
+        index = self.getSelectedIndex(self.walls_list_widget)
         
-        if len(selected_items) == 1:
-            index = self.walls_list_widget.row(selected_items[0])
+        if index != None:
             name = self.data["walls"][index]["name"]
             self.walls_list_widget.takeItem(index)
             self.data["walls"].pop(index)
@@ -256,8 +255,7 @@ class Ui(QMainWindow):
 
     def saveWall(self):
         if self.mode == "edit_wall":
-            selected_item = self.walls_list_widget.selectedItems()[0]
-            index = self.walls_list_widget.row(selected_item)
+            index = self.getSelectedIndex(self.walls_list_widget)
 
             self.browser_map.page().runJavaScript("saveWall(" + str(index) + ");", self.saveWallCallback)
 
@@ -381,10 +379,9 @@ class Ui(QMainWindow):
             self.browser_map.page().runJavaScript("editGate(" + str(index) + ");")
     
     def removeGate(self):
-        selected_items = self.gates_list_widget.selectedItems()
+        index = self.getSelectedIndex(self.gates_list_widget)
         
-        for item in selected_items:
-            index = self.gates_list_widget.row(item)
+        if index != None:
             name = self.data["gates"][index]["name"]
             self.gates_list_widget.takeItem(index)
             self.data["gates"].pop(index)
@@ -489,10 +486,9 @@ class Ui(QMainWindow):
         self.writeInfData()
 
     def removeNoFly(self):
-        selected_items = self.no_fly_list_widget.selectedItems()
+        index = self.getSelectedIndex(self.no_fly_list_widget)
         
-        for item in selected_items:
-            index = self.no_fly_list_widget.row(item)
+        if index != None:
             name = self.data["no_fly"][index]["name"]
             self.no_fly_list_widget.takeItem(index)
             self.data["no_fly"].pop(index)
@@ -606,16 +602,12 @@ class Ui(QMainWindow):
         self.toggleButtonsEnabledMap(True)
 
     def moveInListWidget(self, widget, row_diff):
-        try:
-            item = widget.selectedItems()[0]
-            row = widget.row(item)
+        row = self.getSelectedIndex(widget)
 
-            row = min(max(0, row + row_diff), widget.count()-1)
+        if row != None:
+            new_row = min(max(0, row + row_diff), widget.count()-1)
 
-            widget.setCurrentRow(row)
-
-        except IndexError:
-            pass
+            widget.setCurrentRow(new_row)
 
     def getSelectedIndex(self, list_widget):
         selected_items = list_widget.selectedItems()
