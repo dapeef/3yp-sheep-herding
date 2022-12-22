@@ -96,18 +96,21 @@ class Ui(QMainWindow):
         # Walls
         self.walls_list_widget.keyPressEvent = self.wallKeyPress
         self.add_wall.clicked.connect(self.addWall)
+        self.edit_wall.clicked.connect(self.editWall)
         self.remove_wall.clicked.connect(self.removeWall)
         self.save_wall.clicked.connect(self.saveWall)
         self.cancel_wall.clicked.connect(self.cancelWall)
         # Gates
         self.gates_list_widget.keyPressEvent = self.gateKeyPress
         self.add_gate.clicked.connect(self.addGate)
+        self.edit_gate.clicked.connect(self.editGate)
         self.remove_gate.clicked.connect(self.removeGate)
         self.save_gate.clicked.connect(self.saveGate)
         self.cancel_gate.clicked.connect(self.cancelGate)
         # No fly zones
         self.no_fly_list_widget.keyPressEvent = self.noFlyKeyPress
         self.add_no_fly.clicked.connect(self.addNoFly)
+        self.edit_no_fly.clicked.connect(self.editNoFly)
         self.remove_no_fly.clicked.connect(self.removeNoFly)
 
         # Connect on-change for list widgets
@@ -116,10 +119,14 @@ class Ui(QMainWindow):
         self.no_fly_list_widget.currentItemChanged.connect(self.selectNoFly)
 
         # Enable all buttons
-        self.toggleButtonsEnabledMap(True)
+        #self.toggleButtonsEnabledMap(True)
+        self.resetAllButtonsMap()
 
         # Change instruction
         self.instructions_label.setText("Press a button to begin")
+
+        # Mode
+        self.mode = None
 
 
     # Draw infrastructure on all maps
@@ -207,38 +214,79 @@ class Ui(QMainWindow):
 
         # Call javascript
         self.browser_map.page().runJavaScript("makeWall();")
+        
+    def editWall(self):
+        # Get selected index
+        index = self.getSelectedIndex(self.walls_list_widget)
+
+        # If something is selected
+        if index != None:
+            self.mode = "edit_wall"
+
+            # Change wall button options
+            self.walls_list_widget.setEnabled(False)
+            self.save_wall.setHidden(False)
+            self.cancel_wall.setHidden(False)
+            self.add_wall.setHidden(True)
+            self.edit_wall.setHidden(True)
+            self.remove_wall.setHidden(True)
+
+            # Disable other buttons
+            self.toggleButtonsEnabledMap(False)
+
+            # Change instructions
+            self.instructions_label.setText("Drag the markers to edit. When you're finished editing, press Save")
+
+            # Call javascript
+            self.browser_map.page().runJavaScript("editWall(" + str(index) + ");")
 
     def removeWall(self):
         selected_items = self.walls_list_widget.selectedItems()
         
-        for item in selected_items:
-            index = self.walls_list_widget.row(item)
+        if len(selected_items) == 1:
+            index = self.walls_list_widget.row(selected_items[0])
             name = self.data["walls"][index]["name"]
             self.walls_list_widget.takeItem(index)
             self.data["walls"].pop(index)
             self.writeInfData()
         
-        self.drawInfrastructure()
+            self.drawInfrastructure()
 
-        # Change instructions
-        self.instructions_label.setText("Successfully removed " + name)
+            # Change instructions
+            self.instructions_label.setText("Successfully removed " + name)
 
     def saveWall(self):
-        self.browser_map.page().runJavaScript("saveWall();", self.saveWallCallback)
+        if self.mode == "edit_wall":
+            selected_item = self.walls_list_widget.selectedItems()[0]
+            index = self.walls_list_widget.row(selected_item)
+
+            self.browser_map.page().runJavaScript("saveWall(" + str(index) + ");", self.saveWallCallback)
+
+        else:
+            self.browser_map.page().runJavaScript("saveWall();", self.saveWallCallback)
 
     def saveWallCallback(self, points):
+        if self.mode == "edit_wall":
+            index = self.getSelectedIndex(self.walls_list_widget)
+
+            self.data["walls"][index]["points"] = points
+            
+            self.instructions_label.setText("Successfully edited " + self.data["walls"][index]["name"])
+
+        else:
+            name = "Wall " + str(self.walls_list_widget.count())
+            self.walls_list_widget.addItem(name)
+            self.data["walls"].append({
+                "name": name,
+                "points": points
+            })
+            
+            self.instructions_label.setText("Successfully added " + name)
+
+        self.writeInfData()
+
         # Revert button states
         self.resetAllButtonsMap()
-
-        name = "Wall " + str(self.walls_list_widget.count())
-        self.walls_list_widget.addItem(name)
-        self.data["walls"].append({
-            "name": name,
-            "points": points
-        })
-        self.writeInfData()
-        
-        self.instructions_label.setText("Successfully added " + name)
         
         # Redraw infrastructure
         self.drawInfrastructure()
@@ -249,10 +297,23 @@ class Ui(QMainWindow):
         # Revert button states
         self.resetAllButtonsMap()
 
+        self.drawInfrastructure()
+
     def selectWall(self, item):
+        self.edit_wall.setEnabled(True)
+        self.remove_wall.setEnabled(True)
+
         index = self.walls_list_widget.row(item)
 
         self.browser_map.page().runJavaScript("selectWall(" + str(self.data["walls"][index]["points"]) + ");")
+
+    def deselectWall(self):
+        self.walls_list_widget.clearSelection()
+            
+        self.edit_wall.setEnabled(False)
+        self.remove_wall.setEnabled(False)
+
+        self.browser_map.page().runJavaScript("deselectWall()")
 
     def wallKeyPress(self, event):
         key = event.key()
@@ -260,14 +321,10 @@ class Ui(QMainWindow):
         if key in [Qt.Key_Delete, Qt.Key_Backspace]:
             self.removeWall()
         
-            self.walls_list_widget.clearSelection()
-
-            self.browser_map.page().runJavaScript("deselectWall()")
+            self.deselectWall()
 
         elif key == Qt.Key_Escape:
-            self.walls_list_widget.clearSelection()
-
-            self.browser_map.page().runJavaScript("deselectWall()")
+            self.deselectWall()
 
         elif key == Qt.Key_Up:
             self.moveInListWidget(self.walls_list_widget, -1)
@@ -277,6 +334,23 @@ class Ui(QMainWindow):
 
     # Gates
     def addGate(self):
+        # Change gate button options
+        self.save_gate.setHidden(False)
+        self.cancel_gate.setHidden(False)
+        self.add_gate.setHidden(True)
+        self.edit_gate.setHidden(True)
+        self.remove_gate.setHidden(True)
+
+        # Disable other buttons
+        self.toggleButtonsEnabledMap(False)
+
+        # Change instructions
+        self.instructions_label.setText("Click 2 points on either side of the gate, starting with the hinge end. These markers are draggable. When finished, press Save.")
+
+        # Call javascript
+        self.browser_map.page().runJavaScript("makeGate();")
+
+    def editGate(self):
         # Change gate button options
         self.save_gate.setHidden(False)
         self.cancel_gate.setHidden(False)
@@ -338,10 +412,23 @@ class Ui(QMainWindow):
         # Revert button states
         self.resetAllButtonsMap()
 
+        self.drawInfrastructure()
+
     def selectGate(self, item):
+        self.edit_gate.setEnabled(True)
+        self.remove_gate.setEnabled(True)
+
         index = self.gates_list_widget.row(item)
 
         self.browser_map.page().runJavaScript("selectGate(" + str(self.data["gates"][index]["points"]) + ");")
+
+    def deselectGate(self):
+        self.gates_list_widget.clearSelection()
+            
+        self.edit_gate.setEnabled(False)
+        self.remove_gate.setEnabled(False)
+
+        self.browser_map.page().runJavaScript("deselectGate()")
 
     def gateKeyPress(self, event):
         key = event.key()
@@ -349,14 +436,10 @@ class Ui(QMainWindow):
         if key in [Qt.Key_Delete, Qt.Key_Backspace]:
             self.removeGate()
         
-            self.gates_list_widget.clearSelection()
-
-            self.browser_map.page().runJavaScript("deselectGate()")
+            self.deselectGate()
 
         elif key == Qt.Key_Escape:
-            self.gates_list_widget.clearSelection()
-
-            self.browser_map.page().runJavaScript("deselectGate()")
+            self.deselectGate()
 
         elif key == Qt.Key_Up:
             self.moveInListWidget(self.gates_list_widget, -1)
@@ -366,6 +449,12 @@ class Ui(QMainWindow):
 
     # No fly
     def addNoFly(self):
+        name = "No fly zone " + str(self.no_fly_list_widget.count())
+        self.no_fly_list_widget.addItem(name)
+        self.data["no_fly"].append({"name": name})
+        self.writeInfData()
+        
+    def editNoFly(self):
         name = "No fly zone " + str(self.no_fly_list_widget.count())
         self.no_fly_list_widget.addItem(name)
         self.data["no_fly"].append({"name": name})
@@ -385,7 +474,18 @@ class Ui(QMainWindow):
         self.instructions_label.setText("Successfully removed " + name)
 
     def selectNoFly(self, item):
+        self.edit_no_fly.setEnabled(True)
+        self.remove_no_fly.setEnabled(True)
+
         print("No fly zone selected")
+
+    def deselectNoFly(self):
+        self.no_fly_list_widget.clearSelection()
+            
+        self.edit_no_fly.setEnabled(False)
+        self.remove_no_fly.setEnabled(False)
+
+        self.browser_map.page().runJavaScript("deselectNoFly()")
 
     def noFlyKeyPress(self, event):
         key = event.key()
@@ -393,14 +493,10 @@ class Ui(QMainWindow):
         if key in [Qt.Key_Delete, Qt.Key_Backspace]:
             self.removeNoFly()
         
-            self.no_fly_list_widget.clearSelection()
-
-            self.browser_map.page().runJavaScript("deselectNoFly()")
+            self.deselectNoFly()
 
         elif key == Qt.Key_Escape:
-            self.no_fly_list_widget.clearSelection()
-
-            self.browser_map.page().runJavaScript("deselectNoFly()")
+            self.deselectNoFly()
 
         elif key == Qt.Key_Up:
             self.moveInListWidget(self.no_fly_list_widget, -1)
@@ -420,30 +516,58 @@ class Ui(QMainWindow):
     
     # Handle buttons enabled
     def toggleButtonsEnabledMap(self, value):
+        # Walls
         self.add_wall.setEnabled(value)
-        self.edit_wall.setEnabled(value)
-        self.remove_wall.setEnabled(value)
+        if self.getSelectedIndex(self.walls_list_widget) == None:
+            self.edit_wall.setEnabled(False)
+            self.remove_wall.setEnabled(False)
+        else:
+            self.edit_wall.setEnabled(True)
+            self.remove_wall.setEnabled(True)
+        # self.edit_wall.setEnabled(value)
+        # self.remove_wall.setEnabled(value)
+
+        # Gates
         self.add_gate.setEnabled(value)
-        self.edit_gate.setEnabled(value)
-        self.remove_gate.setEnabled(value)
+        if self.getSelectedIndex(self.gates_list_widget) == None:
+            self.edit_gate.setEnabled(False)
+            self.remove_gate.setEnabled(False)
+        else:
+            self.edit_gate.setEnabled(True)
+            self.remove_gate.setEnabled(True)
+        # self.edit_gate.setEnabled(value)
+        # self.remove_gate.setEnabled(value)
+
+        # No fly
         self.add_no_fly.setEnabled(value)
-        self.edit_no_fly.setEnabled(value)
-        self.remove_no_fly.setEnabled(value)
+        if self.getSelectedIndex(self.no_fly_list_widget) == None:
+            self.edit_no_fly.setEnabled(False)
+            self.remove_no_fly.setEnabled(False)
+        else:
+            self.edit_no_fly.setEnabled(True)
+            self.remove_no_fly.setEnabled(True)
+        # self.edit_no_fly.setEnabled(value)
+        # self.remove_no_fly.setEnabled(value)
     
     def resetAllButtonsMap(self):
+        self.mode = None
+
         # Wall
+        self.walls_list_widget.setEnabled(True)
         self.save_wall.setHidden(True)
         self.cancel_wall.setHidden(True)
         self.add_wall.setHidden(False)
         self.edit_wall.setHidden(False)
         self.remove_wall.setHidden(False)
         # Gate
+        self.gates_list_widget.setEnabled(True)
         self.save_gate.setHidden(True)
         self.cancel_gate.setHidden(True)
         self.add_gate.setHidden(False)
         self.edit_gate.setHidden(False)
         self.remove_gate.setHidden(False)
         # No fly
+        self.no_fly_list_widget.setEnabled(True)
         self.save_no_fly.setHidden(True)
         self.cancel_no_fly.setHidden(True)
         self.add_no_fly.setHidden(False)
@@ -467,6 +591,16 @@ class Ui(QMainWindow):
 
         except IndexError:
             pass
+
+    def getSelectedIndex(self, list_widget):
+        selected_items = list_widget.selectedItems()
+
+        if len(selected_items) == 1:
+            return self.walls_list_widget.row(selected_items[0])
+        
+        else:
+            return None
+
 
 app = QApplication(sys.argv)
 

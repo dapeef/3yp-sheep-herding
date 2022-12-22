@@ -5,15 +5,32 @@ function makeWall() {
     points = [];
 }
 
-function saveWall() {
-    path = line.getPath().getArray();
+function editWall(index) {
+    mode = "wall_edit";
+
+    deselectWall();
+
+    items["walls"][index].setOptions({
+        editable: true,
+        strokeColor: "#ff96ff",
+    });
+}
+
+function saveWall(index=null) {
+    if (index == null) {
+        item = line;
+
+        line.setMap(null);
+    } else {
+        item = items["walls"][index];
+    };
+
+    path = item.getPath().getArray();
     coords = [];
 
     for (let i = 0; i < path.length; i++) {        
         coords.push([path[i].lat(), path[i].lng()]);
     };
-
-    line.setMap(null);
 
     return coords;
 }
@@ -49,6 +66,12 @@ function makeGate() {
 
     points = [];
 };
+
+function editGate(index) {
+    mode = "gate_max"
+
+
+}
 
 function saveGate() {
     mode = null;
