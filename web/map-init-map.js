@@ -26,17 +26,7 @@ function initMap() {
     });
     
     google.maps.event.addListener(map, 'click', function (event) {
-        if (mode == "gate") { // If in gate creation mode
-            markers.push(new google.maps.Marker({
-                position: event.latLng,
-                map: map,
-                draggable: true
-            }));
-
-            if (points.length >= 2) {
-                mode = "gate_max";
-            };
-        } else if (mode == "wall") { // If in wall creation mode
+        if (mode == "wall") { // If in wall creation mode
             // Drop 2 markers
             markers.push(new google.maps.Marker({
                 position: event.latLng,
@@ -60,6 +50,16 @@ function initMap() {
                     strokeWeight: 4,
                 });
                 line.setMap(map);
+            };
+        } else if (mode == "gate") { // If in gate creation mode
+            markers.push(new google.maps.Marker({
+                position: event.latLng,
+                map: map,
+                draggable: true
+            }));
+
+            if (points.length >= 2) {
+                mode = "gate_max";
             };
         };
     });

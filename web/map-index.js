@@ -68,9 +68,27 @@ function makeGate() {
 };
 
 function editGate(index) {
-    mode = "gate_max"
+    mode = "gate_edit";
 
+    deselectGate();
 
+    line_item = items["gates"]["lines"][index];
+    dot_item = items["gates"]["dots"][index];
+
+    path = line_item.getPath().getArray();
+
+    markers.push(addMarker(path[0]));
+    markers.push(addMarker(path[1]));
+
+    // line_item.binder = new MVCArrayBinder(line_item.getPath());
+    // line_item.binder = new MVCArrayBinder(line_item.getPath());
+    // dot_item.binder = new MVCArrayBinder(dot_item.getPath());
+
+    // markers[0].bindTo('position', line_item.binder, (0).toString());
+    // markers[1].bindTo('position', line_item.binder, (1).toString());
+
+    line_item.setMap(null);
+    dot_item.setMap(null);
 }
 
 function saveGate() {
@@ -89,15 +107,19 @@ function saveGate() {
     return points;
 }
 
+function cancelGate() {
+    deleteItems(markers);
+}
+
 function selectGate(points) {
     try {
         deleteItems(selected_gate);
     } catch (e) {}
 
     selected_gate.push(drawLine(points, "#000", 10));
-    selected_gate.push(addMarker(points[0], "#000", 7, 1));
+    selected_gate.push(addDot(points[0], "#000", 7, 1));
     selected_gate.push(drawLine(points, "#FF0", 4));
-    selected_gate.push(addMarker(points[0], "#FF0", 4, 1));
+    selected_gate.push(addDot(points[0], "#FF0", 4, 1));
 }
 
 function deselectGate() {
@@ -105,3 +127,25 @@ function deselectGate() {
         deleteItems(selected_gate);
     } catch (e) {}
 }
+
+
+
+// Function to handle binding polyline to marker
+// function MVCArrayBinder(mvcArray) {
+//     this.array_ = mvcArray;
+// }
+// MVCArrayBinder.prototype = new google.maps.MVCObject();
+// MVCArrayBinder.prototype.get = function (key) {
+//     if (!isNaN(parseInt(key))) {
+//         return this.array_.getAt(parseInt(key));
+//     } else {
+//         this.array_.get(key);
+//     }
+// }
+// MVCArrayBinder.prototype.set = function (key, val) {
+//     if (!isNaN(parseInt(key))) {
+//         this.array_.setAt(parseInt(key), val);
+//     } else {
+//         this.array_.set(key, val);
+//     }
+// }

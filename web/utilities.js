@@ -1,6 +1,6 @@
 // Create circular marker or "dot"
-function addMarker(lat_long, colour, size, opacity=0.6) {
-    let marker = new google.maps.Marker({
+function addDot(lat_long, colour, size, opacity=0.6) {
+    let dot = new google.maps.Marker({
         position: {lat: lat_long[0], lng: lat_long[1]},
         map: map,
         icon: {
@@ -14,9 +14,19 @@ function addMarker(lat_long, colour, size, opacity=0.6) {
         }
     });
 
-    return marker;
+    return dot;
 };
 
+// Create ordinary marker
+function addMarker(latLng) {
+    let marker = new google.maps.Marker({
+        position: latLng,
+        map: map,
+        draggable: true
+    });
+
+    return marker;
+};
 
 // Draw infrastructure - walls, gates, no-fly zones
 function drawInfrastructure(data) {
@@ -34,11 +44,12 @@ function drawInfrastructure(data) {
     // Gates
     for (let i = 0; i < data["gates"].length; i++) {
         let colour = "#FF0"
+        
         // Draw line of gate
         items["gates"]["lines"].push(drawLine(data["gates"][i]["points"], colour));
 
         // Draw spots at end of line to mark hinge end
-        items["gates"]["dots"].push(addMarker(data["gates"][i]["points"][0], colour, 4, 1));
+        items["gates"]["dots"].push(addDot(data["gates"][i]["points"][0], colour, 4, 1));
     };
 };
 

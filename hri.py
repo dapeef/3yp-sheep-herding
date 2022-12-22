@@ -119,8 +119,7 @@ class Ui(QMainWindow):
         self.no_fly_list_widget.currentItemChanged.connect(self.selectNoFly)
 
         # Enable all buttons
-        #self.toggleButtonsEnabledMap(True)
-        self.resetAllButtonsMap()
+        self.toggleButtonsEnabledMap(True)
 
         # Change instruction
         self.instructions_label.setText("Press a button to begin")
@@ -170,13 +169,13 @@ class Ui(QMainWindow):
         self.drawMonitorDrones(monitor_drone_locations)
 
     def drawSheep(self, locations):
-        self.browser_home.page().runJavaScript("addMarkers(" + str(locations) + ", 'sheep');")
+        self.browser_home.page().runJavaScript("addDots(" + str(locations) + ", 'sheep');")
 
     def drawHerdingDrones(self, locations):
-        self.browser_home.page().runJavaScript("addMarkers(" + str(locations) + ", 'herding_drones');")
+        self.browser_home.page().runJavaScript("addDots(" + str(locations) + ", 'herding_drones');")
 
     def drawMonitorDrones(self, locations):
-        self.browser_home.page().runJavaScript("addMarkers(" + str(locations) + ", 'monitor_drones');")
+        self.browser_home.page().runJavaScript("addDots(" + str(locations) + ", 'monitor_drones');")
 
     def toggleButtonsEnabledHome(self, value):
         self.land_button1.setEnabled(value)
@@ -351,21 +350,29 @@ class Ui(QMainWindow):
         self.browser_map.page().runJavaScript("makeGate();")
 
     def editGate(self):
-        # Change gate button options
-        self.save_gate.setHidden(False)
-        self.cancel_gate.setHidden(False)
-        self.add_gate.setHidden(True)
-        self.edit_gate.setHidden(True)
-        self.remove_gate.setHidden(True)
+        # Get selected index
+        index = self.getSelectedIndex(self.gates_list_widget)
 
-        # Disable other buttons
-        self.toggleButtonsEnabledMap(False)
+        # If something is selected
+        if index != None:
+            self.mode = "edit_gate"
 
-        # Change instructions
-        self.instructions_label.setText("Click 2 points on either side of the gate, starting with the hinge end. These markers are draggable. When finished, press Save.")
+            # Change gate button options
+            self.gates_list_widget.setEnabled(False)
+            self.save_gate.setHidden(False)
+            self.cancel_gate.setHidden(False)
+            self.add_gate.setHidden(True)
+            self.edit_gate.setHidden(True)
+            self.remove_gate.setHidden(True)
 
-        # Call javascript
-        self.browser_map.page().runJavaScript("makeGate();")
+            # Disable other buttons
+            self.toggleButtonsEnabledMap(False)
+
+            # Change instructions
+            self.instructions_label.setText("Click 2 points on either side of the gate, starting with the hinge end. These markers are draggable. When finished, press Save.")
+
+            # Call javascript
+            self.browser_map.page().runJavaScript("editGate(" + str(index) + ");")
     
     def removeGate(self):
         selected_items = self.gates_list_widget.selectedItems()
@@ -383,31 +390,46 @@ class Ui(QMainWindow):
         self.instructions_label.setText("Successfully removed " + name)
 
     def saveGate(self):
-        self.browser_map.page().runJavaScript("saveGate();", self.saveGateCallback)
+        if self.mode == "edit_gate":
+            index = self.getSelectedIndex(self.gates_list_widget)
+
+            self.browser_map.page().runJavaScript("saveGate(" + str(index) + ");", self.saveGateCallback)
+
+        else:
+            self.browser_map.page().runJavaScript("saveGate();", self.saveGateCallback)
 
     def saveGateCallback(self, points):
+        if self.mode == "edit_gate":
+            index = self.getSelectedIndex(self.gates_list_widget)
+
+            self.data["gates"][index]["points"] = points
+            
+            self.instructions_label.setText("Successfully edited " + self.data["gates"][index]["name"])
+
+        else:
+            if len(points) == 2:
+                name = "Gate " + str(self.gates_list_widget.count())
+                self.gates_list_widget.addItem(name)
+                self.data["gates"].append({
+                    "name": name,
+                    "points": points
+                })
+                
+                self.instructions_label.setText("Successfully added " + name)
+            
+            else:
+                self.instructions_label.setText("Wrong number of points selected; 2 required, " + str(len(points)) + " selected")
+        
+        self.writeInfData()
+
         # Revert button states
         self.resetAllButtonsMap()
 
-        if len(points) == 2:
-            name = "Gate " + str(self.gates_list_widget.count())
-            self.gates_list_widget.addItem(name)
-            self.data["gates"].append({
-                "name": name,
-                "points": points
-            })
-            self.writeInfData()
-            
-            self.instructions_label.setText("Successfully added " + name)
-        
-        else:
-            self.instructions_label.setText("Wrong number of points selected; 2 required, " + str(len(points)) + " selected")
-        
         # Redraw infrastructure
         self.drawInfrastructure()
 
     def cancelGate(self):
-        self.browser_map.page().runJavaScript("saveGate();")
+        self.browser_map.page().runJavaScript("cancelGate();")
 
         # Revert button states
         self.resetAllButtonsMap()
@@ -596,7 +618,7 @@ class Ui(QMainWindow):
         selected_items = list_widget.selectedItems()
 
         if len(selected_items) == 1:
-            return self.walls_list_widget.row(selected_items[0])
+            return list_widget.row(selected_items[0])
         
         else:
             return None

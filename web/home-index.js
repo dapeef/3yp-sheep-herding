@@ -4,7 +4,7 @@ let markers = {
     "monitor_drones": []
 };
 
-function addMarkers(locations, type) {
+function addDots(locations, type) {
     // Delete all markers
     deleteItems(markers[type]);
 
@@ -24,7 +24,7 @@ function addMarkers(locations, type) {
     };
     // Draw markers
     for (let i = 0; i < locations.length; i++) {
-        markers[type].push(addMarker(locations[i], colour, size));
+        markers[type].push(addDot(locations[i], colour, size));
     };
 }
 
