@@ -26,7 +26,7 @@ function initMap() {
     });
     
     google.maps.event.addListener(map, 'click', function (event) {
-        if (mode == "wall") { // If in wall creation mode
+        if (mode == "wall_markers") { // If in wall creation mode
             // Drop 2 markers
             markers.push(new google.maps.Marker({
                 position: event.latLng,
@@ -52,13 +52,9 @@ function initMap() {
                 line.setMap(map);
             };
         } else if (mode == "gate") { // If in gate creation mode
-            markers.push(new google.maps.Marker({
-                position: event.latLng,
-                map: map,
-                draggable: true
-            }));
+            markers.push(addMarker(event.latLng))
 
-            if (points.length >= 2) {
+            if (markers.length >= 2) {
                 mode = "gate_max";
             };
         };

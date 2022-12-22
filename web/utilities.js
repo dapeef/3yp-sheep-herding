@@ -18,11 +18,11 @@ function addDot(lat_long, colour, size, opacity=0.6) {
 };
 
 // Create ordinary marker
-function addMarker(latLng) {
+function addMarker(latLng, draggable=true) {
     let marker = new google.maps.Marker({
         position: latLng,
         map: map,
-        draggable: true
+        draggable: draggable
     });
 
     return marker;
@@ -44,7 +44,7 @@ function drawInfrastructure(data) {
     // Gates
     for (let i = 0; i < data["gates"].length; i++) {
         let colour = "#FF0"
-        
+
         // Draw line of gate
         items["gates"]["lines"].push(drawLine(data["gates"][i]["points"], colour));
 

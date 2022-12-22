@@ -273,14 +273,18 @@ class Ui(QMainWindow):
             self.instructions_label.setText("Successfully edited " + self.data["walls"][index]["name"])
 
         else:
-            name = "Wall " + str(self.walls_list_widget.count())
-            self.walls_list_widget.addItem(name)
-            self.data["walls"].append({
-                "name": name,
-                "points": points
-            })
+            if points != None:
+                name = "Wall " + str(self.walls_list_widget.count())
+                self.walls_list_widget.addItem(name)
+                self.data["walls"].append({
+                    "name": name,
+                    "points": points
+                })
+                
+                self.instructions_label.setText("Successfully added " + name)
             
-            self.instructions_label.setText("Successfully added " + name)
+            else:
+                self.instructions_label.setText("Save failed; not enough points selected")
 
         self.writeInfData()
 
@@ -292,6 +296,8 @@ class Ui(QMainWindow):
 
     def cancelWall(self):
         self.browser_map.page().runJavaScript("cancelWall();")
+
+        self.instructions_label.setText("Press a button to begin")
 
         # Revert button states
         self.resetAllButtonsMap()
@@ -540,7 +546,7 @@ class Ui(QMainWindow):
     def toggleButtonsEnabledMap(self, value):
         # Walls
         self.add_wall.setEnabled(value)
-        if self.getSelectedIndex(self.walls_list_widget) == None:
+        if self.getSelectedIndex(self.walls_list_widget) == None or value == False:
             self.edit_wall.setEnabled(False)
             self.remove_wall.setEnabled(False)
         else:
@@ -551,7 +557,7 @@ class Ui(QMainWindow):
 
         # Gates
         self.add_gate.setEnabled(value)
-        if self.getSelectedIndex(self.gates_list_widget) == None:
+        if self.getSelectedIndex(self.gates_list_widget) == None or value == False:
             self.edit_gate.setEnabled(False)
             self.remove_gate.setEnabled(False)
         else:
@@ -562,7 +568,7 @@ class Ui(QMainWindow):
 
         # No fly
         self.add_no_fly.setEnabled(value)
-        if self.getSelectedIndex(self.no_fly_list_widget) == None:
+        if self.getSelectedIndex(self.no_fly_list_widget) == None or value == False:
             self.edit_no_fly.setEnabled(False)
             self.remove_no_fly.setEnabled(False)
         else:
@@ -598,9 +604,6 @@ class Ui(QMainWindow):
 
         # Enable other buttons
         self.toggleButtonsEnabledMap(True)
-
-        # Reset instructions
-        self.instructions_label.setText("Click a button to start")
 
     def moveInListWidget(self, widget, row_diff):
         try:

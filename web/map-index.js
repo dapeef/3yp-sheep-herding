@@ -1,6 +1,6 @@
 // Walls
 function makeWall() {
-    mode = "wall";
+    mode = "wall_markers";
 
     points = [];
 }
@@ -17,22 +17,29 @@ function editWall(index) {
 }
 
 function saveWall(index=null) {
-    if (index == null) {
-        item = line;
+    if (mode != "wall_markers") { // If at least 2 points have been selected
+        if (index == null) { // Is in making mode
+            item = line;
 
-        line.setMap(null);
-    } else {
-        item = items["walls"][index];
-    };
+            line.setMap(null);
+        } else { // Is in editing mode
+            item = items["walls"][index];
+        };
 
-    path = item.getPath().getArray();
-    coords = [];
+        path = item.getPath().getArray();
+        coords = [];
 
-    for (let i = 0; i < path.length; i++) {        
-        coords.push([path[i].lat(), path[i].lng()]);
-    };
+        for (let i = 0; i < path.length; i++) {
+            coords.push([path[i].lat(), path[i].lng()]);
+        };
 
-    return coords;
+        return coords;
+    } else { // If 0 or 1 point has been selected
+        // Delete markers
+        deleteItems(markers)
+        
+        return null
+    }
 }
 
 function cancelWall() {
