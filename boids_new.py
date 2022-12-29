@@ -24,8 +24,8 @@ TUNING = {
         'sep': 1,
         'ali': 1,
         # 'coh': 1,
-        'fear': 1,
-        'decel': 1
+        'decel': 1,
+        'fear': 1000000
     },
     "target_dist": 40,      # Target separation
     "influence_dist": {
@@ -35,7 +35,7 @@ TUNING = {
     # "fear_decay": 1,        # see below
     # "fear_const": .05,      # 1/(r/k)^a -> k is const, a is decay
     # "speed_decay": 2        # Decay rate of speed -> v /= speed_decay * dt
-    "target_speed": pg.Vector2(0, 0)
+    "target_vel": pg.Vector2(0, 0)
 }
 
 
@@ -80,9 +80,51 @@ class Boid(pg.sprite.Sprite):
 
     
     def update(self, dt, tuning):
+        # Make list of nearby boids, sorted by distance
+        otherBoids = np.delete(self.data.boids, self.bnum, 0) # delete self
+        array_dists = np.zeros(len(otherBoids))
+        for i, boid in enumerate(otherBoids):
+            array_dists[i] = (self.pos - boid[0]).length() # Get list of distances
+        closeBoidIs = np.argsort(array_dists)[:7] # Look at 7 closest boids only
+        neiboids = otherBoids[closeBoidIs] # pick out chosen boids
+        #neiboids[:,2] = array_dists[closeBoidIs] #  distance
+        neiboids = neiboids[array_dists[closeBoidIs] < tuning["influence_dist"]["boid"]] # Select only boids within influence radius
 
-        # Test acceleration
-        self.accel = pg.Vector2(100, 0)
+        # Define vectors to hold unweighted acceleration values
+        sep = pg.Vector2(0, 0)
+        ali = pg.Vector2(0, 0)
+        decel = pg.Vector2(0, 0)
+        fear = pg.Vector2(0, 0)
+
+        # Loop through near boids and sum sep and ali components
+        for boid in neiboids:
+            rel_pos = boid[0] - self.pos # r_{ij} in the paper
+            rel_vel = boid[1] - self.vel # v_j - v_i in the paper
+
+            sep += (1 - (tuning["target_dist"] / rel_pos.length())**3) * rel_pos
+            ali += rel_vel
+        
+        # Calculate decel component
+        decel = tuning["target_vel"] - self.vel # v_d - v_i in the paper
+        
+        # Loop through fears and sum fear components
+        for fear_obj in self.data.fears:
+            rel_pos = self.pos - fear_obj # r_{pi} in the paper
+
+            fear += (1 / rel_pos.length()**3) * rel_pos
+
+        # Apply weights
+        sep *= tuning["weightings"]['sep']
+        ali *= tuning["weightings"]['ali']
+        decel *= tuning["weightings"]['decel']
+        fear *= tuning["weightings"]['fear']
+
+        # Debug print output to help tune
+        # if self.bnum == 0:
+        #     print(sep, ali, decel, fear, sep="\t")
+
+        # Sum weighted components to get acceleration
+        self.accel = sep + ali + decel + fear
 
         # Change velocity and position based on acceleration
         self.vel += self.accel * dt
@@ -105,12 +147,16 @@ class Boid(pg.sprite.Sprite):
 
 
 class Data():
-    def __init__(self, n_boids, n_fears=1):
-        boid_item = np.array([[pg.Vector2(0, 0), pg.Vector2(0, 0), 0]], dtype=object)
-        self.boids = np.repeat(boid_item, n_boids, 0)
-        fear_item = np.array([[pg.Vector2(0, 0), 0]], dtype=object)
-        self.fears = np.repeat(fear_item, n_fears, 0)
+    def __init__(self, n_boids, n_fears=10):
+        # Boids array
+        self.boids = np.empty((n_boids, 2), dtype=pg.Vector2)
+        self.boids.fill(pg.Vector2(0, 0))
 
+        # Fear array
+        self.fears = np.empty((n_fears), dtype=pg.Vector2)
+        self.fears.fill(pg.Vector2(-10000, -10000)) # Initialise all fears far off screen
+
+        self.num_fears = 1
 
 def main():
     pg.init()  # prepare window
@@ -143,7 +189,7 @@ def main():
         if MOUSEFEAR:
             mouse_pos = pg.mouse.get_pos()
             
-            data.fears[0][0] = pg.Vector2(mouse_pos)
+            data.fears[0] = pg.Vector2(mouse_pos)
 
         for e in pg.event.get():
             # Handle quitting
@@ -151,12 +197,15 @@ def main():
                 return
             
             if e.type == pg.MOUSEBUTTONDOWN and MOUSEFEAR:
-                data.fears = np.append(data.fears, [[pg.Vector2(mouse_pos), 0]], axis=0)
+                # data.fears = np.append(data.fears, [pg.Vector2(mouse_pos)], axis=0)
+                # data.fears = np.insert(data.fears, pg.Vector2(mouse_pos), len(data.fears))
+                data.fears[data.num_fears] = pg.Vector2(mouse_pos)
+                data.num_fears += 1
 
         dt = clock.tick(FPS) / 1000
         screen.fill(BGCOLOR)
         for fear in data.fears:
-            pg.draw.circle(screen, (255, 0, 0), fear[0], 5) # Draw red circle on mouse position
+            pg.draw.circle(screen, (255, 0, 0), fear, 5) # Draw red circle on mouse position
         nBoids.update(dt, TUNING)
         nBoids.draw(screen)
 
