@@ -35,6 +35,7 @@ TUNING = {
     # "fear_decay": 1,        # see below
     # "fear_const": .05,      # 1/(r/k)^a -> k is const, a is decay
     # "speed_decay": 2        # Decay rate of speed -> v /= speed_decay * dt
+    "target_speed": pg.Vector2(0, 0)
 }
 
 
@@ -71,11 +72,16 @@ class Boid(pg.sprite.Sprite):
         maxW, maxH = self.drawSurf.get_size()
         self.rect = self.image.get_rect(center=(randint(50, maxW - 50), randint(50, maxH - 50)))
         self.ang = randint(0, 360)  # random start angle, & position ^
+        self.accel = pg.Vector2(0,0)
         self.vel = pg.Vector2(0,0)# pg.Vector2(randint(-100, 100), randint(-100, 100))
         self.pos = pg.Vector2(self.rect.center)
+        # Finally, output pos and vel to array
+        self.data.boids[self.bnum, :2] = [self.pos, self.vel]
 
     
     def update(self, dt, tuning):
+
+        # Test acceleration
         self.accel = pg.Vector2(100, 0)
 
         # Change velocity and position based on acceleration
@@ -94,14 +100,16 @@ class Boid(pg.sprite.Sprite):
         self.dir = pg.Vector2(1, 0).rotate(self.ang).normalize()
 
         # Finally, output pos and vel to array
-        self.data.boids[self.bnum,:4] = [self.pos[0], self.pos[1], self.vel[0], self.vel[1]]
+        self.data.boids[self.bnum, :2] = [self.pos, self.vel]
 
 
 
 class Data():
     def __init__(self, n_boids, n_fears=1):
-        self.boids = np.zeros((n_boids, 5), dtype=float)
-        self.fears = np.zeros((n_fears, 3), dtype=float)
+        boid_item = np.array([[pg.Vector2(0, 0), pg.Vector2(0, 0), 0]], dtype=object)
+        self.boids = np.repeat(boid_item, n_boids, 0)
+        fear_item = np.array([[pg.Vector2(0, 0), 0]], dtype=object)
+        self.fears = np.repeat(fear_item, n_fears, 0)
 
 
 def main():
@@ -135,8 +143,7 @@ def main():
         if MOUSEFEAR:
             mouse_pos = pg.mouse.get_pos()
             
-            data.fears[0][0] = mouse_pos[0]
-            data.fears[0][1] = mouse_pos[1]
+            data.fears[0][0] = pg.Vector2(mouse_pos)
 
         for e in pg.event.get():
             # Handle quitting
@@ -144,12 +151,12 @@ def main():
                 return
             
             if e.type == pg.MOUSEBUTTONDOWN and MOUSEFEAR:
-                data.fears = np.append(data.fears, [[mouse_pos[0], mouse_pos[1], 0]], axis=0)
+                data.fears = np.append(data.fears, [[pg.Vector2(mouse_pos), 0]], axis=0)
 
         dt = clock.tick(FPS) / 1000
         screen.fill(BGCOLOR)
         for fear in data.fears:
-            pg.draw.circle(screen, (255, 0, 0), (fear[0], fear[1]), 5) # Draw red circle on mouse position
+            pg.draw.circle(screen, (255, 0, 0), fear[0], 5) # Draw red circle on mouse position
         nBoids.update(dt, TUNING)
         nBoids.draw(screen)
 
