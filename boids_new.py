@@ -18,14 +18,14 @@ FPS = 60                # 30-90
 SHOWFPS = True          # Show frame rate
 MOUSEFEAR = True        # Is there a fear node on the cursor
 TUNING = {
-    # "max_speed": 150,       # Max movement speed
+    "max_speed": 150,       # Max movement speed
     # "max_force": 5,         # Max acceleration force
     "weightings": {         # Force weightings
         'sep': 1,
         'ali': 1,
         # 'coh': 1,
         'decel': 1,
-        'fear': 1000000
+        'fear': 2e6
     },
     "target_dist": 40,      # Target separation
     "influence_dist": {
@@ -63,7 +63,7 @@ class Boid(pg.sprite.Sprite):
         if boidNum == 0:
             self.color.hsva = (randint(0,360), 90, 90) if cHSV is None else cHSV # randint(5,55) #4goldfish
         else:
-            self.color.hsva = (0, 0, 20)
+            self.color.hsva = (0, 0, 60)
         pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
         self.orig_image = pg.transform.rotate(self.image.copy(), -90)
 
@@ -87,7 +87,6 @@ class Boid(pg.sprite.Sprite):
             array_dists[i] = (self.pos - boid[0]).length() # Get list of distances
         closeBoidIs = np.argsort(array_dists)[:7] # Look at 7 closest boids only
         neiboids = otherBoids[closeBoidIs] # pick out chosen boids
-        #neiboids[:,2] = array_dists[closeBoidIs] #  distance
         neiboids = neiboids[array_dists[closeBoidIs] < tuning["influence_dist"]["boid"]] # Select only boids within influence radius
 
         # Define vectors to hold unweighted acceleration values
@@ -111,7 +110,8 @@ class Boid(pg.sprite.Sprite):
         for fear_obj in self.data.fears:
             rel_pos = self.pos - fear_obj # r_{pi} in the paper
 
-            fear += (1 / rel_pos.length()**3) * rel_pos
+            if rel_pos.length() <= tuning["influence_dist"]["fear"]:
+                fear += (1 / rel_pos.length()**3) * rel_pos
 
         # Apply weights
         sep *= tuning["weightings"]['sep']
@@ -128,6 +128,7 @@ class Boid(pg.sprite.Sprite):
 
         # Change velocity and position based on acceleration
         self.vel += self.accel * dt
+        self.vel = clamp_magnitude(self.vel, tuning["max_speed"])
         self.pos += self.vel * dt
         
         # Update position of rendered boid
@@ -147,7 +148,7 @@ class Boid(pg.sprite.Sprite):
 
 
 class Data():
-    def __init__(self, n_boids, n_fears=10):
+    def __init__(self, n_boids, n_fears=100):
         # Boids array
         self.boids = np.empty((n_boids, 2), dtype=pg.Vector2)
         self.boids.fill(pg.Vector2(0, 0))
@@ -204,6 +205,8 @@ def main():
 
         dt = clock.tick(FPS) / 1000
         screen.fill(BGCOLOR)
+        for fear in data.fears:
+            pg.draw.circle(screen, (25, 0, 0), fear, TUNING["influence_dist"]["fear"]) # Draw red circle on mouse position
         for fear in data.fears:
             pg.draw.circle(screen, (255, 0, 0), fear, 5) # Draw red circle on mouse position
         nBoids.update(dt, TUNING)
