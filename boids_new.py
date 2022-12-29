@@ -193,6 +193,24 @@ class Boid(pg.sprite.Sprite):
     def update(self, dt, tuning):
         self.accel = pg.Vector2(100, 0)
 
+        # Change velocity and position based on acceleration
+        self.vel += self.accel * dt
+        self.pos += self.vel * dt
+        
+        # Update position of rendered boid
+        self.rect.center = self.pos
+
+        # Get angle of velocity for rendering
+        self.ang = self.vel.as_polar()[1]
+
+        # Adjusts angle of rendered boid image to match heading
+        self.image = pg.transform.rotate(self.orig_image, -self.ang)
+        self.rect = self.image.get_rect(center=self.rect.center)  # recentering fix
+        self.dir = pg.Vector2(1, 0).rotate(self.ang).normalize()
+
+        # Finally, output pos and vel to array
+        self.data.boids[self.bnum,:4] = [self.pos[0], self.pos[1], self.vel[0], self.vel[1]]
+
 
 
 class Data():
