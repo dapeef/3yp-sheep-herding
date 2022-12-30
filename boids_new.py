@@ -2,6 +2,7 @@
 from random import randint
 import pygame as pg
 import numpy as np
+import math
 
 '''
 PyNBoids - a Boids simulation - github.com/Nikorasu/PyNBoids
@@ -25,12 +26,14 @@ TUNING = {
         'ali': 1,
         # 'coh': 1,
         'decel': 1,
-        'fear': 2e6
+        'fear': 2e6,
+        'wall': 2e6
     },
     "target_dist": 40,      # Target separation
     "influence_dist": {
         "boid": 200,        # "visibility" distance for the boids
-        "fear": 200
+        "fear": 200,
+        "wall": 15
     },
     # "fear_decay": 1,        # see below
     # "fear_const": .05,      # 1/(r/k)^a -> k is const, a is decay
@@ -80,23 +83,32 @@ class Boid(pg.sprite.Sprite):
 
     
     def update(self, dt, tuning):
-        # Make list of nearby boids, sorted by distance
-        otherBoids = np.delete(self.data.boids, self.bnum, 0) # delete self
-        array_dists = np.zeros(len(otherBoids))
-        for i, boid in enumerate(otherBoids):
-            array_dists[i] = (self.pos - boid[0]).length() # Get list of distances
-        closeBoidIs = np.argsort(array_dists)[:7] # Look at 7 closest boids only
-        neiboids = otherBoids[closeBoidIs] # pick out chosen boids
-        neiboids = neiboids[array_dists[closeBoidIs] < tuning["influence_dist"]["boid"]] # Select only boids within influence radius
+        def getNearest(type, num_select=7):
+            # Make list of nearby boids, sorted by distance
+            if type == "boid": objects = self.data.boids
+            elif type == "fear": objects = self.data.fears
+            elif type == "wall": objects = self.data.walls
+            otherBoids = np.delete(objects, self.bnum, 0) # delete self
+            array_dists = np.zeros(len(otherBoids))
+            for i, boid in enumerate(otherBoids):
+                if type == "boid": boid_pos = boid[0]
+                elif type == "fear" or type == "wall": boid_pos = boid
+                array_dists[i] = (self.pos - boid_pos).length() # Get list of distances
+            closeBoidIs = np.argsort(array_dists)[:num_select] # Look at $num_select$ closest boids only
+            neiboids = otherBoids[closeBoidIs] # pick out chosen boids
+            neiboids = neiboids[array_dists[closeBoidIs] < tuning["influence_dist"]["boid"]] # Select only boids within influence radius
+
+            return neiboids
 
         # Define vectors to hold unweighted acceleration values
         sep = pg.Vector2(0, 0)
         ali = pg.Vector2(0, 0)
         decel = pg.Vector2(0, 0)
         fear = pg.Vector2(0, 0)
+        wall = pg.Vector2(0, 0)
 
         # Loop through near boids and sum sep and ali components
-        for boid in neiboids:
+        for boid in getNearest("boid"):
             rel_pos = boid[0] - self.pos # r_{ij} in the paper
             rel_vel = boid[1] - self.vel # v_j - v_i in the paper
 
@@ -112,19 +124,27 @@ class Boid(pg.sprite.Sprite):
 
             if rel_pos.length() <= tuning["influence_dist"]["fear"]:
                 fear += (1 / rel_pos.length()**3) * rel_pos
+        
+        # Loop through walls and sum fear components
+        for wall_obj in getNearest("wall"):
+            rel_pos = self.pos - wall_obj # r_{pi} in the paper
+
+            if rel_pos.length() <= tuning["influence_dist"]["wall"]:
+                fear += (1 / rel_pos.length()**3) * rel_pos
 
         # Apply weights
         sep *= tuning["weightings"]['sep']
         ali *= tuning["weightings"]['ali']
         decel *= tuning["weightings"]['decel']
         fear *= tuning["weightings"]['fear']
+        wall *= tuning["weightings"]['wall']
 
         # Debug print output to help tune
         # if self.bnum == 0:
         #     print(sep, ali, decel, fear, sep="\t")
 
         # Sum weighted components to get acceleration
-        self.accel = sep + ali + decel + fear
+        self.accel = sep + ali + decel + fear + wall
 
         # Change velocity and position based on acceleration
         self.vel += self.accel * dt
@@ -148,7 +168,7 @@ class Boid(pg.sprite.Sprite):
 
 
 class Data():
-    def __init__(self, n_boids, n_fears=100):
+    def __init__(self, n_boids, n_fears=100, n_walls=1000):
         # Boids array
         self.boids = np.empty((n_boids, 2), dtype=pg.Vector2)
         self.boids.fill(pg.Vector2(0, 0))
@@ -158,6 +178,24 @@ class Data():
         self.fears.fill(pg.Vector2(-10000, -10000)) # Initialise all fears far off screen
 
         self.num_fears = 1
+
+        # Fear array
+        self.walls = np.empty((n_walls), dtype=pg.Vector2)
+        self.walls.fill(pg.Vector2(-10000, -10000)) # Initialise all walls far off screen
+
+        self.num_walls = 0
+    
+    def makeWall(self, start_point, end_point):
+        sep = 10 # separation of the wall points (pixels)
+
+        diff = end_point - start_point
+
+        step = diff.normalize() * sep
+
+        for i in range(math.floor(diff.length() / sep)):
+            self.walls[self.num_walls] = start_point + step * i
+            self.num_walls += 1
+
 
 def main():
     pg.init()  # prepare window
@@ -184,6 +222,12 @@ def main():
     clock = pg.time.Clock()
     if SHOWFPS : font = pg.font.Font(None, 30)
 
+    data.makeWall(pg.Vector2(50, 50), pg.Vector2(1000, 50))
+    data.makeWall(pg.Vector2(1000, 50), pg.Vector2(1000, 800))
+    data.makeWall(pg.Vector2(1000, 800), pg.Vector2(50, 800))
+    data.makeWall(pg.Vector2(50, 800), pg.Vector2(50, 50))
+    data.makeWall(pg.Vector2(50, 50), pg.Vector2(500, 400))
+
     # main loop
     while True:
         # Get mouse position if MOUSEFEAR
@@ -209,6 +253,10 @@ def main():
             pg.draw.circle(screen, (25, 0, 0), fear, TUNING["influence_dist"]["fear"]) # Draw red circle on mouse position
         for fear in data.fears:
             pg.draw.circle(screen, (255, 0, 0), fear, 5) # Draw red circle on mouse position
+        for wall in data.walls:
+            pg.draw.circle(screen, (25, 0, 0), wall, TUNING["influence_dist"]["wall"]) # Draw red circle on mouse position
+        for wall in data.walls:
+            pg.draw.circle(screen, (255, 0, 0), wall, 5) # Draw red circle on mouse position
         nBoids.update(dt, TUNING)
         nBoids.draw(screen)
 
