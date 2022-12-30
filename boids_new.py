@@ -3,6 +3,7 @@ from random import randint, choice
 import pygame as pg
 import numpy as np
 import math
+import json
 
 '''
 PyNBoids - a Boids simulation - github.com/Nikorasu/PyNBoids
@@ -40,6 +41,7 @@ TUNING = {
     # "speed_decay": 2        # Decay rate of speed -> v /= speed_decay * dt
     "target_vel": pg.Vector2(0, 0)
 }
+PIX_PER_METER = 1.5 # Number of pixels per meter in the real world
 
 
 def clamp_magnitude(vector, magnitude):
@@ -190,17 +192,24 @@ class Boid(pg.sprite.Sprite):
 
 class Data():
     def __init__(self, n_boids, n_fears=100, n_walls=100):
+        self.initBoids(n_boids)
+        self.initFears(n_fears)
+        self.initWalls(n_walls)
+
+    def initBoids(self, n_boids):
         # Boids array
         self.boids = np.empty((n_boids, 2), dtype=pg.Vector2)
         self.boids.fill(pg.Vector2(0, 0))
 
+    def initFears(self, n_fears):
         # Fear array
         self.fears = np.empty((n_fears), dtype=pg.Vector2)
         self.fears.fill(pg.Vector2(-10000, -10000)) # Initialise all fears far off screen
 
         self.num_fears = 1
 
-        # Fear array
+    def initWalls(self, n_walls):
+        # Walls array
         self.walls = np.empty((n_walls, 2), dtype=pg.Vector2)
         self.walls.fill(pg.Vector2(-10000, -10000)) # Initialise all walls far off screen
 
@@ -224,7 +233,7 @@ class Data():
 
 
 class Simulation():
-    def __init__(self, render=True):
+    def __init__(self, num_fears, num_boids=50, render=True):
         self.render = render # Whether to render the pygame screen or not
 
         if self.render:
@@ -251,8 +260,8 @@ class Simulation():
 
         # Set up boids and their data
         self.nBoids = pg.sprite.Group()
-        self.data = Data(BOIDZ)
-        for n in range(BOIDZ):
+        self.data = Data(num_boids, num_fears)
+        for n in range(num_boids):
             self.nBoids.add(Boid(n, self.data, self.render, self.screen))  # spawns desired # of boidz
 
         pad = 50
@@ -265,6 +274,57 @@ class Simulation():
         self.data.makeWall(pg.Vector2(600, 400), pg.Vector2(WIDTH-pad, HEIGHT-pad))
         self.data.makeWall(pg.Vector2(500, 150), pg.Vector2(500, 400))
     
+    def addWallsFromJSON(self, JSON):
+        num_segments = 0
+
+        min_point = pg.Vector2(
+            JSON[0]["points"][0][0],
+            JSON[0]["points"][0][1]
+        )
+        max_point = pg.Vector2(
+            JSON[0]["points"][0][0],
+            JSON[0]["points"][0][1]
+        )
+
+        for wall in JSON:
+            num_segments += len(wall["points"]) - 1
+
+            for point in wall["points"]:
+                min_point.x = min(min_point.x, point[0])
+                max_point.x = max(max_point.x, point[0])
+                min_point.y = min(min_point.y, point[1])
+                max_point.y = max(max_point.y, point[1])
+        
+        center_point = (min_point + max_point)/2
+
+        earth_circ = 40075e3 # km
+        m_per_lat = earth_circ / 360 # meters per degree of latitude
+        m_per_lng = earth_circ * math.cos(center_point.y / 180 * math.pi) / 360
+
+        def transformCoords(lat_long):
+            rel_lat_long = lat_long - min_point
+
+            return pg.Vector2(
+                rel_lat_long.y * m_per_lng * PIX_PER_METER,
+                HEIGHT - rel_lat_long.x * m_per_lat * PIX_PER_METER # Flipping becaue (0,0) is top left in pg
+            ) # switching x and y because lat and long are (y,x)
+
+        self.data.initWalls(num_segments)
+
+        print(transformCoords(pg.Vector2([
+                    51.62394653210728,
+                    -2.5112555701146744
+                ])))
+
+        for wall in JSON:
+            points = wall["points"]
+
+            for i in range(len(points) - 1):
+                self.data.makeWall(
+                    start_point=transformCoords(pg.Vector2(points[i][0], points[i][1])),
+                    end_point=transformCoords(pg.Vector2(points[i+1][0], points[i+1][1]))
+                )
+
     def mainloop(self):
         # main loop
         while True:
@@ -313,5 +373,9 @@ class Simulation():
             print("FPS:", self.clock.get_fps())
 
 if __name__ == '__main__':
-    sim = Simulation(render=False)
+    sim = Simulation(4, num_boids=50, render=True)
+
+    with open("example_infrastructure.json") as f:
+        sim.addWallsFromJSON(json.load(f)["walls"])
+
     sim.mainloop()
