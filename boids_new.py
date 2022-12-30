@@ -53,33 +53,36 @@ def clamp_magnitude(vector, magnitude):
 
 
 class Boid(pg.sprite.Sprite):
-    def __init__(self, boidNum, data, drawSurf, cHSV=None):
+    def __init__(self, boidNum, data, render, drawSurf=None, cHSV=None):
         super().__init__()
 
         self.data = data # Stores positions & rotations of all boids and fears
         self.bnum = boidNum # This boid's number (ID)
-        self.drawSurf = drawSurf # Main screen surface
+        self.render = render # Whether to render the pygame screen or not
 
-        self.image = pg.Surface((15, 15)).convert() # Area to render boid onto
-        self.image.set_colorkey(0)
-        self.color = pg.Color(0)  # preps color so we can use hsva
-        if boidNum == 0:
-            self.color.hsva = (randint(0,360), 90, 90) if cHSV is None else cHSV # randint(5,55) #4goldfish
-        else:
-            self.color.hsva = (0, 0, 60)
-        pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
-        self.orig_image = pg.transform.rotate(self.image.copy(), -90)
-
-        self.bSize = 17 # "personal space" size
-        self.dir = pg.Vector2(1, 0)  # sets up forward direction
-        maxW, maxH = self.drawSurf.get_size()
-        self.rect = self.image.get_rect(center=(randint(50, maxW - 50), randint(50, maxH - 50)))
-        self.ang = randint(0, 360)  # random start angle, & position ^
+        self.ang = pg.Vector2(0,0)
         self.accel = pg.Vector2(0,0)
-        self.vel = pg.Vector2(0,0)# pg.Vector2(randint(-100, 100), randint(-100, 100))
-        self.pos = pg.Vector2(self.rect.center)
+        self.vel = pg.Vector2(randint(-100, 100), randint(-100, 100))
+        self.pos = pg.Vector2(randint(50, WIDTH - 50), randint(50, HEIGHT - 50))
         # Finally, output pos and vel to array
         self.data.boids[self.bnum, :2] = [self.pos, self.vel]
+
+        if render:
+            self.drawSurf = drawSurf # Main screen surface
+
+            self.image = pg.Surface((15, 15)).convert() # Area to render boid onto
+            self.image.set_colorkey(0)
+            self.color = pg.Color(0)  # preps color so we can use hsva
+            if boidNum == 0:
+                self.color.hsva = (randint(0,360), 90, 90) if cHSV is None else cHSV # randint(5,55) #4goldfish
+            else:
+                self.color.hsva = (0, 0, 60)
+            pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
+            self.orig_image = pg.transform.rotate(self.image.copy(), -90)
+
+            # maxW, maxH = self.drawSurf.get_size()
+            self.rect = self.image.get_rect(center=(self.pos.x, self.pos.y))
+        
 
     
     def update(self, dt, tuning):
@@ -168,20 +171,20 @@ class Boid(pg.sprite.Sprite):
         self.vel += self.accel * dt
         self.vel = clamp_magnitude(self.vel, tuning["max_speed"])
         self.pos += self.vel * dt
-        
-        # Update position of rendered boid
-        self.rect.center = self.pos
 
-        # Get angle of velocity for rendering
-        self.ang = self.vel.as_polar()[1]
-
-        # Adjusts angle of rendered boid image to match heading
-        self.image = pg.transform.rotate(self.orig_image, -self.ang)
-        self.rect = self.image.get_rect(center=self.rect.center)  # recentering fix
-        self.dir = pg.Vector2(1, 0).rotate(self.ang).normalize()
-
-        # Finally, output pos and vel to array
+        # Update data array
         self.data.boids[self.bnum, :2] = [self.pos, self.vel]
+        
+        if self.render:
+            # Update position of rendered boid
+            self.rect.center = self.pos
+
+            # Get angle of velocity for rendering
+            self.ang = self.vel.as_polar()[1]
+
+            # Adjusts angle of rendered boid image to match heading
+            self.image = pg.transform.rotate(self.orig_image, -self.ang)
+            self.rect = self.image.get_rect(center=self.rect.center)  # recentering fix
 
 
 
@@ -221,30 +224,36 @@ class Data():
 
 
 class Simulation():
-    def __init__(self):
-        pg.init()  # prepare window
-        pg.display.set_caption("Sheeeeeeep") # Window title
+    def __init__(self, render=True):
+        self.render = render # Whether to render the pygame screen or not
 
-        # setup fullscreen or window mode
-        if FLLSCRN:
-            currentRez = (pg.display.Info().current_w, pg.display.Info().current_h)
-            self.screen = pg.display.set_mode(currentRez, pg.SCALED)
-            pg.mouse.set_visible(False)
-        else: self.screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
+        if self.render:
+            pg.init()  # prepare window
+            pg.display.set_caption("Sheeeeeeep") # Window title
 
-        # If mouse controls fear
-        if MOUSEFEAR:
-            pg.mouse.set_visible(False)
+            # setup fullscreen or window mode
+            if FLLSCRN:
+                currentRez = (pg.display.Info().current_w, pg.display.Info().current_h)
+                self.screen = pg.display.set_mode(currentRez, pg.SCALED)
+                pg.mouse.set_visible(False)
+            else: self.screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
+
+            # If mouse controls fear
+            if MOUSEFEAR:
+                pg.mouse.set_visible(False)
+
+            if SHOWFPS : self.font = pg.font.Font(None, 30)
         
+        else:
+            self.screen = None
+        
+        self.clock = pg.time.Clock()
 
         # Set up boids and their data
         self.nBoids = pg.sprite.Group()
         self.data = Data(BOIDZ)
         for n in range(BOIDZ):
-            self.nBoids.add(Boid(n, self.data, self.screen))  # spawns desired # of boidz
-
-        self.clock = pg.time.Clock()
-        if SHOWFPS : self.font = pg.font.Font(None, 30)
+            self.nBoids.add(Boid(n, self.data, self.render, self.screen))  # spawns desired # of boidz
 
         pad = 50
 
@@ -259,6 +268,15 @@ class Simulation():
     def mainloop(self):
         # main loop
         while True:
+            info = self.stepTime()
+
+            if info == "quit":
+                pg.quit()
+
+                return
+
+    def stepTime(self):
+        if self.render:
             # Get mouse position if MOUSEFEAR
             if MOUSEFEAR:
                 mouse_pos = pg.mouse.get_pos()
@@ -268,7 +286,7 @@ class Simulation():
             for e in pg.event.get():
                 # Handle quitting
                 if e.type == pg.QUIT or e.type == pg.KEYDOWN and e.key == pg.K_ESCAPE:
-                    return
+                    return "quit"
                 
                 if e.type == pg.MOUSEBUTTONDOWN and MOUSEFEAR:
                     # data.fears = np.append(data.fears, [pg.Vector2(mouse_pos)], axis=0)
@@ -276,19 +294,24 @@ class Simulation():
                     self.data.fears[self.data.num_fears] = pg.Vector2(mouse_pos)
                     self.data.num_fears += 1
 
-            dt = self.clock.tick(FPS) / 1000
+        dt = self.clock.tick(FPS) / 1000
+
+        self.nBoids.update(dt, TUNING)
+
+        if self.render:
+            # Draw
             self.screen.fill(BGCOLOR)
             self.data.drawFears(self.screen)
             self.data.drawWalls(self.screen)
-            self.nBoids.update(dt, TUNING)
             self.nBoids.draw(self.screen)
 
             if SHOWFPS : self.screen.blit(self.font.render(str(int(self.clock.get_fps())), True, [0,200,0]), (8, 8))
 
             pg.display.update()
+        
+        else:
+            print("FPS:", self.clock.get_fps())
 
 if __name__ == '__main__':
-    sim = Simulation()
+    sim = Simulation(render=False)
     sim.mainloop()
-
-    pg.quit()
