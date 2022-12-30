@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from random import randint
+from random import randint, choice
 import pygame as pg
 import numpy as np
 import math
@@ -146,6 +146,8 @@ class Boid(pg.sprite.Sprite):
             rel_pos = self.pos - closest_point # r_{pi} in the paper
 
             if rel_pos.length() <= tuning["influence_dist"]["wall"]:
+                if rel_pos.length() == 0: # Handle boid being exactly on the line
+                    rel_pos = pg.Vector2(choice([-2, -1, 1, 2]), choice([-2, -1, 1, 2]))
                 fear += (1 / rel_pos.length()**8) * rel_pos
 
         # Apply weights
@@ -227,7 +229,6 @@ def main():
         currentRez = (pg.display.Info().current_w, pg.display.Info().current_h)
         screen = pg.display.set_mode(currentRez, pg.SCALED)
         pg.mouse.set_visible(False)
-        (WIDTH, HEIGHT) = currentRez
     else: screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
 
     # If mouse controls fear
