@@ -27,7 +27,7 @@ TUNING = {
         # 'coh': 1,
         'decel': 1,
         'fear': 2e6,
-        'wall': 2e6
+        'wall': 2e7
     },
     "target_dist": 40,      # Target separation
     "influence_dist": {
@@ -126,11 +126,27 @@ class Boid(pg.sprite.Sprite):
                 fear += (1 / rel_pos.length()**3) * rel_pos
         
         # Loop through walls and sum fear components
-        for wall_obj in getNearest("wall"):
-            rel_pos = self.pos - wall_obj # r_{pi} in the paper
+        for wall_obj in self.data.walls:
+            diff = wall_obj[1] - wall_obj[0]
+            length2 = diff.length_squared()
+
+            if length2 == 0: # End points of wall are identical
+                closest_point = wall_obj[0]
+            else:
+                # p = self.pos
+                # v = wall_obj[0]
+                # w = wall_obj[1]
+                # Consider the line extending the segment, parameterized as v + t (w - v).
+                # We find projection of point p onto the line. 
+                # It falls where t = [(p-v) . (w-v)] / |w-v|^2
+                # We clamp t from [0,1] to handle points outside the segment vw.
+                t = max(0, min(1, (self.pos - wall_obj[0]).dot(diff) / length2))
+                closest_point = wall_obj[0] + t * diff
+
+            rel_pos = self.pos - closest_point # r_{pi} in the paper
 
             if rel_pos.length() <= tuning["influence_dist"]["wall"]:
-                fear += (1 / rel_pos.length()**3) * rel_pos
+                fear += (1 / rel_pos.length()**8) * rel_pos
 
         # Apply weights
         sep *= tuning["weightings"]['sep']
@@ -168,7 +184,7 @@ class Boid(pg.sprite.Sprite):
 
 
 class Data():
-    def __init__(self, n_boids, n_fears=100, n_walls=1000):
+    def __init__(self, n_boids, n_fears=100, n_walls=100):
         # Boids array
         self.boids = np.empty((n_boids, 2), dtype=pg.Vector2)
         self.boids.fill(pg.Vector2(0, 0))
@@ -180,21 +196,26 @@ class Data():
         self.num_fears = 1
 
         # Fear array
-        self.walls = np.empty((n_walls), dtype=pg.Vector2)
+        self.walls = np.empty((n_walls, 2), dtype=pg.Vector2)
         self.walls.fill(pg.Vector2(-10000, -10000)) # Initialise all walls far off screen
 
         self.num_walls = 0
     
     def makeWall(self, start_point, end_point):
-        sep = 10 # separation of the wall points (pixels)
+        self.walls[self.num_walls] = [start_point, end_point]
+        self.num_walls += 1
 
-        diff = end_point - start_point
+    def drawWalls(self, surface):
+        for wall in self.walls:
+            pg.draw.line(surface, (255, 0, 0), wall[0], wall[1], 5) # Draw line between points
+            pg.draw.circle(surface, (255, 0, 0), wall[0], 2.5) # Draw red circle on each end
+            pg.draw.circle(surface, (255, 0, 0), wall[1], 2.5) # Draw red circle on other end
 
-        step = diff.normalize() * sep
-
-        for i in range(math.floor(diff.length() / sep)):
-            self.walls[self.num_walls] = start_point + step * i
-            self.num_walls += 1
+    def drawFears(self, surface):
+        for fear in self.fears:
+            pg.draw.circle(surface, (25, 0, 0), fear, TUNING["influence_dist"]["fear"]) # Draw red circle on mouse position
+        for fear in self.fears:
+            pg.draw.circle(surface, (255, 0, 0), fear, 5) # Draw red circle on mouse position
 
 
 def main():
@@ -206,6 +227,7 @@ def main():
         currentRez = (pg.display.Info().current_w, pg.display.Info().current_h)
         screen = pg.display.set_mode(currentRez, pg.SCALED)
         pg.mouse.set_visible(False)
+        (WIDTH, HEIGHT) = currentRez
     else: screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
 
     # If mouse controls fear
@@ -222,11 +244,15 @@ def main():
     clock = pg.time.Clock()
     if SHOWFPS : font = pg.font.Font(None, 30)
 
-    data.makeWall(pg.Vector2(50, 50), pg.Vector2(1000, 50))
-    data.makeWall(pg.Vector2(1000, 50), pg.Vector2(1000, 800))
-    data.makeWall(pg.Vector2(1000, 800), pg.Vector2(50, 800))
-    data.makeWall(pg.Vector2(50, 800), pg.Vector2(50, 50))
-    data.makeWall(pg.Vector2(50, 50), pg.Vector2(500, 400))
+    pad = 50
+
+    data.makeWall(pg.Vector2(pad, pad), pg.Vector2(WIDTH-pad, pad))
+    data.makeWall(pg.Vector2(WIDTH-pad, pad), pg.Vector2(WIDTH-pad, HEIGHT-pad))
+    data.makeWall(pg.Vector2(WIDTH-pad, HEIGHT-pad), pg.Vector2(pad, HEIGHT-pad))
+    data.makeWall(pg.Vector2(pad, HEIGHT-pad), pg.Vector2(pad, pad))
+    data.makeWall(pg.Vector2(pad, pad), pg.Vector2(500, 400))
+    data.makeWall(pg.Vector2(600, 400), pg.Vector2(WIDTH-pad, HEIGHT-pad))
+    data.makeWall(pg.Vector2(500, 150), pg.Vector2(500, 400))
 
     # main loop
     while True:
@@ -249,14 +275,8 @@ def main():
 
         dt = clock.tick(FPS) / 1000
         screen.fill(BGCOLOR)
-        for fear in data.fears:
-            pg.draw.circle(screen, (25, 0, 0), fear, TUNING["influence_dist"]["fear"]) # Draw red circle on mouse position
-        for fear in data.fears:
-            pg.draw.circle(screen, (255, 0, 0), fear, 5) # Draw red circle on mouse position
-        for wall in data.walls:
-            pg.draw.circle(screen, (25, 0, 0), wall, TUNING["influence_dist"]["wall"]) # Draw red circle on mouse position
-        for wall in data.walls:
-            pg.draw.circle(screen, (255, 0, 0), wall, 5) # Draw red circle on mouse position
+        data.drawFears(screen)
+        data.drawWalls(screen)
         nBoids.update(dt, TUNING)
         nBoids.draw(screen)
 
