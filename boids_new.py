@@ -220,71 +220,75 @@ class Data():
             pg.draw.circle(surface, (255, 0, 0), fear, 5) # Draw red circle on mouse position
 
 
-def main():
-    pg.init()  # prepare window
-    pg.display.set_caption("Sheeeeeeep") # Window title
+class Simulation():
+    def __init__(self):
+        pg.init()  # prepare window
+        pg.display.set_caption("Sheeeeeeep") # Window title
 
-    # setup fullscreen or window mode
-    if FLLSCRN:
-        currentRez = (pg.display.Info().current_w, pg.display.Info().current_h)
-        screen = pg.display.set_mode(currentRez, pg.SCALED)
-        pg.mouse.set_visible(False)
-    else: screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
+        # setup fullscreen or window mode
+        if FLLSCRN:
+            currentRez = (pg.display.Info().current_w, pg.display.Info().current_h)
+            self.screen = pg.display.set_mode(currentRez, pg.SCALED)
+            pg.mouse.set_visible(False)
+        else: self.screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
 
-    # If mouse controls fear
-    if MOUSEFEAR:
-        pg.mouse.set_visible(False)
-    
-
-    # Set up boids and their data
-    nBoids = pg.sprite.Group()
-    data = Data(BOIDZ)
-    for n in range(BOIDZ):
-        nBoids.add(Boid(n, data, screen))  # spawns desired # of boidz
-
-    clock = pg.time.Clock()
-    if SHOWFPS : font = pg.font.Font(None, 30)
-
-    pad = 50
-
-    data.makeWall(pg.Vector2(pad, pad), pg.Vector2(WIDTH-pad, pad))
-    data.makeWall(pg.Vector2(WIDTH-pad, pad), pg.Vector2(WIDTH-pad, HEIGHT-pad))
-    data.makeWall(pg.Vector2(WIDTH-pad, HEIGHT-pad), pg.Vector2(pad, HEIGHT-pad))
-    data.makeWall(pg.Vector2(pad, HEIGHT-pad), pg.Vector2(pad, pad))
-    data.makeWall(pg.Vector2(pad, pad), pg.Vector2(500, 400))
-    data.makeWall(pg.Vector2(600, 400), pg.Vector2(WIDTH-pad, HEIGHT-pad))
-    data.makeWall(pg.Vector2(500, 150), pg.Vector2(500, 400))
-
-    # main loop
-    while True:
-        # Get mouse position if MOUSEFEAR
+        # If mouse controls fear
         if MOUSEFEAR:
-            mouse_pos = pg.mouse.get_pos()
-            
-            data.fears[0] = pg.Vector2(mouse_pos)
+            pg.mouse.set_visible(False)
+        
 
-        for e in pg.event.get():
-            # Handle quitting
-            if e.type == pg.QUIT or e.type == pg.KEYDOWN and e.key == pg.K_ESCAPE:
-                return
-            
-            if e.type == pg.MOUSEBUTTONDOWN and MOUSEFEAR:
-                # data.fears = np.append(data.fears, [pg.Vector2(mouse_pos)], axis=0)
-                # data.fears = np.insert(data.fears, pg.Vector2(mouse_pos), len(data.fears))
-                data.fears[data.num_fears] = pg.Vector2(mouse_pos)
-                data.num_fears += 1
+        # Set up boids and their data
+        self.nBoids = pg.sprite.Group()
+        self.data = Data(BOIDZ)
+        for n in range(BOIDZ):
+            self.nBoids.add(Boid(n, self.data, self.screen))  # spawns desired # of boidz
 
-        dt = clock.tick(FPS) / 1000
-        screen.fill(BGCOLOR)
-        data.drawFears(screen)
-        data.drawWalls(screen)
-        nBoids.update(dt, TUNING)
-        nBoids.draw(screen)
+        self.clock = pg.time.Clock()
+        if SHOWFPS : self.font = pg.font.Font(None, 30)
 
-        if SHOWFPS : screen.blit(font.render(str(int(clock.get_fps())), True, [0,200,0]), (8, 8))
+        pad = 50
 
-        pg.display.update()
+        self.data.makeWall(pg.Vector2(pad, pad), pg.Vector2(WIDTH-pad, pad))
+        self.data.makeWall(pg.Vector2(WIDTH-pad, pad), pg.Vector2(WIDTH-pad, HEIGHT-pad))
+        self.data.makeWall(pg.Vector2(WIDTH-pad, HEIGHT-pad), pg.Vector2(pad, HEIGHT-pad))
+        self.data.makeWall(pg.Vector2(pad, HEIGHT-pad), pg.Vector2(pad, pad))
+        self.data.makeWall(pg.Vector2(pad, pad), pg.Vector2(500, 400))
+        self.data.makeWall(pg.Vector2(600, 400), pg.Vector2(WIDTH-pad, HEIGHT-pad))
+        self.data.makeWall(pg.Vector2(500, 150), pg.Vector2(500, 400))
+    
+    def mainloop(self):
+        # main loop
+        while True:
+            # Get mouse position if MOUSEFEAR
+            if MOUSEFEAR:
+                mouse_pos = pg.mouse.get_pos()
+                
+                self.data.fears[0] = pg.Vector2(mouse_pos)
+
+            for e in pg.event.get():
+                # Handle quitting
+                if e.type == pg.QUIT or e.type == pg.KEYDOWN and e.key == pg.K_ESCAPE:
+                    return
+                
+                if e.type == pg.MOUSEBUTTONDOWN and MOUSEFEAR:
+                    # data.fears = np.append(data.fears, [pg.Vector2(mouse_pos)], axis=0)
+                    # data.fears = np.insert(data.fears, pg.Vector2(mouse_pos), len(data.fears))
+                    self.data.fears[self.data.num_fears] = pg.Vector2(mouse_pos)
+                    self.data.num_fears += 1
+
+            dt = self.clock.tick(FPS) / 1000
+            self.screen.fill(BGCOLOR)
+            self.data.drawFears(self.screen)
+            self.data.drawWalls(self.screen)
+            self.nBoids.update(dt, TUNING)
+            self.nBoids.draw(self.screen)
+
+            if SHOWFPS : self.screen.blit(self.font.render(str(int(self.clock.get_fps())), True, [0,200,0]), (8, 8))
+
+            pg.display.update()
 
 if __name__ == '__main__':
-    main()  # by Nik
+    sim = Simulation()
+    sim.mainloop()
+
     pg.quit()
