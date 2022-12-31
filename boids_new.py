@@ -34,7 +34,7 @@ TUNING = {
     "influence_dist": {
         "boid": 200,        # "visibility" distance for the boids
         "fear": 200,
-        "wall": 15
+        "wall": 25
     },
     # "fear_decay": 1,        # see below
     # "fear_const": .05,      # 1/(r/k)^a -> k is const, a is decay
@@ -189,7 +189,6 @@ class Boid(pg.sprite.Sprite):
             self.rect = self.image.get_rect(center=self.rect.center)  # recentering fix
 
 
-
 class Data():
     def __init__(self, n_boids, n_fears=100, n_walls=100):
         self.initBoids(n_boids)
@@ -263,16 +262,6 @@ class Simulation():
         self.data = Data(num_boids, num_fears)
         for n in range(num_boids):
             self.nBoids.add(Boid(n, self.data, self.render, self.screen))  # spawns desired # of boidz
-
-        pad = 50
-
-        self.data.makeWall(pg.Vector2(pad, pad), pg.Vector2(WIDTH-pad, pad))
-        self.data.makeWall(pg.Vector2(WIDTH-pad, pad), pg.Vector2(WIDTH-pad, HEIGHT-pad))
-        self.data.makeWall(pg.Vector2(WIDTH-pad, HEIGHT-pad), pg.Vector2(pad, HEIGHT-pad))
-        self.data.makeWall(pg.Vector2(pad, HEIGHT-pad), pg.Vector2(pad, pad))
-        self.data.makeWall(pg.Vector2(pad, pad), pg.Vector2(500, 400))
-        self.data.makeWall(pg.Vector2(600, 400), pg.Vector2(WIDTH-pad, HEIGHT-pad))
-        self.data.makeWall(pg.Vector2(500, 150), pg.Vector2(500, 400))
     
     def addWallsFromJSON(self, JSON):
         num_segments = 0
@@ -325,6 +314,19 @@ class Simulation():
                     end_point=transformCoords(pg.Vector2(points[i+1][0], points[i+1][1]))
                 )
 
+    def addTestWalls(self):
+        pad = 40
+
+        self.data.initWalls(7)
+
+        self.data.makeWall(pg.Vector2(pad, pad), pg.Vector2(WIDTH-pad, pad))
+        self.data.makeWall(pg.Vector2(WIDTH-pad, pad), pg.Vector2(WIDTH-pad, HEIGHT-pad))
+        self.data.makeWall(pg.Vector2(WIDTH-pad, HEIGHT-pad), pg.Vector2(pad, HEIGHT-pad))
+        self.data.makeWall(pg.Vector2(pad, HEIGHT-pad), pg.Vector2(pad, pad))
+        self.data.makeWall(pg.Vector2(pad, pad), pg.Vector2(500, 400))
+        self.data.makeWall(pg.Vector2(600, 400), pg.Vector2(WIDTH-pad, HEIGHT-pad))
+        self.data.makeWall(pg.Vector2(500, 150), pg.Vector2(500, 400))
+
     def mainloop(self):
         # main loop
         while True:
@@ -373,9 +375,11 @@ class Simulation():
             print("FPS:", self.clock.get_fps())
 
 if __name__ == '__main__':
-    sim = Simulation(4, num_boids=50, render=True)
+    sim = Simulation(4, num_boids=BOIDZ, render=True)
 
-    with open("example_infrastructure.json") as f:
-        sim.addWallsFromJSON(json.load(f)["walls"])
+    # with open("example_infrastructure.json") as f:
+    #     sim.addWallsFromJSON(json.load(f)["walls"][:5])
+
+    sim.addTestWalls()
 
     sim.mainloop()
