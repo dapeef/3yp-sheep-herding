@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>969</width>
-    <height>768</height>
+    <height>788</height>
    </rect>
   </property>
   <property name="font">
@@ -31,7 +31,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="home_tab">
        <attribute name="title">
@@ -115,7 +115,7 @@ Drone 3</string>
              <item row="3" column="2">
               <widget class="QPushButton" name="land_button4">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <sizepolicy hsizetype="Fixed" vsizetype="Ignored">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -184,7 +184,7 @@ Drone</string>
              <item row="1" column="2">
               <widget class="QPushButton" name="land_button2">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <sizepolicy hsizetype="Fixed" vsizetype="Ignored">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -197,7 +197,7 @@ Drone</string>
              <item row="0" column="2">
               <widget class="QPushButton" name="land_button1">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <sizepolicy hsizetype="Fixed" vsizetype="Ignored">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -210,7 +210,7 @@ Drone</string>
              <item row="2" column="2">
               <widget class="QPushButton" name="land_button3">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <sizepolicy hsizetype="Fixed" vsizetype="Ignored">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
@@ -228,42 +228,40 @@ Drone</string>
             <property name="title">
              <string>Commands</string>
             </property>
-            <layout class="QGridLayout" name="gridLayout">
-             <item row="1" column="1">
+            <layout class="QVBoxLayout" name="verticalLayout_4">
+             <item>
               <widget class="QPushButton" name="collect">
-               <property name="text">
-                <string>&quot;Collect&quot;</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QPushButton" name="movement3">
-               <property name="text">
-                <string>[Movement 3]</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QPushButton" name="movement2">
-               <property name="text">
-                <string>[Movement 2]</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <widget class="QPushButton" name="come_by">
                <property name="sizePolicy">
-                <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
                  <horstretch>0</horstretch>
                  <verstretch>0</verstretch>
                 </sizepolicy>
                </property>
+               <property name="styleSheet">
+                <string notr="true">font: 18pt;</string>
+               </property>
                <property name="text">
-                <string>&quot;Come by&quot;</string>
+                <string>Collect sheep</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="0" colspan="2">
+             <item>
+              <widget class="QPushButton" name="start_route">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font: 18pt;</string>
+               </property>
+               <property name="text">
+                <string>Start route</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QPushButton" name="stop_all">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Minimum" vsizetype="MinimumExpanding">
@@ -671,6 +669,9 @@ FOR MAP]</string>
              </item>
              <item>
               <widget class="QGroupBox" name="no_fly_box">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
                <property name="title">
                 <string>No fly zones</string>
                </property>

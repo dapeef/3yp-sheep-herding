@@ -185,9 +185,7 @@ class Ui(QMainWindow):
         self.land_button2.setEnabled(value)
         self.land_button3.setEnabled(value)
         self.land_button4.setEnabled(value)
-        self.come_by.setEnabled(value)
-        self.movement2.setEnabled(value)
-        self.movement3.setEnabled(value)
+        self.start_route.setEnabled(value)
         self.collect.setEnabled(value)
         self.stop_all.setEnabled(value)
 
