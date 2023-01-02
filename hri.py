@@ -497,6 +497,45 @@ class Ui(QMainWindow):
         # Change instructions
         self.instructions_label.setText("Successfully removed " + name)
 
+    def saveNoFly(self):
+        if self.mode == "edit_no_fly":
+            index = self.getSelectedIndex(self.no_fly_list_widget)
+
+            self.browser_map.page().runJavaScript("saveNoFly(" + str(index) + ");", self.saveNoFlyCallback)
+
+        else:
+            self.browser_map.page().runJavaScript("saveNoFly();", self.saveNoFlyCallback)
+
+    def saveNoFlyCallback(self, points):
+        if self.mode == "edit_no_fly":
+            index = self.getSelectedIndex(self.no_fly_list_widget)
+
+            self.data["no_fly"][index]["points"] = points
+            
+            self.instructions_label.setText("Successfully edited " + self.data["no_fly"][index]["name"])
+
+        else:
+            if points != None:
+                name = "No fly zone " + str(self.no_Fly_list_widget.count())
+                self.no_fly_list_widget.addItem(name)
+                self.data["no_fly"].append({
+                    "name": name,
+                    "points": points
+                })
+                
+                self.instructions_label.setText("Successfully added " + name)
+            
+            else:
+                self.instructions_label.setText("Save failed; not enough points selected")
+        
+        self.writeInfData()
+
+        # Revert button states
+        self.resetAllButtonsMap()
+
+        # Redraw infrastructure
+        self.drawInfrastructure()
+
     def selectNoFly(self, item):
         self.edit_no_fly.setEnabled(True)
         self.remove_no_fly.setEnabled(True)

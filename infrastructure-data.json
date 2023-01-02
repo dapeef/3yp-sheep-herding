@@ -808,12 +808,5 @@
             ]
         }
     ],
-    "no_fly": [
-        {
-            "name": "No fly zone 0"
-        },
-        {
-            "name": "No fly zone 1"
-        }
-    ]
+    "no_fly": []
 }
