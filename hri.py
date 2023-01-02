@@ -146,8 +146,6 @@ class Ui(QMainWindow):
 
         self.drawTestHome()
 
-        self.overlayTestHome()
-
     def drawTestHome(self):
         sheep_locations = [
             [51.6255863, -2.5121819],
@@ -172,14 +170,6 @@ class Ui(QMainWindow):
         self.drawSheep(sheep_locations)
         self.drawHerdingDrones(herding_drone_locations)
         self.drawMonitorDrones(monitor_drone_locations)
-
-    def overlayTestHome(self):
-        file_name = "chapel-cottage-above.jpg"
-        position = [51.627089, -2.513499]
-        rotation = 45
-        scale = 1
-
-        self.browser_home.page().runJavaScript("overlayImage('%s', %s, %s, %s)" % (file_name, position, rotation, scale), print)
 
     def drawSheep(self, locations):
         self.browser_home.page().runJavaScript("addDots(" + str(locations) + ", 'sheep');")
