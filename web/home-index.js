@@ -28,6 +28,23 @@ function addDots(locations, type) {
     };
 }
 
-function drawArchitecture(params) {
-    // Walls, gates, no fly etc
+function overlayImage(file_name, position, rotation, scale) {
+    const imageMapType = new google.maps.ImageMapType({
+        getTileUrl: function (coord, zoom) {
+          return [
+            "https://www.gstatic.com/io2010maps/tiles/5/L2_",
+            zoom,
+            "_",
+            coord.x,
+            "_",
+            coord.y,
+            ".png",
+          ].join("");
+        },
+        tileSize: new google.maps.Size(256, 256),
+      });
+    
+      map.overlayMapTypes.push(imageMapType);
 }
+
+overlayImage(0, 0, 0, 0);
