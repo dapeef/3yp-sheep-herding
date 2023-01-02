@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QUrl, Qt
+from PyQt5.QtGui import QPixmap
 import sys
 import os
 import json
@@ -55,6 +56,14 @@ class Ui(QMainWindow):
         self.map_layout_map.addWidget(self.browser_map)
         self.browser_map.loadFinished.connect(self.onLoadFinishedMap) # Once loaded, connect buttons
 
+
+        # Add items to live view dropdown menu
+        self.live_view_menu.addItems(["RGB", "Infrared"])
+        self.live_view_menu.currentTextChanged.connect(self.liveViewTextChange)
+
+        # Pixmap to hold live view image
+        self.live_view_pix = QPixmap("images\chapel-cottage.jpg")
+        self.live_view_tab.resizeEvent = self.resizeLiveViewImage
 
     # On map load
     def onLoadFinishedHome(self):
@@ -657,6 +666,24 @@ class Ui(QMainWindow):
         
         else:
             return None
+
+
+    # Live view tab
+    # Update image dimensions
+    def resizeLiveViewImage(self, *args, **kwargs):
+        width = self.live_view_image_label.width()
+        height = self.live_view_image_label.height() - 1
+        
+        self.live_view_image_label.setPixmap(self.live_view_pix.scaled(width, height, aspectRatioMode=1))
+
+    def liveViewTextChange(self, value):
+        if value == "RGB":
+            self.live_view_pix = QPixmap("images\chapel-cottage.jpg")
+        
+        elif value == "Infrared":
+            self.live_view_pix = QPixmap("images\chapel-cottage-inverted.jpg")
+        
+        self.resizeLiveViewImage()
 
 
 app = QApplication(sys.argv)
