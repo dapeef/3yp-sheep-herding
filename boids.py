@@ -393,7 +393,7 @@ class Simulation():
 
 if __name__ == '__main__':
     sim = Simulation(num_fears=2, num_boids=BOIDZ, render=True)
-    # with open("example_infrastructure.json") as f:
+    # with open("infrastructure-data.json") as f:
     #     sim.addWallsFromJSON(json.load(f)["walls"][:5])
     sim.addTestWalls()
 
