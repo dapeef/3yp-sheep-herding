@@ -30,6 +30,8 @@ class Ui(QMainWindow):
         self.save_no_fly.setHidden(True)
         self.cancel_no_fly.setHidden(True)
 
+        self.no_fly_box.setHidden(True)
+
         # Disable buttons until maps are loaded
         self.toggleButtonsEnabledHome(False)
         self.toggleButtonsEnabledRoute(False)
