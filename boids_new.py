@@ -41,7 +41,8 @@ TUNING = {
     # "speed_decay": 2        # Decay rate of speed -> v /= speed_decay * dt
     "target_vel": pg.Vector2(0, 0)
 }
-PIX_PER_METER = 1.5 # Number of pixels per meter in the real world
+PIX_PER_METER = 1.5     # Number of pixels per meter in the real world
+FEAR_SPEED = 300        # Speed of drones
 
 
 def clamp_magnitude(vector, magnitude):
@@ -192,7 +193,7 @@ class Boid(pg.sprite.Sprite):
 class Data():
     def __init__(self, n_boids, n_fears=100, n_walls=100):
         self.initBoids(n_boids)
-        self.initFears(n_fears)
+        self.initFears(n_fears, pg.Vector2(100,100))
         self.initWalls(n_walls)
 
     def initBoids(self, n_boids):
@@ -200,12 +201,16 @@ class Data():
         self.boids = np.empty((n_boids, 2), dtype=pg.Vector2)
         self.boids.fill(pg.Vector2(0, 0))
 
-    def initFears(self, n_fears):
+    def initFears(self, n_fears, start_pos=pg.Vector2(-10000, -10000)):
         # Fear array
         self.fears = np.empty((n_fears), dtype=pg.Vector2)
-        self.fears.fill(pg.Vector2(-10000, -10000)) # Initialise all fears far off screen
+        self.fears.fill(start_pos) # Initialise all fears far off screen
 
-        self.num_fears = 1
+        self.num_fears = 0
+
+        # Fear target array
+        self.fear_targets = np.empty((n_fears), dtype=pg.Vector2)
+        self.fear_targets.fill(start_pos) # Initialise all fears' target position far off screen
 
     def initWalls(self, n_walls):
         # Walls array
@@ -226,7 +231,7 @@ class Data():
 
     def drawFears(self, surface):
         for fear in self.fears:
-            pg.draw.circle(surface, (25, 0, 0), fear, TUNING["influence_dist"]["fear"]) # Draw red circle on mouse position
+            pg.draw.circle(surface, (32, 0, 0), fear, TUNING["influence_dist"]["fear"]) # Draw red circle on mouse position
         for fear in self.fears:
             pg.draw.circle(surface, (255, 0, 0), fear, 5) # Draw red circle on mouse position
 
@@ -258,8 +263,9 @@ class Simulation():
         self.clock = pg.time.Clock()
 
         # Set up boids and their data
-        self.nBoids = pg.sprite.Group()
         self.data = Data(num_boids, num_fears)
+
+        self.nBoids = pg.sprite.Group()
         for n in range(num_boids):
             self.nBoids.add(Boid(n, self.data, self.render, self.screen))  # spawns desired # of boidz
     
@@ -360,6 +366,15 @@ class Simulation():
 
         self.nBoids.update(dt, TUNING)
 
+        for i in range(len(self.data.fears)):
+            diff = self.data.fear_targets[i] - self.data.fears[i]
+
+            if diff.length() < dt * FEAR_SPEED:
+                self.data.fears[i] = self.data.fear_targets[i]
+            
+            else:
+                self.data.fears[i] = self.data.fears[i] +  diff.normalize() * dt * FEAR_SPEED
+
         if self.render:
             # Draw
             self.screen.fill(BGCOLOR)
@@ -374,11 +389,14 @@ class Simulation():
         else:
             print("FPS:", self.clock.get_fps())
 
+
 if __name__ == '__main__':
-    sim = Simulation(4, num_boids=BOIDZ, render=True)
+    sim = Simulation(num_fears=2, num_boids=BOIDZ, render=True)
 
     # with open("example_infrastructure.json") as f:
     #     sim.addWallsFromJSON(json.load(f)["walls"][:5])
+
+    sim.data.fear_targets[1] = pg.Vector2(500, 500)
 
     sim.addTestWalls()
 
