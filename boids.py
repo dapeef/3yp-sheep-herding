@@ -256,6 +256,9 @@ class Simulation():
                 pg.mouse.set_visible(False)
 
             if SHOWFPS : self.font = pg.font.Font(None, 30)
+
+            self.last_image_save = 0
+            self.image_save_rate = 1000 # Time between image saves, ms
         
         else:
             self.screen = None
@@ -386,6 +389,11 @@ class Simulation():
             if SHOWFPS : self.screen.blit(self.font.render(str(int(self.clock.get_fps())), True, [0,200,0]), (8, 8))
 
             pg.display.update()
+
+            if pg.time.get_ticks() > self.last_image_save + self.image_save_rate:
+                pg.image.save(self.screen, "dataset\output.png")
+
+                self.last_image_save = pg.time.get_ticks()
         
         else:
             print("FPS:", self.clock.get_fps())
