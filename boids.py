@@ -76,11 +76,12 @@ class Boid(pg.sprite.Sprite):
             self.image = pg.Surface((15, 15)).convert() # Area to render boid onto
             self.image.set_colorkey(0)
             self.color = pg.Color(0)  # preps color so we can use hsva
-            if boidNum == 0:
-                self.color.hsva = (randint(0,360), 90, 90) if cHSV is None else cHSV # randint(5,55) #4goldfish
-            else:
-                self.color.hsva = (0, 0, 60)
-            pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
+            # if self.bnum == 0:
+            # self.color.hsva = (randint(0,360), 90, 90)
+            # else:
+            self.color.hsva = (0, 0, 100)
+            # pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
+            pg.draw.ellipse(self.image, self.color, pg.Rect(3, 0, 9, 15)) # Blob shape
             self.orig_image = pg.transform.rotate(self.image.copy(), -90)
 
             # maxW, maxH = self.drawSurf.get_size()
