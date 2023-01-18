@@ -270,6 +270,7 @@ class Simulation():
             if self.save_image:
                 self.last_image_save = 0
                 self.image_save_rate = 1000 # Time between image saves, ms
+                self.save_count = 0
         
         else:
             self.screen = None
@@ -395,10 +396,19 @@ class Simulation():
             self.screen.fill(BGCOLOR)
 
             self.nBoids.draw(self.screen)
+
             if self.save_image and pg.time.get_ticks() > self.last_image_save + self.image_save_rate:
-                # self.nBoids.draw(self.screen)
-                pg.image.save(self.screen, "dataset\output.png")
+                pg.image.save(self.screen, "dataset\\" + str(self.save_count) + ".png") # Save image
+
+                dump = []
+
+                for pos in self.data.boids[:, 1]:
+                    dump.append([int(pos.x), int(pos.y)])
+
+                with open("dataset\\" + str(self.save_count) + ".json", 'w') as f:
+                    json.dump(dump, f, indent=4)
                 self.last_image_save = pg.time.get_ticks()
+                self.save_count += 1
 
             self.data.drawFears(self.screen)
             self.data.drawWalls(self.screen)
