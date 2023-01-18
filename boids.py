@@ -18,7 +18,6 @@ HEIGHT = 800            # Window Height (800)
 BGCOLOR = (0, 0, 0)     # Background color in RGB
 FPS = 60                # 30-90
 SHOWFPS = True          # Show frame rate
-MOUSEFEAR = True        # Is there a fear node on the cursor
 TUNING = {
     "max_speed": 150,       # Max movement speed
     # "max_force": 5,         # Max acceleration force
@@ -56,22 +55,25 @@ def clamp_magnitude(vector, magnitude):
 
 
 class Boid(pg.sprite.Sprite):
-    def __init__(self, boidNum, data, render, drawSurf=None, cHSV=None):
+    def __init__(self, boid_num, data, render, spawn_zone, draw_surf=None):
         super().__init__()
 
         self.data = data # Stores positions & rotations of all boids and fears
-        self.bnum = boidNum # This boid's number (ID)
+        self.bnum = boid_num # This boid's number (ID)
         self.render = render # Whether to render the pygame screen or not
 
         self.ang = pg.Vector2(0,0)
         self.accel = pg.Vector2(0,0)
         self.vel = pg.Vector2(randint(-100, 100), randint(-100, 100))
-        self.pos = pg.Vector2(randint(50, WIDTH - 50), randint(50, HEIGHT - 50))
+        self.pos = pg.Vector2(
+            randint(spawn_zone.left, spawn_zone.right),
+            randint(spawn_zone.top, spawn_zone.bottom)
+        )
         # Finally, output pos and vel to array
         self.data.boids[self.bnum, :2] = [self.pos, self.vel]
 
         if render:
-            self.drawSurf = drawSurf # Main screen surface
+            self.draw_surf = draw_surf # Main screen surface
 
             self.image = pg.Surface((15, 15)).convert() # Area to render boid onto
             self.image.set_colorkey(0)
@@ -83,10 +85,8 @@ class Boid(pg.sprite.Sprite):
             pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
             self.orig_image = pg.transform.rotate(self.image.copy(), -90)
 
-            # maxW, maxH = self.drawSurf.get_size()
+            # maxW, maxH = self.draw_surf.get_size()
             self.rect = self.image.get_rect(center=(self.pos.x, self.pos.y))
-        
-
     
     def update(self, dt, tuning):
         def getNearest(type, num_select=7):
@@ -237,12 +237,14 @@ class Data():
 
 
 class Simulation():
-    def __init__(self, num_fears, num_boids=50, render=True):
+    def __init__(self, num_fears, num_boids=50, render=True, mouse_fear=False, spawn_zone=pg.Rect(300, 300, 100, 100)):
         self.render = render # Whether to render the pygame screen or not
 
         if self.render:
             pg.init()  # prepare window
             pg.display.set_caption("Sheeeeeeep") # Window title
+
+            self.mouse_fear = mouse_fear
 
             # setup fullscreen or window mode
             if FLLSCRN:
@@ -252,7 +254,7 @@ class Simulation():
             else: self.screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
 
             # If mouse controls fear
-            if MOUSEFEAR:
+            if self.mouse_fear:
                 pg.mouse.set_visible(False)
 
             if SHOWFPS : self.font = pg.font.Font(None, 30)
@@ -267,7 +269,7 @@ class Simulation():
 
         self.nBoids = pg.sprite.Group()
         for n in range(num_boids):
-            self.nBoids.add(Boid(n, self.data, self.render, self.screen))  # spawns desired # of boidz
+            self.nBoids.add(Boid(n, self.data, self.render, spawn_zone, self.screen))  # spawns desired # of boidz
     
     def addWallsFromJSON(self, JSON):
         num_segments = 0
@@ -306,11 +308,6 @@ class Simulation():
 
         self.data.initWalls(num_segments)
 
-        print(transformCoords(pg.Vector2([
-                    51.62394653210728,
-                    -2.5112555701146744
-                ])))
-
         for wall in JSON:
             points = wall["points"]
 
@@ -323,15 +320,14 @@ class Simulation():
     def addTestWalls(self):
         pad = 40
 
-        self.data.initWalls(7)
+        self.data.initWalls(6)
 
         self.data.makeWall(pg.Vector2(pad, pad), pg.Vector2(WIDTH-pad, pad))
         self.data.makeWall(pg.Vector2(WIDTH-pad, pad), pg.Vector2(WIDTH-pad, HEIGHT-pad))
         self.data.makeWall(pg.Vector2(WIDTH-pad, HEIGHT-pad), pg.Vector2(pad, HEIGHT-pad))
         self.data.makeWall(pg.Vector2(pad, HEIGHT-pad), pg.Vector2(pad, pad))
-        self.data.makeWall(pg.Vector2(pad, pad), pg.Vector2(500, 400))
-        self.data.makeWall(pg.Vector2(600, 400), pg.Vector2(WIDTH-pad, HEIGHT-pad))
-        self.data.makeWall(pg.Vector2(500, 150), pg.Vector2(500, 400))
+        self.data.makeWall(pg.Vector2(600, pad), pg.Vector2(600, 400))
+        self.data.makeWall(pg.Vector2(600, 500), pg.Vector2(600, HEIGHT-pad))
 
     def mainloop(self):
         # main loop
@@ -345,8 +341,8 @@ class Simulation():
 
     def stepTime(self):
         if self.render:
-            # Get mouse position if MOUSEFEAR
-            if MOUSEFEAR:
+            # Get mouse position if self.mouse_fear
+            if self.mouse_fear:
                 mouse_pos = pg.mouse.get_pos()
                 
                 self.data.fears[0] = pg.Vector2(mouse_pos)
@@ -357,11 +353,11 @@ class Simulation():
                 if e.type == pg.QUIT or e.type == pg.KEYDOWN and e.key == pg.K_ESCAPE:
                     return "quit"
                 
-                if e.type == pg.MOUSEBUTTONDOWN and MOUSEFEAR:
-                    # data.fears = np.append(data.fears, [pg.Vector2(mouse_pos)], axis=0)
-                    # data.fears = np.insert(data.fears, pg.Vector2(mouse_pos), len(data.fears))
-                    self.data.fears[self.data.num_fears] = pg.Vector2(mouse_pos)
-                    self.data.num_fears += 1
+                # if e.type == pg.MOUSEBUTTONDOWN and self.mouse_fear:
+                #     # data.fears = np.append(data.fears, [pg.Vector2(mouse_pos)], axis=0)
+                #     # data.fears = np.insert(data.fears, pg.Vector2(mouse_pos), len(data.fears))
+                #     self.data.fears[self.data.num_fears] = pg.Vector2(mouse_pos)
+                #     self.data.num_fears += 1
 
         dt = self.clock.tick(FPS) / 1000
 
@@ -392,7 +388,7 @@ class Simulation():
 
 
 if __name__ == '__main__':
-    sim = Simulation(num_fears=2, num_boids=BOIDZ, render=True)
+    sim = Simulation(num_fears=2, num_boids=BOIDZ, render=True, mouse_fear=True)
     # with open("infrastructure-data.json") as f:
     #     sim.addWallsFromJSON(json.load(f)["walls"][:5])
     sim.addTestWalls()
