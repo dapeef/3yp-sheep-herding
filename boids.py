@@ -30,7 +30,7 @@ TUNING = {
         'fear': 2e6,
         'wall': 2e7
     },
-    "target_dist": 40,      # Target separation
+    "target_dist": 30,      # Target separation
     "influence_dist": {
         "boid": 200,        # "visibility" distance for the boids
         "fear": 200,
@@ -238,12 +238,14 @@ class Data():
 
 
 class Simulation():
-    def __init__(self, num_fears, num_boids=50, render=True):
+    def __init__(self, num_fears, num_boids=50, render=True, save_image=False):
         self.render = render # Whether to render the pygame screen or not
 
         if self.render:
             pg.init()  # prepare window
             pg.display.set_caption("Sheeeeeeep") # Window title
+
+            self.save_image = save_image
 
             # setup fullscreen or window mode
             if FLLSCRN:
@@ -258,8 +260,9 @@ class Simulation():
 
             if SHOWFPS : self.font = pg.font.Font(None, 30)
 
-            self.last_image_save = 0
-            self.image_save_rate = 1000 # Time between image saves, ms
+            if self.save_image:
+                self.last_image_save = 0
+                self.image_save_rate = 1000 # Time between image saves, ms
         
         else:
             self.screen = None
@@ -383,6 +386,13 @@ class Simulation():
         if self.render:
             # Draw
             self.screen.fill(BGCOLOR)
+
+
+            if self.save_image and pg.time.get_ticks() > self.last_image_save + self.image_save_rate:
+                self.nBoids.draw(self.screen)
+                pg.image.save(self.screen, "dataset\output.png")
+                self.last_image_save = pg.time.get_ticks()
+
             self.data.drawFears(self.screen)
             self.data.drawWalls(self.screen)
             self.nBoids.draw(self.screen)
@@ -391,10 +401,6 @@ class Simulation():
 
             pg.display.update()
 
-            if pg.time.get_ticks() > self.last_image_save + self.image_save_rate:
-                pg.image.save(self.screen, "dataset\output.png")
-
-                self.last_image_save = pg.time.get_ticks()
         
         else:
             print("FPS:", self.clock.get_fps())
