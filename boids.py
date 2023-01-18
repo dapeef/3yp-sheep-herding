@@ -12,7 +12,6 @@ Copyright (c) 2021  Nikolaus Stromberg  nikorasu85@gmail.com
 '''
 
 FLLSCRN = False         # True for Fullscreen, or False for Window
-BOIDZ = 50              # How many boids to spawn, too many may slow fps
 WIDTH = 1200            # Window Width (1200)
 HEIGHT = 800            # Window Height (800)
 BGCOLOR = (0, 0, 0)     # Background color in RGB
@@ -38,7 +37,8 @@ TUNING = {
     # "fear_decay": 1,        # see below
     # "fear_const": .05,      # 1/(r/k)^a -> k is const, a is decay
     # "speed_decay": 2        # Decay rate of speed -> v /= speed_decay * dt
-    "target_vel": pg.Vector2(0, 0)
+    "target_vel": pg.Vector2(0, 0),  # Speed which the boids tend towards under no other forces
+    "wall_thickness": 5       # Amount of padding given to the wall (x on either side of the wall)
 }
 PIX_PER_METER = 1.5     # Number of pixels per meter in the real world
 FEAR_SPEED = 300        # Speed of drones
@@ -155,9 +155,8 @@ class Boid(pg.sprite.Sprite):
             rel_pos = self.pos - closest_point # r_{pi} in the paper
 
             if rel_pos.length() <= tuning["influence_dist"]["wall"]:
-                if rel_pos.length() == 0: # Handle boid being exactly on the line
-                    rel_pos = pg.Vector2(choice([-2, -1, 1, 2]), choice([-2, -1, 1, 2]))
-                fear += (1 / rel_pos.length()**8) * rel_pos
+                dist = max(rel_pos.length() - tuning["wall_thickness"], 1)
+                fear += (1 / dist**8) * rel_pos
 
         # Apply weights
         sep *= tuning["weightings"]['sep']
@@ -391,7 +390,7 @@ class Simulation():
 
 
 if __name__ == '__main__':
-    sim = Simulation(num_fears=2, num_boids=BOIDZ, render=True, mouse_fear=True)
+    sim = Simulation(num_fears=2, num_boids=50, render=True, mouse_fear=True)
     # with open("infrastructure-data.json") as f:
     #     sim.addWallsFromJSON(json.load(f)["walls"][:5])
     sim.addTestWalls()
