@@ -78,8 +78,8 @@ class Boid(pg.sprite.Sprite):
             self.image = pg.Surface((15, 15)).convert() # Area to render boid onto
             self.image.set_colorkey(0)
             self.color = pg.Color(0)  # preps color so we can use hsva
-            if boidNum == 0:
-                self.color.hsva = (randint(0,360), 90, 90) if cHSV is None else cHSV # randint(5,55) #4goldfish
+            if self.bnum == 0:
+                self.color.hsva = (randint(0,360), 90, 90) # randint(5,55) #4goldfish
             else:
                 self.color.hsva = (0, 0, 60)
             pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
@@ -87,7 +87,7 @@ class Boid(pg.sprite.Sprite):
 
             # maxW, maxH = self.draw_surf.get_size()
             self.rect = self.image.get_rect(center=(self.pos.x, self.pos.y))
-    
+ 
     def update(self, dt, tuning):
         def getNearest(type, num_select=7):
             # Make list of nearby boids, sorted by distance
@@ -117,6 +117,9 @@ class Boid(pg.sprite.Sprite):
         for boid in getNearest("boid"):
             rel_pos = boid[0] - self.pos # r_{ij} in the paper
             rel_vel = boid[1] - self.vel # v_j - v_i in the paper
+
+            if rel_pos.length() == 0: # Handle boid being exactly on the line
+                    rel_pos = pg.Vector2(choice([-2, -1, 1, 2]), choice([-2, -1, 1, 2]))
 
             sep += (1 - (tuning["target_dist"] / rel_pos.length())**3) * rel_pos
             ali += rel_vel
