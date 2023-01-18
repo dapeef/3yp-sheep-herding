@@ -14,7 +14,17 @@ sim.addTestWalls()
 
 # Change one of the fear position's target position
 sim.data.fear_targets[1] = pg.Vector2(500, 500)
-# Equiv to: sim.data.fear_targets[1].update(500, 500)
+# Equivalent to: sim.data.fear_targets[1].update(500, 500)
 
 # Set the simulation running
-sim.mainloop()
+# sim.mainloop()
+
+while True:
+    # sim.data.fear_targets[2] = 
+
+    info = sim.stepTime()
+
+    if info == "quit":
+        pg.quit()
+
+        break
