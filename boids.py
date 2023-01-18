@@ -231,10 +231,17 @@ class Data():
             pg.draw.circle(surface, (255, 0, 0), wall[1], 2.5) # Draw red circle on other end
 
     def drawFears(self, surface):
+        alpha_surface = pg.Surface((WIDTH, HEIGHT))
+        alpha_surface.set_colorkey((0,0,0))
+        alpha_surface.set_alpha(128)
+
         for fear in self.fears:
-            pg.draw.circle(surface, (32, 0, 0), fear, TUNING["influence_dist"]["fear"]) # Draw red circle on mouse position
+            pg.draw.circle(alpha_surface, (100, 0, 0), fear, TUNING["influence_dist"]["fear"]) # Draw big circle at every fear
+
+        surface.blit(alpha_surface, (0, 0))
+
         for fear in self.fears:
-            pg.draw.circle(surface, (255, 0, 0), fear, 5) # Draw red circle on mouse position
+            pg.draw.circle(surface, (255, 0, 0), fear, 5) # Draw dot at avery fear
 
 
 class Simulation():
@@ -387,15 +394,14 @@ class Simulation():
             # Draw
             self.screen.fill(BGCOLOR)
 
-
+            self.nBoids.draw(self.screen)
             if self.save_image and pg.time.get_ticks() > self.last_image_save + self.image_save_rate:
-                self.nBoids.draw(self.screen)
+                # self.nBoids.draw(self.screen)
                 pg.image.save(self.screen, "dataset\output.png")
                 self.last_image_save = pg.time.get_ticks()
 
             self.data.drawFears(self.screen)
             self.data.drawWalls(self.screen)
-            self.nBoids.draw(self.screen)
 
             if SHOWFPS : self.screen.blit(self.font.render(str(int(self.clock.get_fps())), True, [0,200,0]), (8, 8))
 
@@ -407,7 +413,7 @@ class Simulation():
 
 
 if __name__ == '__main__':
-    sim = Simulation(num_fears=2, num_boids=BOIDZ, render=True)
+    sim = Simulation(num_fears=2, num_boids=BOIDZ, render=True, save_image=True)
     # with open("infrastructure-data.json") as f:
     #     sim.addWallsFromJSON(json.load(f)["walls"][:5])
     sim.addTestWalls()
