@@ -4,6 +4,7 @@ import pygame as pg
 import numpy as np
 import math
 import json
+import os
 
 '''
 PyNBoids - a Boids simulation - github.com/Nikorasu/PyNBoids
@@ -398,15 +399,19 @@ class Simulation():
             self.nBoids.draw(self.screen)
 
             if self.save_image and pg.time.get_ticks() > self.last_image_save + self.image_save_rate:
+                if not '.\\dataset' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
+                    os.mkdir(".\\dataset")
+
                 pg.image.save(self.screen, "dataset\\" + str(self.save_count) + ".png") # Save image
 
+                # Save position data
                 dump = []
-
                 for pos in self.data.boids[:, 1]:
                     dump.append([int(pos.x), int(pos.y)])
-
                 with open("dataset\\" + str(self.save_count) + ".json", 'w') as f:
                     json.dump(dump, f, indent=4)
+
+                # Iterate and update timers
                 self.last_image_save = pg.time.get_ticks()
                 self.save_count += 1
 
