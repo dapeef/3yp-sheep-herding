@@ -4,6 +4,7 @@ import pygame as pg
 import numpy as np
 import math
 import json
+import transform as tf
 
 '''
 PyNBoids - a Boids simulation - github.com/Nikorasu/PyNBoids
@@ -276,47 +277,20 @@ class Simulation():
     def addWallsFromJSON(self, JSON):
         num_segments = 0
 
-        min_point = pg.Vector2(
-            JSON[0]["points"][0][0],
-            JSON[0]["points"][0][1]
-        )
-        max_point = pg.Vector2(
-            JSON[0]["points"][0][0],
-            JSON[0]["points"][0][1]
-        )
-
         for wall in JSON:
             num_segments += len(wall["points"]) - 1
 
-            for point in wall["points"]:
-                min_point.x = min(min_point.x, point[0])
-                max_point.x = max(max_point.x, point[0])
-                min_point.y = min(min_point.y, point[1])
-                max_point.y = max(max_point.y, point[1])
-        
-        center_point = (min_point + max_point)/2
-
-        earth_circ = 40075e3 # km
-        m_per_lat = earth_circ / 360 # meters per degree of latitude
-        m_per_lng = earth_circ * math.cos(center_point.y / 180 * math.pi) / 360
-
-        def transformCoords(lat_long):
-            rel_lat_long = lat_long - min_point
-
-            return pg.Vector2(
-                rel_lat_long.y * m_per_lng * PIX_PER_METER,
-                HEIGHT - rel_lat_long.x * m_per_lat * PIX_PER_METER # Flipping becaue (0,0) is top left in pg
-            ) # switching x and y because lat and long are (y,x)
-
         self.data.initWalls(num_segments)
+
+        bounds = tf.GetWallBounds(JSON)
 
         for wall in JSON:
             points = wall["points"]
 
             for i in range(len(points) - 1):
                 self.data.makeWall(
-                    start_point=transformCoords(pg.Vector2(points[i][0], points[i][1])),
-                    end_point=transformCoords(pg.Vector2(points[i+1][0], points[i+1][1]))
+                    start_point=tf.TransformLP(pg.Vector2(points[i][0], points[i][1]), HEIGHT, bounds),
+                    end_point=tf.TransformLP(pg.Vector2(points[i+1][0], points[i+1][1]), HEIGHT, bounds)
                 )
 
     def addTestWalls(self):
@@ -391,8 +365,8 @@ class Simulation():
 
 if __name__ == '__main__':
     sim = Simulation(num_fears=2, num_boids=50, render=True, mouse_fear=True)
-    # with open("infrastructure-data.json") as f:
-    #     sim.addWallsFromJSON(json.load(f)["walls"][:5])
-    sim.addTestWalls()
+    with open("infrastructure-data.json") as f:
+        sim.addWallsFromJSON(json.load(f)["walls"][:5])
+    # sim.addTestWalls()
 
     sim.mainloop()
