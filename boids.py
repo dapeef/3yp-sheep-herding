@@ -246,14 +246,20 @@ class Data():
 
 
 class Simulation():
-    def __init__(self, num_fears, num_boids=50, render=True, save_image=False):
+    def __init__(self, num_fears, num_boids=50, render=True, image_save_type=None, save_rate=1000):
         self.render = render # Whether to render the pygame screen or not
 
         if self.render:
             pg.init()  # prepare window
             pg.display.set_caption("Sheeeeeeep") # Window title
 
-            self.save_image = save_image
+            if image_save_type == None or \
+               image_save_type == "single" or \
+               image_save_type == "dataset":
+                self.image_save_type = image_save_type
+            
+            else:
+                raise Exception("\"" + image_save_type + "\" is not a valid input for image_save_type. Options are None, \"single\" or \"dataset\".")
 
             # setup fullscreen or window mode
             if FLLSCRN:
@@ -268,9 +274,9 @@ class Simulation():
 
             if SHOWFPS : self.font = pg.font.Font(None, 30)
 
-            if self.save_image:
+            if self.image_save_type != None:
                 self.last_image_save = 0
-                self.image_save_rate = 1000 # Time between image saves, ms
+                self.image_save_rate = save_rate # Time between image saves, ms
                 self.save_count = 0
         
         else:
@@ -398,17 +404,26 @@ class Simulation():
 
             self.nBoids.draw(self.screen)
 
-            if self.save_image and pg.time.get_ticks() > self.last_image_save + self.image_save_rate:
-                if not '.\\dataset' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
-                    os.mkdir(".\\dataset")
+            if self.image_save_type != None and pg.time.get_ticks() > self.last_image_save + self.image_save_rate:
+                if self.image_save_type == "dataset":
+                    if not '.\\dataset' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
+                        os.mkdir(".\\dataset")
 
-                pg.image.save(self.screen, "dataset\\" + str(self.save_count) + ".png") # Save image
+                    file_name = "dataset\\" + str(self.save_count)
+                
+                else:
+                    if not '.\\temp' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
+                        os.mkdir(".\\temp")
+                    
+                    file_name = "temp\\boids-out"
+
+                pg.image.save(self.screen, file_name + ".png") # Save image
 
                 # Save position data
                 dump = []
                 for pos in self.data.boids[:, 1]:
                     dump.append([int(pos.x), int(pos.y)])
-                with open("dataset\\" + str(self.save_count) + ".json", 'w') as f:
+                with open(file_name + ".json", 'w') as f:
                     json.dump(dump, f, indent=4)
 
                 # Iterate and update timers
@@ -428,7 +443,7 @@ class Simulation():
 
 
 if __name__ == '__main__':
-    sim = Simulation(num_fears=2, num_boids=BOIDZ, render=True, save_image=True)
+    sim = Simulation(num_fears=2, num_boids=BOIDZ, render=True, image_save_type="single")
     # with open("infrastructure-data.json") as f:
     #     sim.addWallsFromJSON(json.load(f)["walls"][:5])
     sim.addTestWalls()
