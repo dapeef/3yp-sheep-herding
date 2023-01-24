@@ -266,7 +266,7 @@ class Simulation():
                 currentRez = (pg.display.Info().current_w, pg.display.Info().current_h)
                 self.screen = pg.display.set_mode(currentRez, pg.SCALED)
                 pg.mouse.set_visible(False)
-            else: self.screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
+            else: self.screen = pg.display.set_mode((WIDTH, HEIGHT))
 
             # If mouse controls fear
             if MOUSEFEAR:
