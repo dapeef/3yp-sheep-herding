@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtCore import QUrl, Qt
+from PyQt5.QtCore import QUrl, Qt, QTimer
 from PyQt5.QtGui import QPixmap
 import sys
 import os
@@ -69,6 +69,11 @@ class Ui(QMainWindow):
     def onLoadFinishedHome(self):
         print("Home map ready!")
 
+        # Initialise update timer
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.drawTestHome)
+        self.timer.start(1000)
+
         # Once map is loaded, connect buttons to functions
         self.stop_all.clicked.connect(self.stopAllClick)
 
@@ -83,9 +88,6 @@ class Ui(QMainWindow):
 
     def onLoadFinishedRoute(self):
         print("Route edit map ready!")
-
-        # Once map is loaded, connect buttons to functions
-        #self.stop_all.clicked.connect(self.buttonClick)
         
         # Draw infrastructure
         self.drawInfrastructure()
