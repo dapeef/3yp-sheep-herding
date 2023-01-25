@@ -4,10 +4,10 @@ import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame as pg
 import numpy as np
-import math
 import json
 import transform as tf
 import sys
+from PIL import Image
 
 
 FLLSCRN = False         # True for Fullscreen, or False for Window
@@ -414,8 +414,6 @@ class Simulation():
                 elif self.image_save_type == "hri":
                     if not '.\\temp' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
                         os.mkdir(".\\temp")
-                    
-                    pg.image.save(self.screen, "temp\\boids-out.png") # Save image
 
                     # Format position data
                     boids_dump = []
@@ -433,10 +431,16 @@ class Simulation():
                     monitor_pos = self.transform.TransformPL(pg.Vector2(WIDTH/2, HEIGHT/2))
                     monitor_dump = [[monitor_pos.x, monitor_pos.y]]
 
+                    # Get image in string
+                    image_bytes = pg.image.tostring(self.screen, "RGB") # Image in bytes
+                    img = Image.frombytes("RGB", (WIDTH, HEIGHT), image_bytes)
+                    image = np.array(img).tolist()
+
                     all_dump = {
                         "sheep": boids_dump,
                         "drones": fear_dump,
-                        "monitoring": monitor_dump
+                        "monitoring": monitor_dump,
+                        "image": image
                     }
 
                     sys.stdout.write(json.dumps(all_dump))
@@ -459,7 +463,7 @@ class Simulation():
 
 
 if __name__ == '__main__':
-    sim = Simulation(num_fears=2, num_boids=50, mouse_fear=True, image_save_type="hri")
+    sim = Simulation(num_fears=2, num_boids=50, mouse_fear=True, image_save_type="hri", save_rate=500)
     
     sim.addWallsFromHRI()
     # sim.addTestWalls()
