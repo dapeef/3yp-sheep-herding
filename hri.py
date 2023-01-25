@@ -175,8 +175,6 @@ class Ui(QMainWindow):
             sheep_locations = all_locations["sheep"]
             herding_drone_locations = all_locations["drones"]
             monitor_drone_locations = all_locations["monitoring"]
-
-            print(len(all_locations["image"]))
         
         except json.decoder.JSONDecodeError:
             sheep_locations = []

@@ -415,6 +415,8 @@ class Simulation():
                     if not '.\\temp' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
                         os.mkdir(".\\temp")
 
+                    pg.image.save(self.screen, "temp\\boids.png") # Image in bytes
+
                     # Format position data
                     boids_dump = []
                     for pos in self.data.boids[:, 0]:
@@ -431,16 +433,16 @@ class Simulation():
                     monitor_pos = self.transform.TransformPL(pg.Vector2(WIDTH/2, HEIGHT/2))
                     monitor_dump = [[monitor_pos.x, monitor_pos.y]]
 
-                    # Get image in string
-                    image_bytes = pg.image.tostring(self.screen, "RGB") # Image in bytes
-                    img = Image.frombytes("RGB", (WIDTH, HEIGHT), image_bytes)
-                    image = np.array(img).tolist()
+                    # # Get image in string
+                    # image_bytes = pg.image.tostring(self.screen, "RGB") # Image in bytes
+                    # img = Image.frombytes("RGB", (WIDTH, HEIGHT), image_bytes)
+                    # image = np.array(img).tolist()
 
                     all_dump = {
                         "sheep": boids_dump,
                         "drones": fear_dump,
                         "monitoring": monitor_dump,
-                        "image": image
+                        # "image": image
                     }
 
                     sys.stdout.write(json.dumps(all_dump))
