@@ -10,7 +10,7 @@ class Transform():
 
         earth_circ = 40075e3 # km
         self.m_per_lat = earth_circ / 360 # meters per degree of latitude
-        self.m_per_lng = earth_circ * math.cos(self.bound_center.y / 180 * math.pi) / 360
+        self.m_per_lng = earth_circ * math.cos(self.bound_center.x / 180 * math.pi) / 360 # using x because latitude is upwards
 
     def TransformLP(self, lat_long):
         rel_lat_long = lat_long - self.bounds["min"]
