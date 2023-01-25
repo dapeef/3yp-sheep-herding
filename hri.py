@@ -156,15 +156,19 @@ class Ui(QMainWindow):
         self.drawTestHome()
 
     def drawTestHome(self):
-        sheep_locations = [
-            [51.6255863, -2.5121819],
-            [51.626060, -2.512327],
-            [51.626045, -2.512716],
-            [51.626151, -2.511915],
-            [51.625848, -2.512039],
-            [51.625616, -2.512513],
-            [51.625737, -2.512117]
-        ]
+        try:
+            with open("temp\\boids-out.json") as f:
+                sheep_locations = json.load(f)
+        except FileNotFoundError:
+            sheep_locations = [
+                [51.6255863, -2.5121819],
+                [51.626060, -2.512327],
+                [51.626045, -2.512716],
+                [51.626151, -2.511915],
+                [51.625848, -2.512039],
+                [51.625616, -2.512513],
+                [51.625737, -2.512117]
+            ]
 
         herding_drone_locations = [
             [51.626360, -2.513160],
