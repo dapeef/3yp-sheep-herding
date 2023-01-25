@@ -7,11 +7,6 @@ import json
 import os
 import transform as tf
 
-'''
-PyNBoids - a Boids simulation - github.com/Nikorasu/PyNBoids
-Uses numpy array math instead of math lib, more efficient.
-Copyright (c) 2021  Nikolaus Stromberg  nikorasu85@gmail.com
-'''
 
 FLLSCRN = False         # True for Fullscreen, or False for Window
 WIDTH = 1200            # Window Width (1200)
@@ -264,12 +259,12 @@ class Simulation():
             pg.display.set_caption("Sheeeeeeep") # Window title
 
             if image_save_type == None or \
-               image_save_type == "single" or \
+               image_save_type == "hri" or \
                image_save_type == "dataset":
                 self.image_save_type = image_save_type
             
             else:
-                raise Exception("\"" + image_save_type + "\" is not a valid input for image_save_type. Options are None, \"single\" or \"dataset\".")
+                raise Exception("\"" + image_save_type + "\" is not a valid input for image_save_type. Options are None, \"hri\" or \"dataset\".")
             
             self.mouse_fear = mouse_fear
 
@@ -397,19 +392,27 @@ class Simulation():
                         os.mkdir(".\\dataset")
 
                     file_name = "dataset\\" + str(self.save_count)
+                    
+                    # Format position data
+                    dump = []
+                    for pos in self.data.boids[:, 0]:
+                        dump.append([pos.x, pos.y])
                 
-                else:
+                elif self.image_save_type == "hri":
                     if not '.\\temp' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
                         os.mkdir(".\\temp")
                     
                     file_name = "temp\\boids-out"
+                    
+                    # Format position data
+                    dump = []
+                    for pos in self.data.boids[:, 0]:
+                        trans_pos = self.transform.TransformPL(pos)
+                        dump.append([trans_pos.x, trans_pos.y])
 
                 pg.image.save(self.screen, file_name + ".png") # Save image
 
                 # Save position data
-                dump = []
-                for pos in self.data.boids[:, 0]:
-                    dump.append([pos.x, pos.y])
                 with open(file_name + ".json", 'w') as f:
                     json.dump(dump, f, indent=4)
 
@@ -430,7 +433,7 @@ class Simulation():
 
 
 if __name__ == '__main__':
-    sim = Simulation(num_fears=2, num_boids=50, mouse_fear=True, image_save_type="single")
+    sim = Simulation(num_fears=2, num_boids=50, mouse_fear=True, image_save_type="hri")
     
     sim.addWallsFromHRI()
     # sim.addTestWalls()
