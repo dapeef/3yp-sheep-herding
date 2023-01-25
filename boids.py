@@ -419,7 +419,7 @@ class Simulation():
 
                 # Save position data
                 dump = []
-                for pos in self.data.boids[:, 1]:
+                for pos in self.data.boids[:, 0]:
                     dump.append([int(pos.x), int(pos.y)])
                 with open(file_name + ".json", 'w') as f:
                     json.dump(dump, f, indent=4)
