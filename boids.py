@@ -4,6 +4,7 @@ import pygame as pg
 import numpy as np
 import math
 import json
+import os
 import transform as tf
 
 '''
@@ -29,7 +30,7 @@ TUNING = {
         'fear': 2e6,
         'wall': 2e7
     },
-    "target_dist": 40,      # Target separation
+    "target_dist": 30,      # Target separation
     "influence_dist": {
         "boid": 200,        # "visibility" distance for the boids
         "fear": 200,
@@ -79,11 +80,12 @@ class Boid(pg.sprite.Sprite):
             self.image = pg.Surface((15, 15)).convert() # Area to render boid onto
             self.image.set_colorkey(0)
             self.color = pg.Color(0)  # preps color so we can use hsva
-            if self.bnum == 0:
-                self.color.hsva = (randint(0,360), 90, 90) # randint(5,55) #4goldfish
-            else:
-                self.color.hsva = (0, 0, 60)
-            pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
+            # if self.bnum == 0:
+            # self.color.hsva = (randint(0,360), 90, 90)
+            # else:
+            self.color.hsva = (0, 0, 100)
+            # pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
+            pg.draw.ellipse(self.image, self.color, pg.Rect(3, 0, 9, 15)) # Blob shape
             self.orig_image = pg.transform.rotate(self.image.copy(), -90)
 
             # maxW, maxH = self.draw_surf.get_size()
@@ -233,20 +235,35 @@ class Data():
             pg.draw.circle(surface, (255, 0, 0), wall[1], 2.5) # Draw red circle on other end
 
     def drawFears(self, surface):
+        alpha_surface = pg.Surface((WIDTH, HEIGHT))
+        alpha_surface.set_colorkey((0,0,0))
+        alpha_surface.set_alpha(128)
+
         for fear in self.fears:
-            pg.draw.circle(surface, (32, 0, 0), fear, TUNING["influence_dist"]["fear"]) # Draw red circle on mouse position
+            pg.draw.circle(alpha_surface, (100, 0, 0), fear, TUNING["influence_dist"]["fear"]) # Draw big circle at every fear
+
+        surface.blit(alpha_surface, (0, 0))
+
         for fear in self.fears:
-            pg.draw.circle(surface, (255, 0, 0), fear, 5) # Draw red circle on mouse position
+            pg.draw.circle(surface, (255, 0, 0), fear, 5) # Draw dot at avery fear
 
 
 class Simulation():
-    def __init__(self, num_fears, num_boids=50, render=True, mouse_fear=False, spawn_zone=pg.Rect(300, 300, 100, 100)):
+    def __init__(self, num_fears, num_boids=50, render=True, mouse_fear=False, spawn_zone=pg.Rect(300, 300, 100, 100), image_save_type=None, save_rate=1000):
         self.render = render # Whether to render the pygame screen or not
 
         if self.render:
             pg.init()  # prepare window
             pg.display.set_caption("Sheeeeeeep") # Window title
 
+            if image_save_type == None or \
+               image_save_type == "single" or \
+               image_save_type == "dataset":
+                self.image_save_type = image_save_type
+            
+            else:
+                raise Exception("\"" + image_save_type + "\" is not a valid input for image_save_type. Options are None, \"single\" or \"dataset\".")
+            
             self.mouse_fear = mouse_fear
 
             # setup fullscreen or window mode
@@ -254,13 +271,18 @@ class Simulation():
                 currentRez = (pg.display.Info().current_w, pg.display.Info().current_h)
                 self.screen = pg.display.set_mode(currentRez, pg.SCALED)
                 pg.mouse.set_visible(False)
-            else: self.screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
+            else: self.screen = pg.display.set_mode((WIDTH, HEIGHT))
 
             # If mouse controls fear
             if self.mouse_fear:
                 pg.mouse.set_visible(False)
 
             if SHOWFPS : self.font = pg.font.Font(None, 30)
+
+            if self.image_save_type != None:
+                self.last_image_save = 0
+                self.image_save_rate = save_rate # Time between image saves, ms
+                self.save_count = 0
         
         else:
             self.screen = None
@@ -351,20 +373,50 @@ class Simulation():
         if self.render:
             # Draw
             self.screen.fill(BGCOLOR)
+
+            self.nBoids.draw(self.screen)
+
+            if self.image_save_type != None and pg.time.get_ticks() > self.last_image_save + self.image_save_rate:
+                if self.image_save_type == "dataset":
+                    if not '.\\dataset' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
+                        os.mkdir(".\\dataset")
+
+                    file_name = "dataset\\" + str(self.save_count)
+                
+                else:
+                    if not '.\\temp' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
+                        os.mkdir(".\\temp")
+                    
+                    file_name = "temp\\boids-out"
+
+                pg.image.save(self.screen, file_name + ".png") # Save image
+
+                # Save position data
+                dump = []
+                for pos in self.data.boids[:, 1]:
+                    dump.append([int(pos.x), int(pos.y)])
+                with open(file_name + ".json", 'w') as f:
+                    json.dump(dump, f, indent=4)
+
+                # Iterate and update timers
+                self.last_image_save = pg.time.get_ticks()
+                self.save_count += 1
+
             self.data.drawFears(self.screen)
             self.data.drawWalls(self.screen)
-            self.nBoids.draw(self.screen)
 
             if SHOWFPS : self.screen.blit(self.font.render(str(int(self.clock.get_fps())), True, [0,200,0]), (8, 8))
 
             pg.display.update()
+
         
         else:
             print("FPS:", self.clock.get_fps())
 
 
 if __name__ == '__main__':
-    sim = Simulation(num_fears=2, num_boids=50, render=True, mouse_fear=True)
+    sim = Simulation(num_fears=2, num_boids=50, mouse_fear=True, image_save_type="single")
+    
     with open("infrastructure-data.json") as f:
         sim.addWallsFromJSON(json.load(f)["walls"][:5])
     # sim.addTestWalls()
