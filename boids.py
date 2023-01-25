@@ -27,7 +27,7 @@ TUNING = {
         'fear': 2e6,
         'wall': 2e7
     },
-    "target_dist": 30,      # Target separation
+    "target_dist": 20,      # Target separation
     "influence_dist": {
         "boid": 200,        # "visibility" distance for the boids
         "fear": 200,
@@ -39,7 +39,7 @@ TUNING = {
     "target_vel": pg.Vector2(0, 0),  # Speed which the boids tend towards under no other forces
     "wall_thickness": 5       # Amount of padding given to the wall (x on either side of the wall)
 }
-PIX_PER_METER = 1.5     # Number of pixels per meter in the real world
+PIX_PER_METER = 15      # Number of pixels per meter in the real world
 FEAR_SPEED = 300        # Speed of drones
 
 
@@ -331,6 +331,8 @@ class Simulation():
                     start_point=self.transform.TransformLP(pg.Vector2(points[i][0], points[i][1])),
                     end_point=self.transform.TransformLP(pg.Vector2(points[i+1][0], points[i+1][1]))
                 )
+        
+        # print(self.transform.TransformLP(pg.Vector2(51.625341, -2.512354)))
 
     def addTestWalls(self):
         pad = 40
@@ -465,7 +467,14 @@ class Simulation():
 
 
 if __name__ == '__main__':
-    sim = Simulation(num_fears=2, num_boids=50, mouse_fear=True, image_save_type="hri", save_rate=500)
+    sim = Simulation(
+        num_fears=2,
+        num_boids=50,
+        mouse_fear=True,
+        image_save_type="hri",
+        save_rate=500,
+        spawn_zone=pg.Rect([2397.05, -6989.29], [100,100])
+    )
     
     sim.addWallsFromHRI()
     # sim.addTestWalls()
