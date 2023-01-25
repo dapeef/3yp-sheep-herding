@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 from random import randint, choice
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame as pg
 import numpy as np
 import math
 import json
-import os
 import transform as tf
+import sys
 
 
 FLLSCRN = False         # True for Fullscreen, or False for Window
@@ -267,10 +269,9 @@ class Simulation():
             else:
                 raise Exception("\"" + image_save_type + "\" is not a valid input for image_save_type. Options are None, \"hri\" or \"dataset\".")
             
-            if self.image_save_type == "hri":
-                print(type(data_pipe))
-                if data_pipe == None:
-                    raise Exception("If using image_save_type=\"hri\", you must also pass a data_pipe")
+            # if self.image_save_type == "hri":
+            #     if data_pipe == None:
+            #         raise Exception("If using image_save_type=\"hri\", you must also pass a data_pipe")
             
             self.mouse_fear = mouse_fear
 
@@ -404,12 +405,18 @@ class Simulation():
                     for pos in self.data.boids[:, 0]:
                         boids_dump.append([pos.x, pos.y])
                 
+                    # Save position data
+                    with open(file_name + ".json", 'w') as f:
+                        json.dump(boids_dump, f, indent=4)
+
+                    pg.image.save(self.screen, file_name + ".png") # Save image
+
                 elif self.image_save_type == "hri":
                     if not '.\\temp' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
                         os.mkdir(".\\temp")
                     
-                    file_name = "temp\\boids-out"
-                    
+                    pg.image.save(self.screen, "temp\\boids-out.png") # Save image
+
                     # Format position data
                     boids_dump = []
                     for pos in self.data.boids[:, 0]:
@@ -421,21 +428,19 @@ class Simulation():
                     for pos in self.data.fears:
                         trans_pos = self.transform.TransformPL(pos)
                         fear_dump.append([trans_pos.x, trans_pos.y])
-                    
-                    # Save fears data
-                    with open("temp\\fears-out.json", 'w') as f:
-                        json.dump(fear_dump, f, indent=4)
 
                     # Set monitor drone position to centre of screen
                     monitor_pos = self.transform.TransformPL(pg.Vector2(WIDTH/2, HEIGHT/2))
-                    with open("temp\\monitor-out.json", 'w') as f:
-                        json.dump([[monitor_pos.x, monitor_pos.y]], f, indent=4)
+                    monitor_dump = [[monitor_pos.x, monitor_pos.y]]
 
-                pg.image.save(self.screen, file_name + ".png") # Save image
+                    all_dump = {
+                        "sheep": boids_dump,
+                        "drones": fear_dump,
+                        "monitoring": monitor_dump
+                    }
 
-                # Save position data
-                with open(file_name + ".json", 'w') as f:
-                    json.dump(boids_dump, f, indent=4)
+                    sys.stdout.write(json.dumps(all_dump))
+                    sys.stdout.flush()
 
                 # Iterate and update timers
                 self.last_image_save = pg.time.get_ticks()
@@ -454,7 +459,7 @@ class Simulation():
 
 
 if __name__ == '__main__':
-    sim = Simulation(num_fears=2, num_boids=50, mouse_fear=True, image_save_type="file")
+    sim = Simulation(num_fears=2, num_boids=50, mouse_fear=True, image_save_type="hri")
     
     sim.addWallsFromHRI()
     # sim.addTestWalls()

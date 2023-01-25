@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5 import uic
 from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtCore import QUrl, Qt, QTimer
+from PyQt5.QtCore import QUrl, Qt, QTimer, QProcess
 from PyQt5.QtGui import QPixmap
 import sys
 import os
@@ -73,12 +73,14 @@ class Ui(QMainWindow):
         print("Home map ready!")
 
         # Create pipe and boids
-        
+        self.p_boids = QProcess()
+        self.p_boids.readyReadStandardOutput.connect(self.drawHome)
+        self.p_boids.start("python", ['boids.py'])
 
-        # Initialise update timer
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.drawHome)
-        self.timer.start(500)
+        # # Initialise update timer
+        # self.timer = QTimer()
+        # self.timer.timeout.connect(self.drawHome)
+        # self.timer.start(500)
 
         # Once map is loaded, connect buttons to functions
         self.stop_all.clicked.connect(self.stopAllClick)
@@ -164,39 +166,21 @@ class Ui(QMainWindow):
         self.drawHome()
 
     def drawHome(self):
-        try:
-            with open("temp\\boids-out.json") as f:
-                sheep_locations = json.load(f)
-        except FileNotFoundError:
-            sheep_locations = [
-                [51.6255863, -2.5121819],
-                [51.626060, -2.512327],
-                [51.626045, -2.512716],
-                [51.626151, -2.511915],
-                [51.625848, -2.512039],
-                [51.625616, -2.512513],
-                [51.625737, -2.512117]
-            ]
+        data = self.p_boids.readAllStandardOutput()
+        stdout = bytes(data).decode("utf8")
 
         try:
-            with open("temp\\fears-out.json") as f:
-                herding_drone_locations = json.load(f)
-        except FileNotFoundError:
-            herding_drone_locations = [
-                [51.626360, -2.513160],
-                [51.626485, -2.512436],
-                [51.626504, -2.511712]
-            ]
+            all_locations = json.loads(stdout)
 
-        try:
-            with open("temp\\monitor-out.json") as f:
-                monitor_drone_locations = json.load(f)
-        except FileNotFoundError:
-            monitor_drone_locations = [
-                [51.625987, -2.512303]
-            ]
-
-
+            sheep_locations = all_locations["sheep"]
+            herding_drone_locations = all_locations["drones"]
+            monitor_drone_locations = all_locations["monitoring"]
+        
+        except json.decoder.JSONDecodeError:
+            sheep_locations = []
+            herding_drone_locations = []
+            monitor_drone_locations = []
+            
         self.drawSheep(sheep_locations)
         self.drawHerdingDrones(herding_drone_locations)
         self.drawMonitorDrones(monitor_drone_locations)
