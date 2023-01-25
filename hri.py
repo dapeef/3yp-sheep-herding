@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5 import uic
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import QUrl, Qt, QTimer
@@ -700,6 +700,7 @@ class Ui(QMainWindow):
         
         self.resizeLiveViewImage()
 
+
 class Hri():
     def __init__(self):
         self.app = QApplication(sys.argv)
@@ -709,6 +710,7 @@ class Hri():
 
     def mainloop(self):
         self.app.exec()
+
 
 if __name__ == "__main__":
     hri = Hri()
