@@ -4,11 +4,13 @@ import pygame as pg
 PIX_PER_METER = 1.5
 
 def TransformLP(lat_long, window_height, bounds):
+    bound_center = (bounds["min"] + bounds["max"]) / 2
+
     earth_circ = 40075e3 # km
     m_per_lat = earth_circ / 360 # meters per degree of latitude
-    m_per_lng = earth_circ * math.cos(bounds.center[1] / 180 * math.pi) / 360
+    m_per_lng = earth_circ * math.cos(bound_center.y / 180 * math.pi) / 360
 
-    rel_lat_long = lat_long - pg.Vector2(bounds.topleft)
+    rel_lat_long = lat_long - pg.Vector2(bounds["min"])
 
     return pg.Vector2(
         rel_lat_long.y * m_per_lng * PIX_PER_METER,
@@ -33,7 +35,10 @@ def GetWallBounds(wall_JSON):
             min_point.y = min(min_point.y, point[1])
             max_point.y = max(max_point.y, point[1])
 
-    return pg.Rect(min_point, max_point-min_point)
+    return {
+        "min": min_point,
+        "max": max_point
+    }
 
 
 if __name__ == "__main__":
