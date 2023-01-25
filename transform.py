@@ -1,21 +1,25 @@
 import math
 import pygame as pg
 
-PIX_PER_METER = 1.5
+class Transform():
+    def __init__(self, bounds, pix_per_meter, window_height):
+        self.bounds = bounds
+        self.pix_per_meter = pix_per_meter
+        self.window_height = window_height
 
-def TransformLP(lat_long, window_height, bounds):
-    bound_center = (bounds["min"] + bounds["max"]) / 2
+    def TransformLP(self, lat_long):
+        bound_center = (self.bounds["min"] + self.bounds["max"]) / 2
 
-    earth_circ = 40075e3 # km
-    m_per_lat = earth_circ / 360 # meters per degree of latitude
-    m_per_lng = earth_circ * math.cos(bound_center.y / 180 * math.pi) / 360
+        earth_circ = 40075e3 # km
+        m_per_lat = earth_circ / 360 # meters per degree of latitude
+        m_per_lng = earth_circ * math.cos(bound_center.y / 180 * math.pi) / 360
 
-    rel_lat_long = lat_long - pg.Vector2(bounds["min"])
+        rel_lat_long = lat_long - pg.Vector2(self.bounds["min"])
 
-    return pg.Vector2(
-        rel_lat_long.y * m_per_lng * PIX_PER_METER,
-        window_height - rel_lat_long.x * m_per_lat * PIX_PER_METER # Flipping becaue (0,0) is top left in pg
-    ) # switching x and y because lat and long are (y,x)
+        return pg.Vector2(
+            rel_lat_long.y * m_per_lng * self.pix_per_meter,
+            self.window_height - rel_lat_long.x * m_per_lat * self.pix_per_meter # Flipping becaue (0,0) is top left in pg
+        ) # switching x and y because lat and long are (y,x)
 
 
 def GetWallBounds(wall_JSON):

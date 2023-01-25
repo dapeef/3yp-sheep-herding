@@ -249,7 +249,14 @@ class Data():
 
 
 class Simulation():
-    def __init__(self, num_fears, num_boids=50, render=True, mouse_fear=False, spawn_zone=pg.Rect(300, 300, 100, 100), image_save_type=None, save_rate=1000):
+    def __init__(self,
+                 num_fears = 2,
+                 num_boids=50,
+                 render=True,
+                 mouse_fear=False,
+                 spawn_zone=pg.Rect(300, 300, 100, 100),
+                 image_save_type=None,
+                 save_rate=1000):
         self.render = render # Whether to render the pygame screen or not
 
         if self.render:
@@ -287,6 +294,7 @@ class Simulation():
         else:
             self.screen = None
         
+        # Clock
         self.clock = pg.time.Clock()
 
         # Set up boids and their data
@@ -294,25 +302,32 @@ class Simulation():
 
         self.nBoids = pg.sprite.Group()
         for n in range(num_boids):
-            self.nBoids.add(Boid(n, self.data, self.render, spawn_zone, self.screen))  # spawns desired # of boidz
+            self.nBoids.add(Boid(n, self.data, self.render, spawn_zone, self.screen))  # spawns desired number of boidz
+        
+        # Create Transform object
+        with open("infrastructure-data.json") as f:
+            bounds = tf.GetWallBounds(json.load(f)["walls"])
+
+        self.transform = tf.Transform(bounds, PIX_PER_METER, HEIGHT)
     
-    def addWallsFromJSON(self, JSON):
+    def addWallsFromHRI(self):
         num_segments = 0
+
+        with open("infrastructure-data.json") as f:
+            JSON = json.load(f)["walls"][:5]
 
         for wall in JSON:
             num_segments += len(wall["points"]) - 1
 
         self.data.initWalls(num_segments)
 
-        bounds = tf.GetWallBounds(JSON)
-
         for wall in JSON:
             points = wall["points"]
 
             for i in range(len(points) - 1):
                 self.data.makeWall(
-                    start_point=tf.TransformLP(pg.Vector2(points[i][0], points[i][1]), HEIGHT, bounds),
-                    end_point=tf.TransformLP(pg.Vector2(points[i+1][0], points[i+1][1]), HEIGHT, bounds)
+                    start_point=self.transform.TransformLP(pg.Vector2(points[i][0], points[i][1])),
+                    end_point=self.transform.TransformLP(pg.Vector2(points[i+1][0], points[i+1][1]))
                 )
 
     def addTestWalls(self):
@@ -394,7 +409,7 @@ class Simulation():
                 # Save position data
                 dump = []
                 for pos in self.data.boids[:, 0]:
-                    dump.append([int(pos.x), int(pos.y)])
+                    dump.append([pos.x, pos.y])
                 with open(file_name + ".json", 'w') as f:
                     json.dump(dump, f, indent=4)
 
@@ -417,8 +432,7 @@ class Simulation():
 if __name__ == '__main__':
     sim = Simulation(num_fears=2, num_boids=50, mouse_fear=True, image_save_type="single")
     
-    with open("infrastructure-data.json") as f:
-        sim.addWallsFromJSON(json.load(f)["walls"][:5])
+    sim.addWallsFromHRI()
     # sim.addTestWalls()
 
     sim.mainloop()
