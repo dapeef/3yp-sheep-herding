@@ -72,7 +72,7 @@ class Ui(QMainWindow):
         # Initialise update timer
         self.timer = QTimer()
         self.timer.timeout.connect(self.drawTestHome)
-        self.timer.start(1000)
+        self.timer.start(500)
 
         # Once map is loaded, connect buttons to functions
         self.stop_all.clicked.connect(self.stopAllClick)
@@ -172,15 +172,24 @@ class Ui(QMainWindow):
                 [51.625737, -2.512117]
             ]
 
-        herding_drone_locations = [
-            [51.626360, -2.513160],
-            [51.626485, -2.512436],
-            [51.626504, -2.511712]
-        ]
+        try:
+            with open("temp\\fears-out.json") as f:
+                herding_drone_locations = json.load(f)
+        except FileNotFoundError:
+            herding_drone_locations = [
+                [51.626360, -2.513160],
+                [51.626485, -2.512436],
+                [51.626504, -2.511712]
+            ]
 
-        monitor_drone_locations = [
-            [51.625987, -2.512303]
-        ]
+        try:
+            with open("temp\\monitor-out.json") as f:
+                monitor_drone_locations = json.load(f)
+        except FileNotFoundError:
+            monitor_drone_locations = [
+                [51.625987, -2.512303]
+            ]
+
 
         self.drawSheep(sheep_locations)
         self.drawHerdingDrones(herding_drone_locations)

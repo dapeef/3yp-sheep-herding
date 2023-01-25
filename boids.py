@@ -251,7 +251,7 @@ class Simulation():
                  mouse_fear=False,
                  spawn_zone=pg.Rect(300, 300, 100, 100),
                  image_save_type=None,
-                 save_rate=1000):
+                 save_rate=500):
         self.render = render # Whether to render the pygame screen or not
 
         if self.render:
@@ -394,9 +394,9 @@ class Simulation():
                     file_name = "dataset\\" + str(self.save_count)
                     
                     # Format position data
-                    dump = []
+                    boids_dump = []
                     for pos in self.data.boids[:, 0]:
-                        dump.append([pos.x, pos.y])
+                        boids_dump.append([pos.x, pos.y])
                 
                 elif self.image_save_type == "hri":
                     if not '.\\temp' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
@@ -405,16 +405,31 @@ class Simulation():
                     file_name = "temp\\boids-out"
                     
                     # Format position data
-                    dump = []
+                    boids_dump = []
                     for pos in self.data.boids[:, 0]:
                         trans_pos = self.transform.TransformPL(pos)
-                        dump.append([trans_pos.x, trans_pos.y])
+                        boids_dump.append([trans_pos.x, trans_pos.y])
+
+                    # Format fears data
+                    fear_dump = []
+                    for pos in self.data.fears:
+                        trans_pos = self.transform.TransformPL(pos)
+                        fear_dump.append([trans_pos.x, trans_pos.y])
+                    
+                    # Save fears data
+                    with open("temp\\fears-out.json", 'w') as f:
+                        json.dump(fear_dump, f, indent=4)
+
+                    # Set monitor drone position to centre of screen
+                    monitor_pos = self.transform.TransformPL(pg.Vector2(WIDTH/2, HEIGHT/2))
+                    with open("temp\\monitor-out.json", 'w') as f:
+                        json.dump([[monitor_pos.x, monitor_pos.y]], f, indent=4)
 
                 pg.image.save(self.screen, file_name + ".png") # Save image
 
                 # Save position data
                 with open(file_name + ".json", 'w') as f:
-                    json.dump(dump, f, indent=4)
+                    json.dump(boids_dump, f, indent=4)
 
                 # Iterate and update timers
                 self.last_image_save = pg.time.get_ticks()
