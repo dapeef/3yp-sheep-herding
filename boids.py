@@ -17,12 +17,10 @@ BGCOLOR = (0, 0, 0)     # Background color in RGB
 FPS = 60                # 30-90
 SHOWFPS = True          # Show frame rate
 TUNING = {
-    "max_speed": 150,       # Max movement speed
-    # "max_force": 5,         # Max acceleration force
+    "max_speed": 150,       # Max movement speed=
     "weightings": {         # Force weightings
         'sep': 1,
         'ali': 1,
-        # 'coh': 1,
         'decel': 1,
         'fear': 2e6,
         'wall': 2e7
@@ -33,9 +31,6 @@ TUNING = {
         "fear": 200,
         "wall": 25
     },
-    # "fear_decay": 1,        # see below
-    # "fear_const": .05,      # 1/(r/k)^a -> k is const, a is decay
-    # "speed_decay": 2        # Decay rate of speed -> v /= speed_decay * dt
     "target_vel": pg.Vector2(0, 0),  # Speed which the boids tend towards under no other forces
     "wall_thickness": 5       # Amount of padding given to the wall (x on either side of the wall)
 }
@@ -68,7 +63,7 @@ class Boid(pg.sprite.Sprite):
             randint(spawn_zone.left, spawn_zone.right),
             randint(spawn_zone.top, spawn_zone.bottom)
         )
-        # Finally, output pos and vel to array
+        # Output pos and vel to array
         self.data.boids[self.bnum, :2] = [self.pos, self.vel]
 
         if render:
@@ -164,10 +159,6 @@ class Boid(pg.sprite.Sprite):
         decel *= tuning["weightings"]['decel']
         fear *= tuning["weightings"]['fear']
         wall *= tuning["weightings"]['wall']
-
-        # Debug print output to help tune
-        # if self.bnum == 0:
-        #     print(sep, ali, decel, fear, sep="\t")
 
         # Sum weighted components to get acceleration
         self.accel = sep + ali + decel + fear + wall
@@ -326,8 +317,6 @@ class Simulation():
                     start_point=self.transform.TransformLP(pg.Vector2(points[i][0], points[i][1])),
                     end_point=self.transform.TransformLP(pg.Vector2(points[i+1][0], points[i+1][1]))
                 )
-        
-        # print(self.transform.TransformLP(pg.Vector2(51.625341, -2.512354)))
 
     def addTestWalls(self):
         pad = 40
@@ -364,12 +353,6 @@ class Simulation():
                 # Handle quitting
                 if e.type == pg.QUIT or e.type == pg.KEYDOWN and e.key == pg.K_ESCAPE:
                     return "quit"
-                
-                # if e.type == pg.MOUSEBUTTONDOWN and self.mouse_fear:
-                #     # data.fears = np.append(data.fears, [pg.Vector2(mouse_pos)], axis=0)
-                #     # data.fears = np.insert(data.fears, pg.Vector2(mouse_pos), len(data.fears))
-                #     self.data.fears[self.data.num_fears] = pg.Vector2(mouse_pos)
-                #     self.data.num_fears += 1
 
         dt = self.clock.tick(FPS) / 1000
 

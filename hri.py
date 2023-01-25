@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5 import uic
 from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtCore import QUrl, Qt, QTimer, QProcess
+from PyQt5.QtCore import QUrl, Qt, QProcess
 from PyQt5.QtGui import QPixmap
 import sys
 import os
@@ -73,11 +73,6 @@ class Ui(QMainWindow):
         self.p_boids = QProcess()
         self.p_boids.readyReadStandardOutput.connect(self.drawHome)
         self.p_boids.start("python", ['boids.py'])
-
-        # # Initialise update timer
-        # self.timer = QTimer()
-        # self.timer.timeout.connect(self.drawHome)
-        # self.timer.start(500)
 
         # Once map is loaded, connect buttons to functions
         self.stop_all.clicked.connect(self.stopAllClick)
@@ -599,8 +594,6 @@ class Ui(QMainWindow):
         else:
             self.edit_wall.setEnabled(True)
             self.remove_wall.setEnabled(True)
-        # self.edit_wall.setEnabled(value)
-        # self.remove_wall.setEnabled(value)
 
         # Gates
         self.add_gate.setEnabled(value)
@@ -610,8 +603,6 @@ class Ui(QMainWindow):
         else:
             self.edit_gate.setEnabled(True)
             self.remove_gate.setEnabled(True)
-        # self.edit_gate.setEnabled(value)
-        # self.remove_gate.setEnabled(value)
 
         # No fly
         self.add_no_fly.setEnabled(value)
@@ -621,8 +612,6 @@ class Ui(QMainWindow):
         else:
             self.edit_no_fly.setEnabled(True)
             self.remove_no_fly.setEnabled(True)
-        # self.edit_no_fly.setEnabled(value)
-        # self.remove_no_fly.setEnabled(value)
     
     def resetAllButtonsMap(self):
         self.mode = None
