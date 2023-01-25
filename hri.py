@@ -9,7 +9,7 @@ import json
 
 
 class Ui(QMainWindow):
-    def __init__(self, pipe):
+    def __init__(self, pipe=None):
         super().__init__()
 
         # Load UI
@@ -72,9 +72,12 @@ class Ui(QMainWindow):
     def onLoadFinishedHome(self):
         print("Home map ready!")
 
+        # Create pipe and boids
+        
+
         # Initialise update timer
         self.timer = QTimer()
-        self.timer.timeout.connect(self.drawTestHome)
+        self.timer.timeout.connect(self.drawHome)
         self.timer.start(500)
 
         # Once map is loaded, connect buttons to functions
@@ -87,7 +90,7 @@ class Ui(QMainWindow):
         self.toggleButtonsEnabledHome(True)
 
         # Draw sheep, herding and monitor drones
-        self.drawTestHome()
+        self.drawHome()
 
     def onLoadFinishedRoute(self):
         print("Route edit map ready!")
@@ -158,9 +161,9 @@ class Ui(QMainWindow):
     def stopAllClick(self):
         print("Mmm, clickeroo")
 
-        self.drawTestHome()
+        self.drawHome()
 
-    def drawTestHome(self):
+    def drawHome(self):
         try:
             with open("temp\\boids-out.json") as f:
                 sheep_locations = json.load(f)
@@ -705,7 +708,7 @@ class Ui(QMainWindow):
 
 
 class Hri():
-    def __init__(self, pipe):
+    def __init__(self, pipe=None):
         self.app = QApplication(sys.argv)
 
         self.window = Ui(pipe)
