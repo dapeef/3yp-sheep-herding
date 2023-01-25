@@ -253,8 +253,7 @@ class Simulation():
                  mouse_fear=False,
                  spawn_zone=pg.Rect(300, 300, 100, 100),
                  image_save_type=None,
-                 save_rate=500,
-                 data_pipe=None):
+                 save_rate=500):
         self.render = render # Whether to render the pygame screen or not
 
         if self.render:
@@ -268,10 +267,6 @@ class Simulation():
             
             else:
                 raise Exception("\"" + image_save_type + "\" is not a valid input for image_save_type. Options are None, \"hri\" or \"dataset\".")
-            
-            # if self.image_save_type == "hri":
-            #     if data_pipe == None:
-            #         raise Exception("If using image_save_type=\"hri\", you must also pass a data_pipe")
             
             self.mouse_fear = mouse_fear
 

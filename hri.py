@@ -9,14 +9,11 @@ import json
 
 
 class Ui(QMainWindow):
-    def __init__(self, pipe=None):
+    def __init__(self):
         super().__init__()
 
         # Load UI
         uic.loadUi("hri.ui", self)
-
-        # Save pipe end
-        self.pipe = pipe
 
         # Get data from json file
         self.data = self.readInfData()
@@ -692,10 +689,10 @@ class Ui(QMainWindow):
 
 
 class Hri():
-    def __init__(self, pipe=None):
+    def __init__(self):
         self.app = QApplication(sys.argv)
 
-        self.window = Ui(pipe)
+        self.window = Ui()
         self.window.show()
 
     def mainloop(self):
