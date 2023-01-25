@@ -700,10 +700,17 @@ class Ui(QMainWindow):
         
         self.resizeLiveViewImage()
 
+class Hri():
+    def __init__(self):
+        self.app = QApplication(sys.argv)
 
-app = QApplication(sys.argv)
+        self.window = Ui()
+        self.window.show()
 
-window = Ui()
-window.show()
+    def mainloop(self):
+        self.app.exec()
 
-app.exec()
+if __name__ == "__main__":
+    hri = Hri()
+
+    hri.mainloop()
