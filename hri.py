@@ -62,7 +62,8 @@ class Ui(QMainWindow):
         self.live_view_menu.currentTextChanged.connect(self.liveViewTextChange)
 
         # Pixmap to hold live view image
-        self.live_view_pix = QPixmap("images\chapel-cottage.jpg")
+        self.rgb_image_file = "images\chapel-cottage.jpg"
+        self.live_view_pix = QPixmap(self.rgb_image_file)
         self.live_view_tab.resizeEvent = self.resizeLiveViewImage
 
     # On map load
@@ -71,7 +72,7 @@ class Ui(QMainWindow):
 
         # Create pipe and boids
         self.p_boids = QProcess()
-        self.p_boids.readyReadStandardOutput.connect(self.drawHome)
+        self.p_boids.readyReadStandardOutput.connect(self.boidsStdOut)
         self.p_boids.start("python", ['boids.py'])
 
         # Once map is loaded, connect buttons to functions
@@ -84,7 +85,7 @@ class Ui(QMainWindow):
         self.toggleButtonsEnabledHome(True)
 
         # Draw sheep, herding and monitor drones
-        self.drawHome()
+        self.boidsStdOut()
 
     def onLoadFinishedRoute(self):
         print("Route edit map ready!")
@@ -155,9 +156,9 @@ class Ui(QMainWindow):
     def stopAllClick(self):
         print("Mmm, clickeroo")
 
-        self.drawHome()
+        self.boidsStdOut()
 
-    def drawHome(self):
+    def boidsStdOut(self):
         try:
             data = self.p_boids.readAllStandardOutput()
             stdout = bytes(data).decode("utf8")
@@ -167,6 +168,11 @@ class Ui(QMainWindow):
             sheep_locations = all_locations["sheep"]
             herding_drone_locations = all_locations["drones"]
             monitor_drone_locations = all_locations["monitoring"]
+            
+            if self.live_view_menu.currentText() == "RGB":
+                self.rgb_image_file = "temp\\boids.png"
+                self.live_view_pix = QPixmap("temp\\boids.png")
+                self.resizeLiveViewImage()
         
         except Exception:
             sheep_locations = []
@@ -669,7 +675,7 @@ class Ui(QMainWindow):
 
     def liveViewTextChange(self, value):
         if value == "RGB":
-            self.live_view_pix = QPixmap("images\chapel-cottage.jpg")
+            self.live_view_pix = QPixmap(self.rgb_image_file)
         
         elif value == "Infrared":
             self.live_view_pix = QPixmap("images\chapel-cottage-inverted.jpg")
