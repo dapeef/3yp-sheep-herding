@@ -309,7 +309,7 @@ class Simulation():
         num_segments = 0
 
         with open("infrastructure-data.json") as f:
-            JSON = json.load(f)["walls"][:5]
+            JSON = json.load(f)["walls"]#[:5]
 
         for wall in JSON:
             num_segments += len(wall["points"]) - 1
