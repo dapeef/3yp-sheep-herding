@@ -10,12 +10,10 @@ import sys
 from PIL import Image
 
 
-FLLSCRN = False         # True for Fullscreen, or False for Window
 WIDTH = 1200            # Window Width (1200)
 HEIGHT = 800            # Window Height (800)
 BGCOLOR = (0, 0, 0)     # Background color in RGB
 FPS = 60                # 30-90
-SHOWFPS = True          # Show frame rate
 TUNING = {
     "max_speed": 150,       # Max movement speed=
     "weightings": {         # Force weightings
@@ -46,6 +44,9 @@ def clamp_magnitude(vector, magnitude):
     
     else:
         return vector
+
+def translate_for_camera(vector, camera_pos):
+    return vector - camera_pos + pg.Vector2(WIDTH/2, HEIGHT/2)
 
 
 class Boid(pg.sprite.Sprite):
@@ -83,7 +84,7 @@ class Boid(pg.sprite.Sprite):
             # maxW, maxH = self.draw_surf.get_size()
             self.rect = self.image.get_rect(center=(self.pos.x, self.pos.y))
  
-    def update(self, dt, tuning):
+    def update(self, dt, tuning, camera_pos):
         def getNearest(type, num_select=7):
             # Make list of nearby boids, sorted by distance
             if type == "boid": objects = self.data.boids
@@ -173,7 +174,7 @@ class Boid(pg.sprite.Sprite):
         
         if self.render:
             # Update position of rendered boid
-            self.rect.center = self.pos
+            self.rect.center = translate_for_camera(self.pos, camera_pos)
 
             # Get angle of velocity for rendering
             self.ang = self.vel.as_polar()[1]
@@ -216,24 +217,39 @@ class Data():
         self.walls[self.num_walls] = [start_point, end_point]
         self.num_walls += 1
 
-    def drawWalls(self, surface):
-        for wall in self.walls:
-            pg.draw.line(surface, (255, 0, 0), wall[0], wall[1], 5) # Draw line between points
-            pg.draw.circle(surface, (255, 0, 0), wall[0], 2.5) # Draw red circle on each end
-            pg.draw.circle(surface, (255, 0, 0), wall[1], 2.5) # Draw red circle on other end
+    def getMeanBoidPos(self):
+        sum = pg.Vector2(0, 0)
 
-    def drawFears(self, surface):
+        for boid_pos in self.boids[:, 0]:
+            sum += boid_pos
+        
+        try:
+            return sum / len(self.boids)
+        
+        except ZeroDivisionError:
+            return sum
+
+    def drawWalls(self, surface, camera_pos):
+        for wall in self.walls:
+            trans_wall_0 = translate_for_camera(wall[0], camera_pos)
+            trans_wall_1 = translate_for_camera(wall[1], camera_pos)
+
+            pg.draw.line(surface, (255, 0, 0), trans_wall_0, trans_wall_1, 5) # Draw line between points
+            pg.draw.circle(surface, (255, 0, 0), trans_wall_0, 2.5) # Draw red circle on each end
+            pg.draw.circle(surface, (255, 0, 0), trans_wall_1, 2.5) # Draw red circle on other end
+
+    def drawFears(self, surface, camera_pos):
         alpha_surface = pg.Surface((WIDTH, HEIGHT))
         alpha_surface.set_colorkey((0,0,0))
         alpha_surface.set_alpha(128)
 
         for fear in self.fears:
-            pg.draw.circle(alpha_surface, (100, 0, 0), fear, TUNING["influence_dist"]["fear"]) # Draw big circle at every fear
+            pg.draw.circle(alpha_surface, (100, 0, 0), translate_for_camera(fear, camera_pos), TUNING["influence_dist"]["fear"]) # Draw big circle at every fear
 
         surface.blit(alpha_surface, (0, 0))
 
         for fear in self.fears:
-            pg.draw.circle(surface, (255, 0, 0), fear, 5) # Draw dot at avery fear
+            pg.draw.circle(surface, (255, 0, 0), translate_for_camera(fear, camera_pos), 5) # Draw dot at avery fear
 
 
 class Simulation():
@@ -244,7 +260,8 @@ class Simulation():
                  mouse_fear=False,
                  spawn_zone=pg.Rect(300, 300, 100, 100),
                  image_save_type=None,
-                 save_rate=500):
+                 save_rate=500,
+                 camera_tracking=False):
         self.render = render # Whether to render the pygame screen or not
 
         if self.render:
@@ -261,27 +278,28 @@ class Simulation():
             
             self.mouse_fear = mouse_fear
 
-            # setup fullscreen or window mode
-            if FLLSCRN:
-                currentRez = (pg.display.Info().current_w, pg.display.Info().current_h)
-                self.screen = pg.display.set_mode(currentRez, pg.SCALED)
-                pg.mouse.set_visible(False)
-            else: self.screen = pg.display.set_mode((WIDTH, HEIGHT))
+            # setup window
+            self.screen = pg.display.set_mode((WIDTH, HEIGHT))
 
             # If mouse controls fear
             if self.mouse_fear:
                 pg.mouse.set_visible(False)
 
-            if SHOWFPS : self.font = pg.font.Font(None, 30)
+            self.font = pg.font.Font(None, 30)
 
             if self.image_save_type != None:
                 self.last_image_save = 0
                 self.image_save_rate = save_rate # Time between image saves, ms
                 self.save_count = 0
         
+            # Set up camera tracking
+            self.camera_tracking = camera_tracking
+            self.camera_pos = pg.Vector2(spawn_zone.center) # pg.Vector2(WIDTH/2, HEIGHT/2)
+
         else:
             self.screen = None
         
+
         # Clock
         self.clock = pg.time.Clock()
 
@@ -345,6 +363,9 @@ class Simulation():
             # Get mouse position if self.mouse_fear
             if self.mouse_fear:
                 mouse_pos = pg.mouse.get_pos()
+
+                # Translate for camera position
+                mouse_pos += self.camera_pos - pg.Vector2(WIDTH/2, HEIGHT/2)
                 
                 self.data.fears[0] = pg.Vector2(mouse_pos)
                 self.data.fear_targets[0] = pg.Vector2(mouse_pos)
@@ -356,7 +377,7 @@ class Simulation():
 
         dt = self.clock.tick(FPS) / 1000
 
-        self.nBoids.update(dt, TUNING)
+        self.nBoids.update(dt, TUNING, self.camera_pos)
 
         for i in range(len(self.data.fears)):
             diff = self.data.fear_targets[i] - self.data.fears[i]
@@ -410,7 +431,7 @@ class Simulation():
                         fear_dump.append([trans_pos.x, trans_pos.y])
 
                     # Set monitor drone position to centre of screen
-                    monitor_pos = self.transform.TransformPL(pg.Vector2(WIDTH/2, HEIGHT/2))
+                    monitor_pos = self.transform.TransformPL(self.camera_pos)
                     monitor_dump = [[monitor_pos.x, monitor_pos.y]]
 
                     # # Get image in string
@@ -432,14 +453,16 @@ class Simulation():
                 self.last_image_save = pg.time.get_ticks()
                 self.save_count += 1
 
-            self.data.drawFears(self.screen)
-            self.data.drawWalls(self.screen)
+            self.data.drawFears(self.screen, self.camera_pos)
+            self.data.drawWalls(self.screen, self.camera_pos)
 
-            if SHOWFPS : self.screen.blit(self.font.render(str(int(self.clock.get_fps())), True, [0,200,0]), (8, 8))
+            self.screen.blit(self.font.render(str(int(self.clock.get_fps())), True, [0,200,0]), (8, 8))
 
             pg.display.update()
 
-        
+            if self.camera_tracking:
+                self.camera_pos = self.data.getMeanBoidPos()
+   
         else:
             print("FPS:", self.clock.get_fps())
 
@@ -450,8 +473,9 @@ if __name__ == '__main__':
         num_boids=50,
         mouse_fear=True,
         image_save_type="hri",
-        save_rate=500,
-        spawn_zone=pg.Rect([2397.05, -6989.29], [100,100])
+        save_rate=1000,
+        spawn_zone=pg.Rect([2397.05, -6989.29], [100,100]),
+        camera_tracking=True
     )
     
     sim.addWallsFromHRI()

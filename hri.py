@@ -158,17 +158,17 @@ class Ui(QMainWindow):
         self.drawHome()
 
     def drawHome(self):
-        data = self.p_boids.readAllStandardOutput()
-        stdout = bytes(data).decode("utf8")
-
         try:
+            data = self.p_boids.readAllStandardOutput()
+            stdout = bytes(data).decode("utf8")
+
             all_locations = json.loads(stdout)
 
             sheep_locations = all_locations["sheep"]
             herding_drone_locations = all_locations["drones"]
             monitor_drone_locations = all_locations["monitoring"]
         
-        except json.decoder.JSONDecodeError:
+        except Exception:
             sheep_locations = []
             herding_drone_locations = []
             monitor_drone_locations = []
