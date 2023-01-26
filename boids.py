@@ -50,12 +50,11 @@ def translate_for_camera(vector, camera_pos):
 
 
 class Boid(pg.sprite.Sprite):
-    def __init__(self, boid_num, data, render, spawn_zone, draw_surf=None):
+    def __init__(self, boid_num, data, spawn_zone, draw_surf=None):
         super().__init__()
 
         self.data = data # Stores positions & rotations of all boids and fears
         self.bnum = boid_num # This boid's number (ID)
-        self.render = render # Whether to render the pygame screen or not
 
         self.ang = pg.Vector2(0,0)
         self.accel = pg.Vector2(0,0)
@@ -64,26 +63,24 @@ class Boid(pg.sprite.Sprite):
             randint(spawn_zone.left, spawn_zone.right),
             randint(spawn_zone.top, spawn_zone.bottom)
         )
-        # Output pos and vel to array
-        self.data.boids[self.bnum, :2] = [self.pos, self.vel]
+        self.data.boids[self.bnum, :2] = [self.pos, self.vel] # Save initial pos and vel to data object
 
-        if render:
-            self.draw_surf = draw_surf # Main screen surface
+        self.draw_surf = draw_surf # Main screen surface
 
-            self.image = pg.Surface((15, 15)).convert() # Area to render boid onto
-            self.image.set_colorkey(0)
-            self.color = pg.Color(0)  # preps color so we can use hsva
-            # if self.bnum == 0:
-            # self.color.hsva = (randint(0,360), 90, 90)
-            # else:
-            self.color.hsva = (0, 0, 100)
-            # pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
-            pg.draw.ellipse(self.image, self.color, pg.Rect(3, 0, 9, 15)) # Blob shape
-            self.orig_image = pg.transform.rotate(self.image.copy(), -90)
+        self.image = pg.Surface((15, 15)).convert() # Area to render boid onto
+        self.image.set_colorkey(0)
+        self.color = pg.Color(0)  # preps color so we can use hsva
+        # if self.bnum == 0:
+        # self.color.hsva = (randint(0,360), 90, 90)
+        # else:
+        self.color.hsva = (0, 0, 100)
+        # pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
+        pg.draw.ellipse(self.image, self.color, pg.Rect(3, 0, 9, 15)) # Blob shape
+        self.orig_image = pg.transform.rotate(self.image.copy(), -90)
 
-            # maxW, maxH = self.draw_surf.get_size()
-            self.rect = self.image.get_rect(center=(self.pos.x, self.pos.y))
- 
+        # maxW, maxH = self.draw_surf.get_size()
+        self.rect = self.image.get_rect(center=(self.pos.x, self.pos.y))
+
     def update(self, dt, tuning, camera_pos):
         def getNearest(type, num_select=7):
             # Make list of nearby boids, sorted by distance
@@ -172,16 +169,15 @@ class Boid(pg.sprite.Sprite):
         # Update data array
         self.data.boids[self.bnum, :2] = [self.pos, self.vel]
         
-        if self.render:
-            # Update position of rendered boid
-            self.rect.center = translate_for_camera(self.pos, camera_pos)
+        # Update position of rendered boid
+        self.rect.center = translate_for_camera(self.pos, camera_pos)
 
-            # Get angle of velocity for rendering
-            self.ang = self.vel.as_polar()[1]
+        # Get angle of velocity for rendering
+        self.ang = self.vel.as_polar()[1]
 
-            # Adjusts angle of rendered boid image to match heading
-            self.image = pg.transform.rotate(self.orig_image, -self.ang)
-            self.rect = self.image.get_rect(center=self.rect.center)  # recentering fix
+        # Adjusts angle of rendered boid image to match heading
+        self.image = pg.transform.rotate(self.orig_image, -self.ang)
+        self.rect = self.image.get_rect(center=self.rect.center)  # recentering fix
 
 
 class Data():
@@ -256,48 +252,41 @@ class Simulation():
     def __init__(self,
                  num_fears = 2,
                  num_boids=50,
-                 render=True,
                  mouse_fear=False,
                  spawn_zone=pg.Rect(300, 300, 100, 100),
                  image_save_type=None,
                  save_rate=500,
                  camera_tracking=False):
-        self.render = render # Whether to render the pygame screen or not
+        pg.init()  # prepare window
+        pg.display.set_caption("Sheeeeeeep") # Window title
 
-        if self.render:
-            pg.init()  # prepare window
-            pg.display.set_caption("Sheeeeeeep") # Window title
-
-            if image_save_type == None or \
-               image_save_type == "hri" or \
-               image_save_type == "dataset":
-                self.image_save_type = image_save_type
-            
-            else:
-                raise Exception("\"" + image_save_type + "\" is not a valid input for image_save_type. Options are None, \"hri\" or \"dataset\".")
-            
-            self.mouse_fear = mouse_fear
-
-            # setup window
-            self.screen = pg.display.set_mode((WIDTH, HEIGHT))
-
-            # If mouse controls fear
-            if self.mouse_fear:
-                pg.mouse.set_visible(False)
-
-            self.font = pg.font.Font(None, 30)
-
-            if self.image_save_type != None:
-                self.last_image_save = 0
-                self.image_save_rate = save_rate # Time between image saves, ms
-                self.save_count = 0
+        if image_save_type == None or \
+            image_save_type == "hri" or \
+            image_save_type == "dataset":
+            self.image_save_type = image_save_type
         
-            # Set up camera tracking
-            self.camera_tracking = camera_tracking
-            self.camera_pos = pg.Vector2(spawn_zone.center) # pg.Vector2(WIDTH/2, HEIGHT/2)
-
         else:
-            self.screen = None
+            raise Exception("\"" + image_save_type + "\" is not a valid input for image_save_type. Options are None, \"hri\" or \"dataset\".")
+        
+        self.mouse_fear = mouse_fear
+
+        # setup window
+        self.screen = pg.display.set_mode((WIDTH, HEIGHT))
+
+        # If mouse controls fear
+        if self.mouse_fear:
+            pg.mouse.set_visible(False)
+
+        self.font = pg.font.Font(None, 30)
+
+        if self.image_save_type != None:
+            self.last_image_save = 0
+            self.image_save_rate = save_rate # Time between image saves, ms
+            self.save_count = 0
+    
+        # Set up camera tracking
+        self.camera_tracking = camera_tracking
+        self.camera_pos = pg.Vector2(spawn_zone.center) # pg.Vector2(WIDTH/2, HEIGHT/2)
         
 
         # Clock
@@ -308,7 +297,7 @@ class Simulation():
 
         self.nBoids = pg.sprite.Group()
         for n in range(num_boids):
-            self.nBoids.add(Boid(n, self.data, self.render, spawn_zone, self.screen))  # spawns desired number of boidz
+            self.nBoids.add(Boid(n, self.data, spawn_zone, self.screen))  # spawns desired number of boidz
         
         # Create Transform object
         with open("infrastructure-data.json") as f:
@@ -359,18 +348,17 @@ class Simulation():
                 return
 
     def stepTime(self):
-        if self.render:
-            # Get mouse position if self.mouse_fear
-            if self.mouse_fear:
-                mouse_pos = pg.mouse.get_pos()
+        # Get mouse position if self.mouse_fear
+        if self.mouse_fear:
+            mouse_pos = pg.mouse.get_pos()
 
-                # Translate for camera position
-                mouse_pos += self.camera_pos - pg.Vector2(WIDTH/2, HEIGHT/2)
-                
-                self.data.fears[0] = pg.Vector2(mouse_pos)
-                self.data.fear_targets[0] = pg.Vector2(mouse_pos)
+            # Translate for camera position
+            mouse_pos += self.camera_pos - pg.Vector2(WIDTH/2, HEIGHT/2)
+            
+            self.data.fears[0] = pg.Vector2(mouse_pos)
+            self.data.fear_targets[0] = pg.Vector2(mouse_pos)
 
-            for e in pg.event.get():
+        for e in pg.event.get():
                 # Handle quitting
                 if e.type == pg.QUIT or e.type == pg.KEYDOWN and e.key == pg.K_ESCAPE:
                     return "quit"
@@ -388,83 +376,79 @@ class Simulation():
             else:
                 self.data.fears[i] = self.data.fears[i] +  diff.normalize() * dt * FEAR_SPEED
 
-        if self.render:
-            # Draw
-            self.screen.fill(BGCOLOR)
+        # Draw
+        self.screen.fill(BGCOLOR)
 
-            self.nBoids.draw(self.screen)
+        self.nBoids.draw(self.screen)
 
-            if self.image_save_type != None and pg.time.get_ticks() > self.last_image_save + self.image_save_rate:
-                if self.image_save_type == "dataset":
-                    if not '.\\dataset' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
-                        os.mkdir(".\\dataset")
+        if self.image_save_type != None and pg.time.get_ticks() > self.last_image_save + self.image_save_rate:
+            if self.image_save_type == "dataset":
+                if not '.\\dataset' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
+                    os.mkdir(".\\dataset")
 
-                    file_name = "dataset\\" + str(self.save_count)
-                    
-                    # Format position data
-                    boids_dump = []
-                    for pos in self.data.boids[:, 0]:
-                        boids_dump.append([pos.x, pos.y])
+                file_name = "dataset\\" + str(self.save_count)
                 
-                    # Save position data
-                    with open(file_name + ".json", 'w') as f:
-                        json.dump(boids_dump, f, indent=4)
+                # Format position data
+                boids_dump = []
+                for pos in self.data.boids[:, 0]:
+                    boids_dump.append([pos.x, pos.y])
+            
+                # Save position data
+                with open(file_name + ".json", 'w') as f:
+                    json.dump(boids_dump, f, indent=4)
 
-                    pg.image.save(self.screen, file_name + ".png") # Save image
+                pg.image.save(self.screen, file_name + ".png") # Save image
 
-                elif self.image_save_type == "hri":
-                    if not '.\\temp' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
-                        os.mkdir(".\\temp")
+            elif self.image_save_type == "hri":
+                if not '.\\temp' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
+                    os.mkdir(".\\temp")
 
-                    pg.image.save(self.screen, "temp\\boids.png") # Image in bytes
+                pg.image.save(self.screen, "temp\\boids.png") # Image in bytes
 
-                    # Format position data
-                    boids_dump = []
-                    for pos in self.data.boids[:, 0]:
-                        trans_pos = self.transform.TransformPL(pos)
-                        boids_dump.append([trans_pos.x, trans_pos.y])
+                # Format position data
+                boids_dump = []
+                for pos in self.data.boids[:, 0]:
+                    trans_pos = self.transform.TransformPL(pos)
+                    boids_dump.append([trans_pos.x, trans_pos.y])
 
-                    # Format fears data
-                    fear_dump = []
-                    for pos in self.data.fears:
-                        trans_pos = self.transform.TransformPL(pos)
-                        fear_dump.append([trans_pos.x, trans_pos.y])
+                # Format fears data
+                fear_dump = []
+                for pos in self.data.fears:
+                    trans_pos = self.transform.TransformPL(pos)
+                    fear_dump.append([trans_pos.x, trans_pos.y])
 
-                    # Set monitor drone position to centre of screen
-                    monitor_pos = self.transform.TransformPL(self.camera_pos)
-                    monitor_dump = [[monitor_pos.x, monitor_pos.y]]
+                # Set monitor drone position to centre of screen
+                monitor_pos = self.transform.TransformPL(self.camera_pos)
+                monitor_dump = [[monitor_pos.x, monitor_pos.y]]
 
-                    # # Get image in string
-                    # image_bytes = pg.image.tostring(self.screen, "RGB") # Image in bytes
-                    # img = Image.frombytes("RGB", (WIDTH, HEIGHT), image_bytes)
-                    # image = np.array(img).tolist()
+                # # Get image in string
+                # image_bytes = pg.image.tostring(self.screen, "RGB") # Image in bytes
+                # img = Image.frombytes("RGB", (WIDTH, HEIGHT), image_bytes)
+                # image = np.array(img).tolist()
 
-                    all_dump = {
-                        "sheep": boids_dump,
-                        "drones": fear_dump,
-                        "monitoring": monitor_dump,
-                        # "image": image
-                    }
+                all_dump = {
+                    "sheep": boids_dump,
+                    "drones": fear_dump,
+                    "monitoring": monitor_dump,
+                    # "image": image
+                }
 
-                    sys.stdout.write(json.dumps(all_dump))
-                    sys.stdout.flush()
+                sys.stdout.write(json.dumps(all_dump))
+                sys.stdout.flush()
 
-                # Iterate and update timers
-                self.last_image_save = pg.time.get_ticks()
-                self.save_count += 1
+            # Iterate and update timers
+            self.last_image_save = pg.time.get_ticks()
+            self.save_count += 1
 
-            self.data.drawFears(self.screen, self.camera_pos)
-            self.data.drawWalls(self.screen, self.camera_pos)
+        self.data.drawFears(self.screen, self.camera_pos)
+        self.data.drawWalls(self.screen, self.camera_pos)
 
-            self.screen.blit(self.font.render(str(int(self.clock.get_fps())), True, [0,200,0]), (8, 8))
+        self.screen.blit(self.font.render(str(int(self.clock.get_fps())), True, [0,200,0]), (8, 8))
 
-            pg.display.update()
+        pg.display.update()
 
-            if self.camera_tracking:
-                self.camera_pos = self.data.getMeanBoidPos()
-   
-        else:
-            print("FPS:", self.clock.get_fps())
+        if self.camera_tracking:
+            self.camera_pos = self.data.getMeanBoidPos()
 
 
 if __name__ == '__main__':
