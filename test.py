@@ -1,3 +1,3 @@
 import image_processing as ip
 
-print(ip.getCoordinates("temp\\boids.png", False))
+print(len(ip.getCoordinates("temp\\boids.png", show_image=False)))

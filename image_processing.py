@@ -73,7 +73,7 @@ def canny_CV2(image,low_threshold, high_Threshold):
   
   
 
-def getCoordinates(file_name):
+def getCoordinates(file_name, show_image=False):
 
   # read the image 
   image = cv2.imread(file_name) 
@@ -93,9 +93,8 @@ def getCoordinates(file_name):
   
   # display the result
   #cv2.imshow('M',np.uint8(edges))
-  cv2.waitKey(0)
-  cv2.imwrite('canny.jpg',np.uint8(edges))
-  cv2.imwrite('blurredimage.jpg',np.uint8(blurred_image))
+  #cv2.waitKey(0)
+
 
 
   # contours = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -122,7 +121,10 @@ def getCoordinates(file_name):
     cv2.putText(image, "center", (cX - 20, cY - 20),
     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
     coordinates.append([cX,cY])
-    # show the image
-  cv2.imshow("Image", image)
-  cv2.waitKey(0)
+  
+  # show the image
+  if show_image == True:
+    cv2.imshow("Image", image)
+    cv2.waitKey(0)
+  
   return coordinates
