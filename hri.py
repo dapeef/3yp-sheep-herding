@@ -72,7 +72,7 @@ class Ui(QMainWindow):
 
         # Create pipe and boids
         self.p_boids = QProcess()
-        self.p_boids.readyReadStandardOutput.connect(self.boidsStdOut)
+        self.p_boids.readyReadStandardOutput.connect(self.timeStepHome)
         self.p_boids.start("python", ['boids.py'])
 
         # Once map is loaded, connect buttons to functions
@@ -85,7 +85,7 @@ class Ui(QMainWindow):
         self.toggleButtonsEnabledHome(True)
 
         # Draw sheep, herding and monitor drones
-        self.boidsStdOut()
+        self.timeStepHome()
 
     def onLoadFinishedRoute(self):
         print("Route edit map ready!")
@@ -156,29 +156,36 @@ class Ui(QMainWindow):
     def stopAllClick(self):
         print("Mmm, clickeroo")
 
-        self.boidsStdOut()
+        self.timeStepHome()
 
-    def boidsStdOut(self):
+    def timeStepHome(self):
         try:
+            # Receive data from boids stdout
             data = self.p_boids.readAllStandardOutput()
             stdout = bytes(data).decode("utf8")
 
+            # Parse JSON
             all_locations = json.loads(stdout)
 
             sheep_locations = all_locations["sheep"]
             herding_drone_locations = all_locations["drones"]
             monitor_drone_locations = all_locations["monitoring"]
             
+            # Update image in "live view" tab
             if self.live_view_menu.currentText() == "RGB":
                 self.rgb_image_file = "temp\\boids.png"
                 self.live_view_pix = QPixmap("temp\\boids.png")
                 self.resizeLiveViewImage()
+            
+            # Run Qianyi's algorithm on image to get sheep positions
         
         except Exception:
+            # If something goes wrong with the data transfer
             sheep_locations = []
             herding_drone_locations = []
             monitor_drone_locations = []
 
+        # Draw markers
         self.drawSheep(sheep_locations)
         self.drawHerdingDrones(herding_drone_locations)
         self.drawMonitorDrones(monitor_drone_locations)
