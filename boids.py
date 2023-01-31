@@ -302,8 +302,6 @@ class Simulation():
         # Create Transform object
         with open("infrastructure-data.json") as f:
             bounds = tf.GetWallBounds(json.load(f)["walls"])
-
-        self.transform = tf.Transform(bounds, PIX_PER_METER, HEIGHT)
     
     def addWallsFromHRI(self):
         num_segments = 0
@@ -321,8 +319,8 @@ class Simulation():
 
             for i in range(len(points) - 1):
                 self.data.makeWall(
-                    start_point=self.transform.TransformLP(pg.Vector2(points[i][0], points[i][1])),
-                    end_point=self.transform.TransformLP(pg.Vector2(points[i+1][0], points[i+1][1]))
+                    start_point=tf.TransformLP(pg.Vector2(points[i][0], points[i][1])),
+                    end_point=tf.TransformLP(pg.Vector2(points[i+1][0], points[i+1][1]))
                 )
 
     def addTestWalls(self):
@@ -408,17 +406,17 @@ class Simulation():
                 # Format position data
                 boids_dump = []
                 for pos in self.data.boids[:, 0]:
-                    trans_pos = self.transform.TransformPL(pos)
+                    trans_pos = tf.TransformPL(pos)
                     boids_dump.append([trans_pos.x, trans_pos.y])
 
                 # Format fears data
                 fear_dump = []
                 for pos in self.data.fears:
-                    trans_pos = self.transform.TransformPL(pos)
+                    trans_pos = tf.TransformPL(pos)
                     fear_dump.append([trans_pos.x, trans_pos.y])
 
                 # Set monitor drone position to centre of screen
-                monitor_pos = self.transform.TransformPL(self.camera_pos)
+                monitor_pos = tf.TransformPL(self.camera_pos)
                 monitor_dump = [[monitor_pos.x, monitor_pos.y]]
 
                 # # Get image in string
