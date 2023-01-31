@@ -105,8 +105,10 @@ def getCoordinates(file_name, show_image=False):
   for i in contours:
     if cv2.contourArea(i) > 25:
       filtered_contours.append(i)
-  cnts = cv2.drawContours(image, filtered_contours, -1, (0,255,0), thickness = 5)
-  fig, ax = plt.subplots(1, figsize=(12,8))
+  
+
+  # cnts = cv2.drawContours(image, filtered_contours, -1, (0,255,0), thickness = 5)
+  # fig, ax = plt.subplots(1, figsize=(12,8))
 
   coordinates = []
 # loop over the contours
