@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5 import uic
 from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtCore import QUrl, Qt
+from PyQt5.QtCore import QUrl, Qt, QProcess
 from PyQt5.QtGui import QPixmap
 import sys
 import os
@@ -62,12 +62,18 @@ class Ui(QMainWindow):
         self.live_view_menu.currentTextChanged.connect(self.liveViewTextChange)
 
         # Pixmap to hold live view image
-        self.live_view_pix = QPixmap("images\chapel-cottage.jpg")
+        self.rgb_image_file = "images\chapel-cottage.jpg"
+        self.live_view_pix = QPixmap(self.rgb_image_file)
         self.live_view_tab.resizeEvent = self.resizeLiveViewImage
 
     # On map load
     def onLoadFinishedHome(self):
         print("Home map ready!")
+
+        # Create pipe and boids
+        self.p_boids = QProcess()
+        self.p_boids.readyReadStandardOutput.connect(self.boidsStdOut)
+        self.p_boids.start("python", ['boids.py'])
 
         # Once map is loaded, connect buttons to functions
         self.stop_all.clicked.connect(self.stopAllClick)
@@ -79,13 +85,10 @@ class Ui(QMainWindow):
         self.toggleButtonsEnabledHome(True)
 
         # Draw sheep, herding and monitor drones
-        self.drawTestHome()
+        self.boidsStdOut()
 
     def onLoadFinishedRoute(self):
         print("Route edit map ready!")
-
-        # Once map is loaded, connect buttons to functions
-        #self.stop_all.clicked.connect(self.buttonClick)
         
         # Draw infrastructure
         self.drawInfrastructure()
@@ -153,28 +156,28 @@ class Ui(QMainWindow):
     def stopAllClick(self):
         print("Mmm, clickeroo")
 
-        self.drawTestHome()
+        self.boidsStdOut()
 
-    def drawTestHome(self):
-        sheep_locations = [
-            [51.6255863, -2.5121819],
-            [51.626060, -2.512327],
-            [51.626045, -2.512716],
-            [51.626151, -2.511915],
-            [51.625848, -2.512039],
-            [51.625616, -2.512513],
-            [51.625737, -2.512117]
-        ]
+    def boidsStdOut(self):
+        try:
+            data = self.p_boids.readAllStandardOutput()
+            stdout = bytes(data).decode("utf8")
 
-        herding_drone_locations = [
-            [51.626360, -2.513160],
-            [51.626485, -2.512436],
-            [51.626504, -2.511712]
-        ]
+            all_locations = json.loads(stdout)
 
-        monitor_drone_locations = [
-            [51.625987, -2.512303]
-        ]
+            sheep_locations = all_locations["sheep"]
+            herding_drone_locations = all_locations["drones"]
+            monitor_drone_locations = all_locations["monitoring"]
+            
+            if self.live_view_menu.currentText() == "RGB":
+                self.rgb_image_file = "temp\\boids.png"
+                self.live_view_pix = QPixmap("temp\\boids.png")
+                self.resizeLiveViewImage()
+        
+        except Exception:
+            sheep_locations = []
+            herding_drone_locations = []
+            monitor_drone_locations = []
 
         self.drawSheep(sheep_locations)
         self.drawHerdingDrones(herding_drone_locations)
@@ -597,8 +600,6 @@ class Ui(QMainWindow):
         else:
             self.edit_wall.setEnabled(True)
             self.remove_wall.setEnabled(True)
-        # self.edit_wall.setEnabled(value)
-        # self.remove_wall.setEnabled(value)
 
         # Gates
         self.add_gate.setEnabled(value)
@@ -608,8 +609,6 @@ class Ui(QMainWindow):
         else:
             self.edit_gate.setEnabled(True)
             self.remove_gate.setEnabled(True)
-        # self.edit_gate.setEnabled(value)
-        # self.remove_gate.setEnabled(value)
 
         # No fly
         self.add_no_fly.setEnabled(value)
@@ -619,8 +618,6 @@ class Ui(QMainWindow):
         else:
             self.edit_no_fly.setEnabled(True)
             self.remove_no_fly.setEnabled(True)
-        # self.edit_no_fly.setEnabled(value)
-        # self.remove_no_fly.setEnabled(value)
     
     def resetAllButtonsMap(self):
         self.mode = None
@@ -678,7 +675,7 @@ class Ui(QMainWindow):
 
     def liveViewTextChange(self, value):
         if value == "RGB":
-            self.live_view_pix = QPixmap("images\chapel-cottage.jpg")
+            self.live_view_pix = QPixmap(self.rgb_image_file)
         
         elif value == "Infrared":
             self.live_view_pix = QPixmap("images\chapel-cottage-inverted.jpg")
@@ -686,9 +683,18 @@ class Ui(QMainWindow):
         self.resizeLiveViewImage()
 
 
-app = QApplication(sys.argv)
+class Hri():
+    def __init__(self):
+        self.app = QApplication(sys.argv)
 
-window = Ui()
-window.show()
+        self.window = Ui()
+        self.window.show()
 
-app.exec()
+    def mainloop(self):
+        self.app.exec()
+
+
+if __name__ == "__main__":
+    hri = Hri()
+
+    hri.mainloop()
