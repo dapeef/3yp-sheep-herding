@@ -6,6 +6,9 @@ from PyQt5.QtGui import QPixmap
 import sys
 import os
 import json
+import image_processing as ip
+import transform as tf
+import pygame as pg
 
 
 class Ui(QMainWindow):
@@ -159,18 +162,32 @@ class Ui(QMainWindow):
         self.timeStepHome()
 
     def timeStepHome(self):
+        # try:
+
+        # Receive data from boids stdout
+        data = self.p_boids.readAllStandardOutput()
+        stdout = bytes(data).decode("utf8")
+
+        # Parse JSON
         try:
-            # Receive data from boids stdout
-            data = self.p_boids.readAllStandardOutput()
-            stdout = bytes(data).decode("utf8")
+            json_data = json.loads(stdout)
+        
+        except json.decoder.JSONDecodeError:
+            json_data = {
+                "sheep": [],
+                "drones": [],
+                "monitoring": [51.623510, -2.512716],
+                "window_size": {
+                    "width": 1200,
+                    "height": 800
+                }
+            }
 
-            # Parse JSON
-            all_locations = json.loads(stdout)
-
-            sheep_locations = all_locations["sheep"]
-            herding_drone_locations = all_locations["drones"]
-            monitor_drone_locations = all_locations["monitoring"]
-            
+        sheep_locations = json_data["sheep"]
+        herding_drone_locations = json_data["drones"]
+        monitor_drone_locations = json_data["monitoring"]
+        
+        if os.path.exists("temp\\boids.png"):
             # Update image in "live view" tab
             if self.live_view_menu.currentText() == "RGB":
                 self.rgb_image_file = "temp\\boids.png"
@@ -178,12 +195,25 @@ class Ui(QMainWindow):
                 self.resizeLiveViewImage()
             
             # Run Qianyi's algorithm on image to get sheep positions
-        
-        except Exception:
-            # If something goes wrong with the data transfer
+            local_sheep_locations = ip.getCoordinates("temp\\boids.png")
+
             sheep_locations = []
-            herding_drone_locations = []
-            monitor_drone_locations = []
+            camera_pos = tf.TransformLP(pg.Vector2(monitor_drone_locations[0]))
+            camera_pos -= pg.Vector2(json_data["window_size"]["width"], json_data["window_size"]["height"]) / 2
+
+            # print(camera_pos)
+
+            for local_location in local_sheep_locations:
+                local_location += camera_pos
+                global_location = tf.TransformPL(pg.Vector2(local_location))
+
+                sheep_locations.append([global_location.x, global_location.y])
+        
+        # except Exception as e:
+        #     # If something goes wrong with the data transfer/processing
+        #     sheep_locations = []
+        #     herding_drone_locations = []
+        #     monitor_drone_locations = []
 
         # Draw markers
         self.drawSheep(sheep_locations)

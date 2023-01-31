@@ -429,6 +429,10 @@ class Simulation():
                     "drones": fear_dump,
                     "monitoring": monitor_dump,
                     # "image": image
+                    "window_size": {
+                        "width": WIDTH,
+                        "height": HEIGHT
+                    }
                 }
 
                 sys.stdout.write(json.dumps(all_dump))
