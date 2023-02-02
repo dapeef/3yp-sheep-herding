@@ -176,7 +176,7 @@ class Ui(QMainWindow):
             json_data = {
                 "sheep": [],
                 "drones": [],
-                "monitoring": [51.623510, -2.512716],
+                "monitoring": [[51.623510, -2.512716]],
                 "window_size": {
                     "width": 1200,
                     "height": 800

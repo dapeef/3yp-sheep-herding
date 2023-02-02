@@ -10,8 +10,8 @@ import sys
 from PIL import Image
 
 
-WIDTH = 1200            # Window Width (1200)
-HEIGHT = 800            # Window Height (800)
+WIDTH = 500            # Window Width (1200)
+HEIGHT = 500            # Window Height (800)
 BGCOLOR = (0, 0, 0)     # Background color in RGB
 FPS = 60                # 30-90
 TUNING = {
@@ -34,6 +34,7 @@ TUNING = {
 }
 PIX_PER_METER = 15      # Number of pixels per meter in the real world
 FEAR_SPEED = 300        # Speed of drones
+BOID_SIZE = pg.Vector2(9, 15)/3 * 2
 
 
 def clamp_magnitude(vector, magnitude):
@@ -75,7 +76,7 @@ class Boid(pg.sprite.Sprite):
         # else:
         self.color.hsva = (0, 0, 100)
         # pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
-        pg.draw.ellipse(self.image, self.color, pg.Rect(3, 0, 9, 15)) # Blob shape
+        pg.draw.ellipse(self.image, self.color, pg.Rect((15-BOID_SIZE.x)/2, (15-BOID_SIZE.y)/2, BOID_SIZE.x, BOID_SIZE.y)) # Blob shape
         self.orig_image = pg.transform.rotate(self.image.copy(), -90)
 
         # maxW, maxH = self.draw_surf.get_size()
@@ -456,7 +457,7 @@ class Simulation():
 if __name__ == '__main__':
     sim = Simulation(
         num_fears=2,
-        num_boids=50,
+        num_boids=30,
         mouse_fear=True,
         image_save_type="hri",
         save_rate=1000,
