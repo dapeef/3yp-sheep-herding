@@ -10,8 +10,8 @@ import sys
 from PIL import Image
 
 
-WIDTH = 1200            # Window Width (1200)
-HEIGHT = 800            # Window Height (800)
+WIDTH = 500            # Window Width (1200)
+HEIGHT = 500            # Window Height (800)
 BGCOLOR = (0, 0, 0)     # Background color in RGB
 FPS = 60                # 30-90
 TUNING = {
@@ -34,6 +34,7 @@ TUNING = {
 }
 PIX_PER_METER = 15      # Number of pixels per meter in the real world
 FEAR_SPEED = 300        # Speed of drones
+BOID_SIZE = pg.Vector2(9, 15)/3 * 2
 
 
 def clamp_magnitude(vector, magnitude):
@@ -75,7 +76,7 @@ class Boid(pg.sprite.Sprite):
         # else:
         self.color.hsva = (0, 0, 100)
         # pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
-        pg.draw.ellipse(self.image, self.color, pg.Rect(3, 0, 9, 15)) # Blob shape
+        pg.draw.ellipse(self.image, self.color, pg.Rect((15-BOID_SIZE.x)/2, (15-BOID_SIZE.y)/2, BOID_SIZE.x, BOID_SIZE.y)) # Blob shape
         self.orig_image = pg.transform.rotate(self.image.copy(), -90)
 
         # maxW, maxH = self.draw_surf.get_size()
@@ -302,8 +303,6 @@ class Simulation():
         # Create Transform object
         with open("infrastructure-data.json") as f:
             bounds = tf.GetWallBounds(json.load(f)["walls"])
-
-        self.transform = tf.Transform(bounds, PIX_PER_METER, HEIGHT)
     
     def addWallsFromHRI(self):
         num_segments = 0
@@ -321,8 +320,8 @@ class Simulation():
 
             for i in range(len(points) - 1):
                 self.data.makeWall(
-                    start_point=self.transform.TransformLP(pg.Vector2(points[i][0], points[i][1])),
-                    end_point=self.transform.TransformLP(pg.Vector2(points[i+1][0], points[i+1][1]))
+                    start_point=tf.TransformLP(pg.Vector2(points[i][0], points[i][1])),
+                    end_point=tf.TransformLP(pg.Vector2(points[i+1][0], points[i+1][1]))
                 )
 
     def addTestWalls(self):
@@ -408,17 +407,17 @@ class Simulation():
                 # Format position data
                 boids_dump = []
                 for pos in self.data.boids[:, 0]:
-                    trans_pos = self.transform.TransformPL(pos)
+                    trans_pos = tf.TransformPL(pos)
                     boids_dump.append([trans_pos.x, trans_pos.y])
 
                 # Format fears data
                 fear_dump = []
                 for pos in self.data.fears:
-                    trans_pos = self.transform.TransformPL(pos)
+                    trans_pos = tf.TransformPL(pos)
                     fear_dump.append([trans_pos.x, trans_pos.y])
 
                 # Set monitor drone position to centre of screen
-                monitor_pos = self.transform.TransformPL(self.camera_pos)
+                monitor_pos = tf.TransformPL(self.camera_pos)
                 monitor_dump = [[monitor_pos.x, monitor_pos.y]]
 
                 # # Get image in string
@@ -431,6 +430,10 @@ class Simulation():
                     "drones": fear_dump,
                     "monitoring": monitor_dump,
                     # "image": image
+                    "window_size": {
+                        "width": WIDTH,
+                        "height": HEIGHT
+                    }
                 }
 
                 sys.stdout.write(json.dumps(all_dump))
@@ -454,7 +457,7 @@ class Simulation():
 if __name__ == '__main__':
     sim = Simulation(
         num_fears=2,
-        num_boids=50,
+        num_boids=30,
         mouse_fear=True,
         image_save_type="hri",
         save_rate=1000,
