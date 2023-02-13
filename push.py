@@ -83,10 +83,16 @@ class Bucket():
             angles2.append(abs(math.atan((grads2[i]-m1)/(1+m1*grads2[i]))))
         error1 = [n - angle for n in angles1]
         abs_err1 = [abs(ele) for ele in error1]
-        error2 = [n - angle for n in angles1]
+        error2 = [n - angle for n in angles2]
         abs_err2 = [abs(ele) for ele in error2]
-        node1 = hull1[np.argmin(abs_err1)]
-        node2 = hull2[np.argmin(abs_err2)]
+        if hull1 == []:
+            node1 = [0,0]
+        else:
+            node1 = hull1[np.argmin(abs_err1)]
+        if hull2 == []:
+            node2 = [0,0]
+        else:
+            node2 = hull2[np.argmin(abs_err2)]
         return node1,node2
 
     def drone_coords(nodes,x_cg,y_cg,r):
@@ -117,6 +123,19 @@ class Bucket():
 
     def get_targets(sheep,R_fear,gate_pos,angle):
         # sheep = Bucket.converter(arr)
+        # new bit: if sheep is already through gate, ignore
+        # subject to change this if random gate position rather than existing setup
+        new_sheep = []
+        for i in range(len(sheep)):
+            # if i >= len(sheep):
+            #     break
+            # if sheep[i,0] > gate_pos[0]:
+            #     # index = [i,:]
+            #     sheep = np.delete(sheep,i,axis=0)
+            if sheep[i,0] <= gate_pos[0]:
+                new_sheep.append(sheep[i,:])
+        sheep = np.asarray(new_sheep)                
+
         hull = GiftWrap.gift_wrapping(sheep)
         x_cg,y_cg = Bucket.centroid(sheep)
         node1,node2 = Bucket.get_nodes(x_cg,y_cg,gate_pos,hull,angle)
