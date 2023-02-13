@@ -1,5 +1,6 @@
 import boids
 import pygame as pg
+import push
 import json
 
 # Initiate simulation
