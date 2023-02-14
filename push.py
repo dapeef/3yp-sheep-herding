@@ -127,11 +127,6 @@ class Bucket():
         # subject to change this if random gate position rather than existing setup
         new_sheep = []
         for i in range(len(sheep)):
-            # if i >= len(sheep):
-            #     break
-            # if sheep[i,0] > gate_pos[0]:
-            #     # index = [i,:]
-            #     sheep = np.delete(sheep,i,axis=0)
             if sheep[i,0] <= gate_pos[0]:
                 new_sheep.append(sheep[i,:])
         sheep = np.asarray(new_sheep)                
