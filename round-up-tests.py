@@ -1,22 +1,25 @@
 import boids
 import pygame as pg
-import push
+# import push
 import math
 import numpy as np
 import roundup
 
 # Initiate simulation
-sim = boids.Simulation(num_fears=2, num_boids=50, render=True)
+sim = boids.Simulation(num_fears=2, num_boids=50, render=True, spawn_zone=pg.Rect(50, 50, 1100, 700))
 fear = boids.TUNING["influence_dist"]["fear"]
-error = 4       # radius of targets required to reach. Just arbitrary for the moment
+error = 10       # radius of targets required to reach. Just arbitrary for the moment
+
+sim.data.fears[1] = pg.Vector2(1000, 800)
 
 # Add some predefined walls
 sim.addTestWalls()
 
 i = 0
-j = -5
+j = -20
 
 while True:
+
 
     sheeps = sim.data.boids
     new_arr = []
@@ -28,6 +31,9 @@ while True:
     sheep = np.asarray(new_arr)
 
     points = roundup.get_points(sheep,fear/1.1)
+    points.append(points[0])
+    new_points = roundup.interpolate_points(points,10)
+    points = new_points
     length = len(points)
     for n in range(2):
         x = sim.data.fears[n][0]            # get fear locations
