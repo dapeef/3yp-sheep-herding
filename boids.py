@@ -15,7 +15,7 @@ FPS = 60                # 30-90
 TUNING = {
     "max_speed": 150,       # Max movement speed=
     "weightings": {         # Force weightings
-        'sep': 1,
+        'sep': 2,
         'ali': 1,
         'decel': 1,
         'fear': 2e6,
