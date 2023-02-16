@@ -290,7 +290,11 @@ class Simulation():
     
         # Set up camera tracking
         self.camera_tracking = camera_tracking
-        self.camera_pos = pg.Vector2(spawn_zone.center)
+        if self.camera_tracking:
+            self.camera_pos = pg.Vector2(spawn_zone.center)
+        
+        else:
+            self.camera_pos = self.window_size/2
         
 
         # Clock

@@ -1,9 +1,8 @@
 import boids
 import pygame as pg
-import json
 
 # Initiate simulation
-sim = boids.Simulation(num_fears=2, num_boids=50, render=True)
+sim = boids.Simulation(num_fears=2, num_boids=50)
 
 # Add some predefined walls
 sim.addTestWalls()
