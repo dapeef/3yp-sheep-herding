@@ -4,3 +4,4 @@ pip install pygame
 pip install numpy
 pip install PyQt5
 pip install PyQtWebEngine
+pip install opencv-python

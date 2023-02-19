@@ -17,7 +17,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>Sheep herding HRI</string>
+   <string>DASH</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -81,7 +81,31 @@ FOR MAP]</string>
              <string>Drone status</string>
             </property>
             <layout class="QGridLayout" name="gridLayout_2">
-             <item row="2" column="0">
+             <item row="1" column="3">
+              <widget class="QPushButton" name="land_button2">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Ignored">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Land drone</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QLabel" name="drone_label2">
+               <property name="text">
+                <string>Herding
+Drone 2</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
               <widget class="QLabel" name="drone_label3">
                <property name="text">
                 <string>Herding
@@ -92,36 +116,14 @@ Drone 3</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
-              <widget class="QLabel" name="drone_battery3">
+             <item row="4" column="0">
+              <widget class="QLabel" name="drone_label4">
                <property name="text">
-                <string/>
+                <string>Monitor
+Drone</string>
                </property>
-               <property name="pixmap">
-                <pixmap>assets/battery-2.jpg</pixmap>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLabel" name="drone_battery1">
-               <property name="text">
-                <string/>
-               </property>
-               <property name="pixmap">
-                <pixmap>assets/battery-4.jpg</pixmap>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="2">
-              <widget class="QPushButton" name="land_button4">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Ignored">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>Land drone</string>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -139,17 +141,7 @@ Drone 1</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
-              <widget class="QLabel" name="drone_battery2">
-               <property name="text">
-                <string/>
-               </property>
-               <property name="pixmap">
-                <pixmap>assets/battery-3.jpg</pixmap>
-               </property>
-              </widget>
-             </item>
-             <item row="3" column="1">
+             <item row="4" column="1">
               <widget class="QLabel" name="drone_battery4">
                <property name="text">
                 <string/>
@@ -159,30 +151,18 @@ Drone 1</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="drone_label2">
+             <item row="0" column="1">
+              <widget class="QLabel" name="drone_battery1">
                <property name="text">
-                <string>Herding
-Drone 2</string>
+                <string/>
                </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
+               <property name="pixmap">
+                <pixmap>assets/battery-4.jpg</pixmap>
                </property>
               </widget>
              </item>
-             <item row="3" column="0">
-              <widget class="QLabel" name="drone_label4">
-               <property name="text">
-                <string>Monitor
-Drone</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="2">
-              <widget class="QPushButton" name="land_button2">
+             <item row="3" column="3">
+              <widget class="QPushButton" name="land_button3">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Ignored">
                  <horstretch>0</horstretch>
@@ -194,7 +174,7 @@ Drone</string>
                </property>
               </widget>
              </item>
-             <item row="0" column="2">
+             <item row="0" column="3">
               <widget class="QPushButton" name="land_button1">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Ignored">
@@ -207,8 +187,28 @@ Drone</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="2">
-              <widget class="QPushButton" name="land_button3">
+             <item row="3" column="1">
+              <widget class="QLabel" name="drone_battery3">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="pixmap">
+                <pixmap>assets/battery-2.jpg</pixmap>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="drone_battery2">
+               <property name="text">
+                <string/>
+               </property>
+               <property name="pixmap">
+                <pixmap>assets/battery-3.jpg</pixmap>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="3">
+              <widget class="QPushButton" name="land_button4">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Fixed" vsizetype="Ignored">
                  <horstretch>0</horstretch>
@@ -217,6 +217,62 @@ Drone</string>
                </property>
                <property name="text">
                 <string>Land drone</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QPushButton" name="manual_control_2">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Ignored">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Manual
+control</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2">
+              <widget class="QPushButton" name="manual_control_3">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Ignored">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Manual
+control</string>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="2">
+              <widget class="QPushButton" name="manual_control_4">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Ignored">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Manual
+control</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QPushButton" name="manual_control_1">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Ignored">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Manual
+control</string>
                </property>
               </widget>
              </item>
