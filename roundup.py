@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 class GiftWrap():
 
@@ -113,28 +114,6 @@ def navigate_loop(points, drone1_pos, drone2_pos):
     # Return the positions of the two drones
     return next_pos1, next_pos2
 
-# def scale_param(current_pos, given_pos, fixed_param):
-#     # Calculate the distance between the two positions
-#     distance = math.sqrt((current_pos[0] - given_pos[0])**2 + (current_pos[1] - given_pos[1])**2)
-    
-#     # Scale the parameter based on the distance
-#     if distance < 100:
-#         scaled_param = fixed_param / 1.05
-#     else:
-#         scaled_param = fixed_param / (1.05 + 0.85 * (distance - 100) / 900)
-    
-#     return scaled_param
-
-# def scale_param(current_pos, given_pos, fixed_param, decay_rate=0.1, min_scale=0.5):
-#     distance = np.linalg.norm(np.array(current_pos) - np.array(given_pos))
-#     if distance < 300:
-#         scale_factor = 1/1.05
-#     else:
-#         scale_factor = 1 / 1.05 * np.exp(-decay_rate * (distance - 300))
-#     scale_factor = max(scale_factor, min_scale)
-#     scaled_param = fixed_param * scale_factor
-#     return scaled_param
-
 def scale_parameter(current_pos, given_pos, fixed_param, dist1, dist2):
     distance = ((current_pos[0] - given_pos[0])**2 + (current_pos[1] - given_pos[1])**2)**0.5
     
@@ -148,24 +127,12 @@ def scale_parameter(current_pos, given_pos, fixed_param, dist1, dist2):
     scaled_param = fixed_param * scale_factor
     return scaled_param
 
-
-# def roundup(sheep,r,error):
-#     index = 0
-#     while run= = True:
-#         points = get_points(sheep,r)
-#         # get drone coords?
-#         x = # get fear locations
-#         y = # as above
-#         s = math.sqrt((x-points[index][0])**2 + (y-points[index][1])**2)
-#         if s<=error:
-#             index += 1
-
 # testing plots:
 
-# sheep = np.random.rand(50,2)
-# plt.plot(sheep[:,0],sheep[:,1],'co')
-# points = get_points(sheep,0.2)
-# points.append(points[0])
-# points = np.asarray(points)
-# plt.plot(points[:,0],points[:,1])
-# plt.show()
+sheep = np.random.rand(50,2)
+plt.plot(sheep[:,0],sheep[:,1],'co')
+points = get_points(sheep,0.2)
+points.append(points[0])
+points = np.asarray(points)
+plt.plot(points[:,0],points[:,1])
+plt.show()
