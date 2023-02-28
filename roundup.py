@@ -129,10 +129,10 @@ def scale_parameter(current_pos, given_pos, fixed_param, dist1, dist2):
 
 # testing plots:
 
-sheep = np.random.rand(50,2)
-plt.plot(sheep[:,0],sheep[:,1],'co')
-points = get_points(sheep,0.2)
-points.append(points[0])
-points = np.asarray(points)
-plt.plot(points[:,0],points[:,1])
-plt.show()
+# sheep = np.random.rand(50,2)
+# plt.plot(sheep[:,0],sheep[:,1],'co')
+# points = get_points(sheep,0.2)
+# points.append(points[0])
+# points = np.asarray(points)
+# plt.plot(points[:,0],points[:,1])
+# plt.show()

@@ -6,14 +6,14 @@ import numpy as np
 import roundup
 
 # Initiate simulation
-sim = boids.Simulation(num_fears=2, num_boids=50, render=True, spawn_zone=pg.Rect(50, 50, 1100, 700))
+sim = boids.Simulation(num_fears=2, num_boids=50, spawn_zone=pg.Rect(50, 50, 1100, 700), window_size=pg.Vector2(1200, 800))
 fear = boids.TUNING["influence_dist"]["fear"]
 error = 10       # radius of targets required to reach. Just arbitrary for the moment
 
 sim.data.fears[1] = pg.Vector2(50, 800)
 
 # Add some predefined walls
-sim.addTestWalls()
+sim.addTestWalls(add_gate=False)
 
 i = 0
 j = -20
