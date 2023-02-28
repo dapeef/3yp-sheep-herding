@@ -331,7 +331,7 @@ class Simulation():
                     end_point=tf.TransformLP(pg.Vector2(points[i+1][0], points[i+1][1]))
                 )
 
-    def addTestWalls(self):
+    def addTestWalls(self, add_gate=True):
         pad = 40
 
         self.data.initWalls(6)
@@ -340,8 +340,9 @@ class Simulation():
         self.data.makeWall(pg.Vector2(self.window_size.x-pad, pad), pg.Vector2(self.window_size.x-pad, self.window_size.y-pad))
         self.data.makeWall(pg.Vector2(self.window_size.x-pad, self.window_size.y-pad), pg.Vector2(pad, self.window_size.y-pad))
         self.data.makeWall(pg.Vector2(pad, self.window_size.y-pad), pg.Vector2(pad, pad))
-        self.data.makeWall(pg.Vector2(600, pad), pg.Vector2(600, 400))
-        self.data.makeWall(pg.Vector2(600, 500), pg.Vector2(600, self.window_size.y-pad))
+        if add_gate:
+            self.data.makeWall(pg.Vector2(600, pad), pg.Vector2(600, 400))
+            self.data.makeWall(pg.Vector2(600, 500), pg.Vector2(600, self.window_size.y-pad))
 
     def mainloop(self):
         # main loop
