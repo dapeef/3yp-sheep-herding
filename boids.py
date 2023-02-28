@@ -1,47 +1,38 @@
 #!/usr/bin/env python3
 from random import randint, choice
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame as pg
 import numpy as np
-import math
 import json
+import transform as tf
+import sys
+from PIL import Image
 
-'''
-PyNBoids - a Boids simulation - github.com/Nikorasu/PyNBoids
-Uses numpy array math instead of math lib, more efficient.
-Copyright (c) 2021  Nikolaus Stromberg  nikorasu85@gmail.com
-'''
 
-FLLSCRN = False         # True for Fullscreen, or False for Window
-WIDTH = 1200            # Window Width (1200)
-HEIGHT = 800            # Window Height (800)
 BGCOLOR = (0, 0, 0)     # Background color in RGB
 FPS = 60                # 30-90
-SHOWFPS = True          # Show frame rate
 TUNING = {
-    "max_speed": 150,       # Max movement speed
-    # "max_force": 5,         # Max acceleration force
+    "max_speed": 150,       # Max movement speed=
     "weightings": {         # Force weightings
-        'sep': 1,
+        'sep': 2,
         'ali': 1,
-        # 'coh': 1,
         'decel': 1,
         'fear': 2e6,
         'wall': 2e7
     },
-    "target_dist": 40,      # Target separation
+    "target_dist": 20,      # Target separation
     "influence_dist": {
         "boid": 200,        # "visibility" distance for the boids
         "fear": 200,
         "wall": 25
     },
-    # "fear_decay": 1,        # see below
-    # "fear_const": .05,      # 1/(r/k)^a -> k is const, a is decay
-    # "speed_decay": 2        # Decay rate of speed -> v /= speed_decay * dt
     "target_vel": pg.Vector2(0, 0),  # Speed which the boids tend towards under no other forces
     "wall_thickness": 5       # Amount of padding given to the wall (x on either side of the wall)
 }
-PIX_PER_METER = 1.5     # Number of pixels per meter in the real world
+PIX_PER_METER = 15      # Number of pixels per meter in the real world
 FEAR_SPEED = 300        # Speed of drones
+BOID_SIZE = pg.Vector2(9, 15)/3 * 2
 
 
 def clamp_magnitude(vector, magnitude):
@@ -53,14 +44,16 @@ def clamp_magnitude(vector, magnitude):
     else:
         return vector
 
+def translate_for_camera(vector, camera_pos, window_size):
+    return vector - camera_pos + window_size/2
+
 
 class Boid(pg.sprite.Sprite):
-    def __init__(self, boid_num, data, render, spawn_zone, draw_surf=None):
+    def __init__(self, boid_num, data, spawn_zone, draw_surf=None):
         super().__init__()
 
         self.data = data # Stores positions & rotations of all boids and fears
         self.bnum = boid_num # This boid's number (ID)
-        self.render = render # Whether to render the pygame screen or not
 
         self.ang = pg.Vector2(0,0)
         self.accel = pg.Vector2(0,0)
@@ -69,26 +62,25 @@ class Boid(pg.sprite.Sprite):
             randint(spawn_zone.left, spawn_zone.right),
             randint(spawn_zone.top, spawn_zone.bottom)
         )
-        # Finally, output pos and vel to array
-        self.data.boids[self.bnum, :2] = [self.pos, self.vel]
+        self.data.boids[self.bnum, :2] = [self.pos, self.vel] # Save initial pos and vel to data object
 
-        if render:
-            self.draw_surf = draw_surf # Main screen surface
+        self.draw_surf = draw_surf # Main screen surface
 
-            self.image = pg.Surface((15, 15)).convert() # Area to render boid onto
-            self.image.set_colorkey(0)
-            self.color = pg.Color(0)  # preps color so we can use hsva
-            if self.bnum == 0:
-                self.color.hsva = (randint(0,360), 90, 90) # randint(5,55) #4goldfish
-            else:
-                self.color.hsva = (0, 0, 60)
-            pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
-            self.orig_image = pg.transform.rotate(self.image.copy(), -90)
+        self.image = pg.Surface((15, 15)).convert() # Area to render boid onto
+        self.image.set_colorkey(0)
+        self.color = pg.Color(0)  # preps color so we can use hsva
+        # if self.bnum == 0:
+        # self.color.hsva = (randint(0,360), 90, 90)
+        # else:
+        self.color.hsva = (0, 0, 100)
+        # pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
+        pg.draw.ellipse(self.image, self.color, pg.Rect((15-BOID_SIZE.x)/2, (15-BOID_SIZE.y)/2, BOID_SIZE.x, BOID_SIZE.y)) # Blob shape
+        self.orig_image = pg.transform.rotate(self.image.copy(), -90)
 
-            # maxW, maxH = self.draw_surf.get_size()
-            self.rect = self.image.get_rect(center=(self.pos.x, self.pos.y))
- 
-    def update(self, dt, tuning):
+        # maxW, maxH = self.draw_surf.get_size()
+        self.rect = self.image.get_rect(center=(self.pos.x, self.pos.y))
+
+    def update(self, dt, tuning, camera_pos, window_size):
         def getNearest(type, num_select=7):
             # Make list of nearby boids, sorted by distance
             if type == "boid": objects = self.data.boids
@@ -165,10 +157,6 @@ class Boid(pg.sprite.Sprite):
         fear *= tuning["weightings"]['fear']
         wall *= tuning["weightings"]['wall']
 
-        # Debug print output to help tune
-        # if self.bnum == 0:
-        #     print(sep, ali, decel, fear, sep="\t")
-
         # Sum weighted components to get acceleration
         self.accel = sep + ali + decel + fear + wall
 
@@ -180,16 +168,15 @@ class Boid(pg.sprite.Sprite):
         # Update data array
         self.data.boids[self.bnum, :2] = [self.pos, self.vel]
         
-        if self.render:
-            # Update position of rendered boid
-            self.rect.center = self.pos
+        # Update position of rendered boid
+        self.rect.center = translate_for_camera(self.pos, camera_pos, window_size)
 
-            # Get angle of velocity for rendering
-            self.ang = self.vel.as_polar()[1]
+        # Get angle of velocity for rendering
+        self.ang = self.vel.as_polar()[1]
 
-            # Adjusts angle of rendered boid image to match heading
-            self.image = pg.transform.rotate(self.orig_image, -self.ang)
-            self.rect = self.image.get_rect(center=self.rect.center)  # recentering fix
+        # Adjusts angle of rendered boid image to match heading
+        self.image = pg.transform.rotate(self.orig_image, -self.ang)
+        self.rect = self.image.get_rect(center=self.rect.center)  # recentering fix
 
 
 class Data():
@@ -225,45 +212,92 @@ class Data():
         self.walls[self.num_walls] = [start_point, end_point]
         self.num_walls += 1
 
-    def drawWalls(self, surface):
-        for wall in self.walls:
-            pg.draw.line(surface, (255, 0, 0), wall[0], wall[1], 5) # Draw line between points
-            pg.draw.circle(surface, (255, 0, 0), wall[0], 2.5) # Draw red circle on each end
-            pg.draw.circle(surface, (255, 0, 0), wall[1], 2.5) # Draw red circle on other end
+    def getMeanBoidPos(self):
+        sum = pg.Vector2(0, 0)
 
-    def drawFears(self, surface):
+        for boid_pos in self.boids[:, 0]:
+            sum += boid_pos
+        
+        try:
+            return sum / len(self.boids)
+        
+        except ZeroDivisionError:
+            return sum
+
+    def drawWalls(self, surface, camera_pos):
+        window_size = pg.Vector2(surface.get_size())
+        for wall in self.walls:
+            trans_wall_0 = translate_for_camera(wall[0], camera_pos, window_size)
+            trans_wall_1 = translate_for_camera(wall[1], camera_pos, window_size)
+
+            pg.draw.line(surface, (255, 0, 0), trans_wall_0, trans_wall_1, 5) # Draw line between points
+            pg.draw.circle(surface, (255, 0, 0), trans_wall_0, 2.5) # Draw red circle on each end
+            pg.draw.circle(surface, (255, 0, 0), trans_wall_1, 2.5) # Draw red circle on other end
+
+    def drawFears(self, surface, camera_pos):
+        window_size = pg.Vector2(surface.get_size())
+        alpha_surface = pg.Surface((window_size.x, window_size.y))
+        alpha_surface.set_colorkey((0,0,0))
+        alpha_surface.set_alpha(128)
+
         for fear in self.fears:
-            pg.draw.circle(surface, (32, 0, 0), fear, TUNING["influence_dist"]["fear"]) # Draw red circle on mouse position
+            pg.draw.circle(alpha_surface, (100, 0, 0), translate_for_camera(fear, camera_pos, window_size), TUNING["influence_dist"]["fear"]) # Draw big circle at every fear
+
+        surface.blit(alpha_surface, (0, 0))
+
         for fear in self.fears:
-            pg.draw.circle(surface, (255, 0, 0), fear, 5) # Draw red circle on mouse position
+            pg.draw.circle(surface, (255, 0, 0), translate_for_camera(fear, camera_pos, window_size), 5) # Draw dot at avery fear
 
 
 class Simulation():
-    def __init__(self, num_fears, num_boids=50, render=True, mouse_fear=False, spawn_zone=pg.Rect(300, 300, 100, 100)):
-        self.render = render # Whether to render the pygame screen or not
+    def __init__(self,
+                 num_fears=2,
+                 num_boids=50,
+                 mouse_fear=False,
+                 spawn_zone=pg.Rect(300, 300, 100, 100),
+                 image_save_type=None,
+                 save_rate=500,
+                 camera_tracking=False,
+                 window_size=pg.Vector2(500, 1000)):
+        pg.init()  # prepare window
+        pg.display.set_caption("Sheeeeeeep") # Window title
 
-        if self.render:
-            pg.init()  # prepare window
-            pg.display.set_caption("Sheeeeeeep") # Window title
+        self.window_size = window_size
 
-            self.mouse_fear = mouse_fear
-
-            # setup fullscreen or window mode
-            if FLLSCRN:
-                currentRez = (pg.display.Info().current_w, pg.display.Info().current_h)
-                self.screen = pg.display.set_mode(currentRez, pg.SCALED)
-                pg.mouse.set_visible(False)
-            else: self.screen = pg.display.set_mode((WIDTH, HEIGHT), pg.RESIZABLE)
-
-            # If mouse controls fear
-            if self.mouse_fear:
-                pg.mouse.set_visible(False)
-
-            if SHOWFPS : self.font = pg.font.Font(None, 30)
+        if image_save_type == None or \
+            image_save_type == "hri" or \
+            image_save_type == "dataset":
+            self.image_save_type = image_save_type
         
         else:
-            self.screen = None
+            raise Exception("\"" + image_save_type + "\" is not a valid input for image_save_type. Options are None, \"hri\" or \"dataset\".")
         
+        self.mouse_fear = mouse_fear
+
+        # setup window
+        self.screen = pg.display.set_mode((self.window_size.x, self.window_size.y))
+
+        # If mouse controls fear
+        if self.mouse_fear:
+            pg.mouse.set_visible(False)
+
+        self.font = pg.font.Font(None, 30)
+
+        if self.image_save_type != None:
+            self.last_image_save = 0
+            self.image_save_rate = save_rate # Time between image saves, ms
+            self.save_count = 0
+    
+        # Set up camera tracking
+        self.camera_tracking = camera_tracking
+        if self.camera_tracking:
+            self.camera_pos = pg.Vector2(spawn_zone.center)
+        
+        else:
+            self.camera_pos = self.window_size/2
+        
+
+        # Clock
         self.clock = pg.time.Clock()
 
         # Set up boids and their data
@@ -271,42 +305,20 @@ class Simulation():
 
         self.nBoids = pg.sprite.Group()
         for n in range(num_boids):
-            self.nBoids.add(Boid(n, self.data, self.render, spawn_zone, self.screen))  # spawns desired # of boidz
+            self.nBoids.add(Boid(n, self.data, spawn_zone, self.screen))  # spawns desired number of boidz
+        
+        # Create Transform object
+        with open("infrastructure-data.json") as f:
+            bounds = tf.GetWallBounds(json.load(f)["walls"])
     
-    def addWallsFromJSON(self, JSON):
+    def addWallsFromHRI(self):
         num_segments = 0
 
-        min_point = pg.Vector2(
-            JSON[0]["points"][0][0],
-            JSON[0]["points"][0][1]
-        )
-        max_point = pg.Vector2(
-            JSON[0]["points"][0][0],
-            JSON[0]["points"][0][1]
-        )
+        with open("infrastructure-data.json") as f:
+            JSON = json.load(f)["walls"]#[:5]
 
         for wall in JSON:
             num_segments += len(wall["points"]) - 1
-
-            for point in wall["points"]:
-                min_point.x = min(min_point.x, point[0])
-                max_point.x = max(max_point.x, point[0])
-                min_point.y = min(min_point.y, point[1])
-                max_point.y = max(max_point.y, point[1])
-        
-        center_point = (min_point + max_point)/2
-
-        earth_circ = 40075e3 # km
-        m_per_lat = earth_circ / 360 # meters per degree of latitude
-        m_per_lng = earth_circ * math.cos(center_point.y / 180 * math.pi) / 360
-
-        def transformCoords(lat_long):
-            rel_lat_long = lat_long - min_point
-
-            return pg.Vector2(
-                rel_lat_long.y * m_per_lng * PIX_PER_METER,
-                HEIGHT - rel_lat_long.x * m_per_lat * PIX_PER_METER # Flipping becaue (0,0) is top left in pg
-            ) # switching x and y because lat and long are (y,x)
 
         self.data.initWalls(num_segments)
 
@@ -315,8 +327,8 @@ class Simulation():
 
             for i in range(len(points) - 1):
                 self.data.makeWall(
-                    start_point=transformCoords(pg.Vector2(points[i][0], points[i][1])),
-                    end_point=transformCoords(pg.Vector2(points[i+1][0], points[i+1][1]))
+                    start_point=tf.TransformLP(pg.Vector2(points[i][0], points[i][1])),
+                    end_point=tf.TransformLP(pg.Vector2(points[i+1][0], points[i+1][1]))
                 )
 
     def addTestWalls(self):
@@ -324,12 +336,12 @@ class Simulation():
 
         self.data.initWalls(6)
 
-        self.data.makeWall(pg.Vector2(pad, pad), pg.Vector2(WIDTH-pad, pad))
-        self.data.makeWall(pg.Vector2(WIDTH-pad, pad), pg.Vector2(WIDTH-pad, HEIGHT-pad))
-        self.data.makeWall(pg.Vector2(WIDTH-pad, HEIGHT-pad), pg.Vector2(pad, HEIGHT-pad))
-        self.data.makeWall(pg.Vector2(pad, HEIGHT-pad), pg.Vector2(pad, pad))
+        self.data.makeWall(pg.Vector2(pad, pad), pg.Vector2(self.window_size.x-pad, pad))
+        self.data.makeWall(pg.Vector2(self.window_size.x-pad, pad), pg.Vector2(self.window_size.x-pad, self.window_size.y-pad))
+        self.data.makeWall(pg.Vector2(self.window_size.x-pad, self.window_size.y-pad), pg.Vector2(pad, self.window_size.y-pad))
+        self.data.makeWall(pg.Vector2(pad, self.window_size.y-pad), pg.Vector2(pad, pad))
         self.data.makeWall(pg.Vector2(600, pad), pg.Vector2(600, 400))
-        self.data.makeWall(pg.Vector2(600, 500), pg.Vector2(600, HEIGHT-pad))
+        self.data.makeWall(pg.Vector2(600, 500), pg.Vector2(600, self.window_size.y-pad))
 
     def mainloop(self):
         # main loop
@@ -342,28 +354,24 @@ class Simulation():
                 return
 
     def stepTime(self):
-        if self.render:
-            # Get mouse position if self.mouse_fear
-            if self.mouse_fear:
-                mouse_pos = pg.mouse.get_pos()
-                
-                self.data.fears[0] = pg.Vector2(mouse_pos)
-                self.data.fear_targets[0] = pg.Vector2(mouse_pos)
+        # Get mouse position if self.mouse_fear
+        if self.mouse_fear:
+            mouse_pos = pg.mouse.get_pos()
 
-            for e in pg.event.get():
+            # Translate for camera position
+            mouse_pos += self.camera_pos - self.window_size/2
+            
+            self.data.fears[0] = pg.Vector2(mouse_pos)
+            self.data.fear_targets[0] = pg.Vector2(mouse_pos)
+
+        for e in pg.event.get():
                 # Handle quitting
                 if e.type == pg.QUIT or e.type == pg.KEYDOWN and e.key == pg.K_ESCAPE:
                     return "quit"
-                
-                # if e.type == pg.MOUSEBUTTONDOWN and self.mouse_fear:
-                #     # data.fears = np.append(data.fears, [pg.Vector2(mouse_pos)], axis=0)
-                #     # data.fears = np.insert(data.fears, pg.Vector2(mouse_pos), len(data.fears))
-                #     self.data.fears[self.data.num_fears] = pg.Vector2(mouse_pos)
-                #     self.data.num_fears += 1
 
         dt = self.clock.tick(FPS) / 1000
 
-        self.nBoids.update(dt, TUNING)
+        self.nBoids.update(dt, TUNING, self.camera_pos, self.window_size)
 
         for i in range(len(self.data.fears)):
             diff = self.data.fear_targets[i] - self.data.fears[i]
@@ -374,25 +382,97 @@ class Simulation():
             else:
                 self.data.fears[i] = self.data.fears[i] +  diff.normalize() * dt * FEAR_SPEED
 
-        if self.render:
-            # Draw
-            self.screen.fill(BGCOLOR)
-            self.data.drawFears(self.screen)
-            self.data.drawWalls(self.screen)
-            self.nBoids.draw(self.screen)
+        # Draw
+        self.screen.fill(BGCOLOR)
 
-            if SHOWFPS : self.screen.blit(self.font.render(str(int(self.clock.get_fps())), True, [0,200,0]), (8, 8))
+        self.nBoids.draw(self.screen)
 
-            pg.display.update()
-        
-        else:
-            print("FPS:", self.clock.get_fps())
+        if self.image_save_type != None and pg.time.get_ticks() > self.last_image_save + self.image_save_rate:
+            if self.image_save_type == "dataset":
+                if not '.\\dataset' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
+                    os.mkdir(".\\dataset")
+
+                file_name = "dataset\\" + str(self.save_count)
+                
+                # Format position data
+                boids_dump = []
+                for pos in self.data.boids[:, 0]:
+                    boids_dump.append([pos.x, pos.y])
+            
+                # Save position data
+                with open(file_name + ".json", 'w') as f:
+                    json.dump(boids_dump, f, indent=4)
+
+                pg.image.save(self.screen, file_name + ".png") # Save image
+
+            elif self.image_save_type == "hri":
+                if not '.\\temp' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
+                    os.mkdir(".\\temp")
+
+                pg.image.save(self.screen, "temp\\boids.png") # Image in bytes
+
+                # Format position data
+                boids_dump = []
+                for pos in self.data.boids[:, 0]:
+                    trans_pos = tf.TransformPL(pos)
+                    boids_dump.append([trans_pos.x, trans_pos.y])
+
+                # Format fears data
+                fear_dump = []
+                for pos in self.data.fears:
+                    trans_pos = tf.TransformPL(pos)
+                    fear_dump.append([trans_pos.x, trans_pos.y])
+
+                # Set monitor drone position to centre of screen
+                monitor_pos = tf.TransformPL(self.camera_pos)
+                monitor_dump = [[monitor_pos.x, monitor_pos.y]]
+
+                # # Get image in string
+                # image_bytes = pg.image.tostring(self.screen, "RGB") # Image in bytes
+                # img = Image.frombytes("RGB", (self.window_size.x, self.window_size.y), image_bytes)
+                # image = np.array(img).tolist()
+
+                all_dump = {
+                    "sheep": boids_dump,
+                    "drones": fear_dump,
+                    "monitoring": monitor_dump,
+                    # "image": image
+                    "window_size": {
+                        "width": self.window_size.x,
+                        "height": self.window_size.y
+                    }
+                }
+
+                sys.stdout.write(json.dumps(all_dump))
+                sys.stdout.flush()
+
+            # Iterate and update timers
+            self.last_image_save = pg.time.get_ticks()
+            self.save_count += 1
+
+        self.data.drawFears(self.screen, self.camera_pos)
+        self.data.drawWalls(self.screen, self.camera_pos)
+
+        self.screen.blit(self.font.render(str(int(self.clock.get_fps())), True, [0,200,0]), (8, 8))
+
+        pg.display.update()
+
+        if self.camera_tracking:
+            self.camera_pos = self.data.getMeanBoidPos()
 
 
 if __name__ == '__main__':
-    sim = Simulation(num_fears=2, num_boids=50, render=True, mouse_fear=True)
-    # with open("infrastructure-data.json") as f:
-    #     sim.addWallsFromJSON(json.load(f)["walls"][:5])
-    sim.addTestWalls()
+    sim = Simulation(
+        num_fears=2,
+        num_boids=30,
+        mouse_fear=True,
+        image_save_type="hri",
+        save_rate=1000,
+        spawn_zone=pg.Rect([2397.05, -6989.29], [100,100]),
+        camera_tracking=True
+    )
+    
+    sim.addWallsFromHRI()
+    # sim.addTestWalls()
 
     sim.mainloop()

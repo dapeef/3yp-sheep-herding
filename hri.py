@@ -1,11 +1,14 @@
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5 import uic
 from PyQt5.QtWebEngineWidgets import QWebEngineView
-from PyQt5.QtCore import QUrl, Qt
+from PyQt5.QtCore import QUrl, Qt, QProcess
 from PyQt5.QtGui import QPixmap
 import sys
 import os
 import json
+import image_processing as ip
+import transform as tf
+import pygame as pg
 
 
 class Ui(QMainWindow):
@@ -62,12 +65,18 @@ class Ui(QMainWindow):
         self.live_view_menu.currentTextChanged.connect(self.liveViewTextChange)
 
         # Pixmap to hold live view image
-        self.live_view_pix = QPixmap("images\chapel-cottage.jpg")
+        self.rgb_image_file = "images\chapel-cottage.jpg"
+        self.live_view_pix = QPixmap(self.rgb_image_file)
         self.live_view_tab.resizeEvent = self.resizeLiveViewImage
 
     # On map load
     def onLoadFinishedHome(self):
         print("Home map ready!")
+
+        # Create pipe and boids
+        self.p_boids = QProcess()
+        self.p_boids.readyReadStandardOutput.connect(self.timeStepHome)
+        self.p_boids.start("python", ['boids.py'])
 
         # Once map is loaded, connect buttons to functions
         self.stop_all.clicked.connect(self.stopAllClick)
@@ -79,13 +88,10 @@ class Ui(QMainWindow):
         self.toggleButtonsEnabledHome(True)
 
         # Draw sheep, herding and monitor drones
-        self.drawTestHome()
+        self.timeStepHome()
 
     def onLoadFinishedRoute(self):
         print("Route edit map ready!")
-
-        # Once map is loaded, connect buttons to functions
-        #self.stop_all.clicked.connect(self.buttonClick)
         
         # Draw infrastructure
         self.drawInfrastructure()
@@ -153,29 +159,63 @@ class Ui(QMainWindow):
     def stopAllClick(self):
         print("Mmm, clickeroo")
 
-        self.drawTestHome()
+        self.timeStepHome()
 
-    def drawTestHome(self):
-        sheep_locations = [
-            [51.6255863, -2.5121819],
-            [51.626060, -2.512327],
-            [51.626045, -2.512716],
-            [51.626151, -2.511915],
-            [51.625848, -2.512039],
-            [51.625616, -2.512513],
-            [51.625737, -2.512117]
-        ]
+    def timeStepHome(self):
+        # try:
 
-        herding_drone_locations = [
-            [51.626360, -2.513160],
-            [51.626485, -2.512436],
-            [51.626504, -2.511712]
-        ]
+        # Receive data from boids stdout
+        data = self.p_boids.readAllStandardOutput()
+        stdout = bytes(data).decode("utf8")
 
-        monitor_drone_locations = [
-            [51.625987, -2.512303]
-        ]
+        # Parse JSON
+        try:
+            json_data = json.loads(stdout)
+        
+        except json.decoder.JSONDecodeError:
+            json_data = {
+                "sheep": [],
+                "drones": [],
+                "monitoring": [[51.623510, -2.512716]],
+                "window_size": {
+                    "width": 1200,
+                    "height": 800
+                }
+            }
 
+        sheep_locations = json_data["sheep"]
+        herding_drone_locations = json_data["drones"]
+        monitor_drone_locations = json_data["monitoring"]
+        
+        if os.path.exists("temp\\boids.png"):
+            # Update image in "live view" tab
+            if self.live_view_menu.currentText() == "RGB":
+                self.rgb_image_file = "temp\\boids.png"
+                self.live_view_pix = QPixmap("temp\\boids.png")
+                self.resizeLiveViewImage()
+            
+            # Run Qianyi's algorithm on image to get sheep positions
+            local_sheep_locations = ip.getCoordinates("temp\\boids.png")
+
+            sheep_locations = []
+            camera_pos = tf.TransformLP(pg.Vector2(monitor_drone_locations[0]))
+            camera_pos -= pg.Vector2(json_data["window_size"]["width"], json_data["window_size"]["height"]) / 2
+
+            # print(camera_pos)
+
+            for local_location in local_sheep_locations:
+                local_location += camera_pos
+                global_location = tf.TransformPL(pg.Vector2(local_location))
+
+                sheep_locations.append([global_location.x, global_location.y])
+        
+        # except Exception as e:
+        #     # If something goes wrong with the data transfer/processing
+        #     sheep_locations = []
+        #     herding_drone_locations = []
+        #     monitor_drone_locations = []
+
+        # Draw markers
         self.drawSheep(sheep_locations)
         self.drawHerdingDrones(herding_drone_locations)
         self.drawMonitorDrones(monitor_drone_locations)
@@ -383,7 +423,7 @@ class Ui(QMainWindow):
             self.toggleButtonsEnabledMap(False)
 
             # Change instructions
-            self.instructions_label.setText("Click 2 points on either side of the gate, starting with the hinge end. These markers are draggable. When finished, press Save.")
+            self.instructions_label.setText("Drag the markers on either end of the gate. When finished, press Save.")
 
             # Call javascript
             self.browser_map.page().runJavaScript("editGate(" + str(index) + ");")
@@ -597,8 +637,6 @@ class Ui(QMainWindow):
         else:
             self.edit_wall.setEnabled(True)
             self.remove_wall.setEnabled(True)
-        # self.edit_wall.setEnabled(value)
-        # self.remove_wall.setEnabled(value)
 
         # Gates
         self.add_gate.setEnabled(value)
@@ -608,8 +646,6 @@ class Ui(QMainWindow):
         else:
             self.edit_gate.setEnabled(True)
             self.remove_gate.setEnabled(True)
-        # self.edit_gate.setEnabled(value)
-        # self.remove_gate.setEnabled(value)
 
         # No fly
         self.add_no_fly.setEnabled(value)
@@ -619,8 +655,6 @@ class Ui(QMainWindow):
         else:
             self.edit_no_fly.setEnabled(True)
             self.remove_no_fly.setEnabled(True)
-        # self.edit_no_fly.setEnabled(value)
-        # self.remove_no_fly.setEnabled(value)
     
     def resetAllButtonsMap(self):
         self.mode = None
@@ -678,7 +712,7 @@ class Ui(QMainWindow):
 
     def liveViewTextChange(self, value):
         if value == "RGB":
-            self.live_view_pix = QPixmap("images\chapel-cottage.jpg")
+            self.live_view_pix = QPixmap(self.rgb_image_file)
         
         elif value == "Infrared":
             self.live_view_pix = QPixmap("images\chapel-cottage-inverted.jpg")
@@ -686,9 +720,18 @@ class Ui(QMainWindow):
         self.resizeLiveViewImage()
 
 
-app = QApplication(sys.argv)
+class Hri():
+    def __init__(self):
+        self.app = QApplication(sys.argv)
 
-window = Ui()
-window.show()
+        self.window = Ui()
+        self.window.show()
 
-app.exec()
+    def mainloop(self):
+        self.app.exec()
+
+
+if __name__ == "__main__":
+    hri = Hri()
+
+    hri.mainloop()
