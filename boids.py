@@ -406,6 +406,8 @@ class Simulation():
 
                 pg.image.save(self.screen, file_name + ".png") # Save image
 
+                print("Images saved:", self.save_count)
+
             elif self.image_save_type == "hri":
                 if not '.\\temp' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
                     os.mkdir(".\\temp")

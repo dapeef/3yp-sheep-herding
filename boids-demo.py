@@ -1,7 +1,7 @@
 import boids
 import pygame as pg
 
-# Initiate simulation
+# Initialise simulation
 sim = boids.Simulation(
     num_fears=2,
     num_boids=50,
