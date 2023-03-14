@@ -315,7 +315,7 @@ class Data():
 
         for fear in self.fears:
             # Draw blurred area
-            self.fear_blur_rect.center = fear[0], fear[1]
+            self.fear_blur_rect.center = translate_for_camera(fear, camera_pos, window_size)
 
             surface.blit(self.fear_blur, self.fear_blur_rect)
 
