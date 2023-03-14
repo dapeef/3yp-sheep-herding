@@ -76,7 +76,7 @@ class Ui(QMainWindow):
         # Create pipe and boids
         self.p_boids = QProcess()
         self.p_boids.readyReadStandardOutput.connect(self.timeStepHome)
-        self.p_boids.start("python", ['boids.py'])
+        self.p_boids.start("python", ['boids_hri.py'])
 
         # Once map is loaded, connect buttons to functions
         self.stop_all.clicked.connect(self.stopAllClick)
