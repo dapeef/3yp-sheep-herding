@@ -1,5 +1,6 @@
 import math
 import pygame as pg
+import boids
 
 REFERENCE_COORD = pg.Vector2(51.6206761736925, -2.514666327940187)
 
@@ -7,7 +8,7 @@ EARTH_CIRC = 40075e3 # km
 M_PER_LAT = EARTH_CIRC / 360 # meters per degree of latitude
 M_PER_LNG = EARTH_CIRC * math.cos(REFERENCE_COORD.x / 180 * math.pi) / 360 # using x because latitude is upwards
 
-PIX_PER_METER = 15
+PIX_PER_METER = boids.PIX_PER_METER
 WINDOW_HEIGHT = 800
 
 def TransformLP(lat_long):
