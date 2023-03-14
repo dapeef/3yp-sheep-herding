@@ -512,17 +512,4 @@ class Simulation():
 
 
 if __name__ == '__main__':
-    sim = Simulation(
-        num_fears=2,
-        num_boids=30,
-        mouse_fear=True,
-        image_save_type="hri",
-        save_rate=1000,
-        spawn_zone=pg.Rect([2397.05, -6989.29], [100,100]),
-        camera_tracking=True
-    )
-    
-    sim.addWallsFromHRI()
-    # sim.addTestWalls()
-
-    sim.mainloop()
+    import boids_validation
