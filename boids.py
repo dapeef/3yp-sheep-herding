@@ -65,9 +65,6 @@ BOID_SIZE *= PIX_PER_METER
 MAX_FORCE = 0
 
 
-def process_vec(vector):
-    return round(vector.magnitude(), 2)
-
 def clamp_magnitude(vector, magnitude):
     # Clamps the magnitude of a vector
 
@@ -103,10 +100,10 @@ class Boid(pg.sprite.Sprite):
         self.image = pg.Surface((surf_size, surf_size)).convert() # Area to render boid onto
         self.image.set_colorkey(0)
         self.color = pg.Color(0)  # preps color so we can use hsva
-        if self.bnum == 0:
-            self.color.hsva = (randint(0,360), 90, 90)
-        else:
-            self.color.hsva = (0, 0, 100)
+        # if self.bnum == 0:
+        #     self.color.hsva = (randint(0,360), 90, 90)
+        # else:
+        self.color.hsva = (0, 0, 100)
         # pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
         pg.draw.ellipse(self.image, self.color, pg.Rect((surf_size-BOID_SIZE.x)/2, (surf_size-BOID_SIZE.y)/2, BOID_SIZE.x, BOID_SIZE.y)) # Blob shape
         self.orig_image = pg.transform.rotate(self.image.copy(), -90)
@@ -159,8 +156,7 @@ class Boid(pg.sprite.Sprite):
 
             if rel_pos.length() <= tuning["influence_dist"]["fear"]:
                 fear += (1 / rel_pos.length()**(tuning["decay"]["fear"] + 1)) * rel_pos
-        
-        
+
         # Loop through walls and sum fear components
         for wall_obj in self.data.walls:
             diff = wall_obj[1] - wall_obj[0]
@@ -193,16 +189,6 @@ class Boid(pg.sprite.Sprite):
         wall *= tuning["weightings"]['wall']
         
         fear = clamp_magnitude(fear, tuning["max_fear_force"]) # Clamp fear force so it isn't excessive
-
-        # if self.bnum == 0:
-        #     print(
-        #         process_vec(sep),
-        #         process_vec(ali),
-        #         process_vec(decel),
-        #         process_vec(fear),
-        #         process_vec(wall),
-        #         sep="\t"
-        #     )
 
         # Sum weighted components to get acceleration
         self.accel = sep + ali + decel + fear + wall
