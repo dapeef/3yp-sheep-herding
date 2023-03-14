@@ -8,7 +8,7 @@ EARTH_CIRC = 40075e3 # km
 M_PER_LAT = EARTH_CIRC / 360 # meters per degree of latitude
 M_PER_LNG = EARTH_CIRC * math.cos(REFERENCE_COORD.x / 180 * math.pi) / 360 # using x because latitude is upwards
 
-PIX_PER_METER = boids.PIX_PER_METER
+PIX_PER_METER = 15
 WINDOW_HEIGHT = 800
 
 def TransformLP(lat_long):
