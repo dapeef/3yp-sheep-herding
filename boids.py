@@ -9,31 +9,64 @@ import transform as tf
 import sys
 from PIL import Image
 
-
 BGCOLOR = (0, 0, 0)     # Background color in RGB
 FPS = 60                # 30-90
-TUNING = {
-    "max_speed": 150,       # Max movement speed=
+# These are all measured in real units; m, m/s, etc:
+TUNING_REAL = {
+    "max_speed": 11.1,       # Max movement speed=
     "weightings": {         # Force weightings
         'sep': 2,
         'ali': 1,
         'decel': 1,
-        'fear': 2e6,
-        'wall': 2e7
+        'fear': 5,       # Force at edge of fear radius
+        'wall': 10000        # Force as distance from wall -> 0
     },
-    "target_dist": 20,      # Target separation
+    "max_fear_force": 500, # Max force that fear can apply
+    "target_dist": 1,      # Target separation
     "influence_dist": {
-        "boid": 200,        # "visibility" distance for the boids
-        "fear": 200,
-        "wall": 25
+        "boid": 10,        # "visibility" distance for the boids
+        "fear": 30,         # Should be 30?
+        "wall": 1
+    },
+    "decay": { # force is proportional to 1/r^x
+        "boid": 2,
+        "fear": 1.5,
+        "wall": 7
     },
     "target_vel": pg.Vector2(0, 0),  # Speed which the boids tend towards under no other forces
-    "wall_thickness": 5       # Amount of padding given to the wall (x on either side of the wall)
+    "wall_thickness": .5       # Amount of padding given to the wall (x on either side of the wall)
 }
-PIX_PER_METER = 15      # Number of pixels per meter in the real world
 FEAR_SPEED = 300        # Speed of drones
-BOID_SIZE = pg.Vector2(9, 15)/3 * 2
+BOID_SIZE = pg.Vector2(.5, 1)/3*2 # Size of rendered sheep (ovals)
 
+PIX_PER_METER = 15      # Number of pixels per meter in the real world
+
+# These are all in pixels:
+TUNING = {
+    "max_speed": TUNING_REAL["max_speed"] * PIX_PER_METER,       # Max movement speed=
+    "weightings": TUNING_REAL["weightings"],
+    "max_fear_force": TUNING_REAL["max_fear_force"],             # Max force that fear can apply
+    "target_dist": TUNING_REAL["target_dist"] * PIX_PER_METER,      # Target separation
+    "influence_dist": {
+        "boid": TUNING_REAL["influence_dist"]["boid"] * PIX_PER_METER,        # "visibility" distance for the boids
+        "fear": TUNING_REAL["influence_dist"]["fear"] * PIX_PER_METER,
+        "wall": TUNING_REAL["influence_dist"]["wall"] * PIX_PER_METER
+    },
+    "decay": TUNING_REAL["decay"],       # fear force is proportional to 1/r^x
+    "target_vel": TUNING_REAL["target_vel"] * PIX_PER_METER,  # Speed which the boids tend towards under no other forces
+    "wall_thickness": TUNING_REAL["wall_thickness"] * PIX_PER_METER       # Amount of padding given to the wall (x on either side of the wall)
+}
+TUNING["weightings"]["fear"] *= TUNING["influence_dist"]["fear"] ** TUNING["decay"]["fear"]
+# TUNING["weightings"]["wall"] *= 1 ** TUNING["decay"]["wall"]
+
+FEAR_SPEED *= PIX_PER_METER
+BOID_SIZE *= PIX_PER_METER
+
+MAX_FORCE = 0
+
+
+def process_vec(vector):
+    return round(vector.magnitude(), 2)
 
 def clamp_magnitude(vector, magnitude):
     # Clamps the magnitude of a vector
@@ -66,15 +99,16 @@ class Boid(pg.sprite.Sprite):
 
         self.draw_surf = draw_surf # Main screen surface
 
-        self.image = pg.Surface((15, 15)).convert() # Area to render boid onto
+        surf_size = max(BOID_SIZE.x, BOID_SIZE.y) # To use in size of surface
+        self.image = pg.Surface((surf_size, surf_size)).convert() # Area to render boid onto
         self.image.set_colorkey(0)
         self.color = pg.Color(0)  # preps color so we can use hsva
-        # if self.bnum == 0:
-        # self.color.hsva = (randint(0,360), 90, 90)
-        # else:
-        self.color.hsva = (0, 0, 100)
+        if self.bnum == 0:
+            self.color.hsva = (randint(0,360), 90, 90)
+        else:
+            self.color.hsva = (0, 0, 100)
         # pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
-        pg.draw.ellipse(self.image, self.color, pg.Rect((15-BOID_SIZE.x)/2, (15-BOID_SIZE.y)/2, BOID_SIZE.x, BOID_SIZE.y)) # Blob shape
+        pg.draw.ellipse(self.image, self.color, pg.Rect((surf_size-BOID_SIZE.x)/2, (surf_size-BOID_SIZE.y)/2, BOID_SIZE.x, BOID_SIZE.y)) # Blob shape
         self.orig_image = pg.transform.rotate(self.image.copy(), -90)
 
         # maxW, maxH = self.draw_surf.get_size()
@@ -124,7 +158,8 @@ class Boid(pg.sprite.Sprite):
             rel_pos = self.pos - fear_obj # r_{pi} in the paper
 
             if rel_pos.length() <= tuning["influence_dist"]["fear"]:
-                fear += (1 / rel_pos.length()**3) * rel_pos
+                fear += (1 / rel_pos.length()**(tuning["decay"]["fear"] + 1)) * rel_pos
+        
         
         # Loop through walls and sum fear components
         for wall_obj in self.data.walls:
@@ -148,7 +183,7 @@ class Boid(pg.sprite.Sprite):
 
             if rel_pos.length() <= tuning["influence_dist"]["wall"]:
                 dist = max(rel_pos.length() - tuning["wall_thickness"], 1)
-                fear += (1 / dist**8) * rel_pos
+                wall += (1 / dist**tuning["decay"]["wall"]) * rel_pos / rel_pos.length()
 
         # Apply weights
         sep *= tuning["weightings"]['sep']
@@ -156,6 +191,18 @@ class Boid(pg.sprite.Sprite):
         decel *= tuning["weightings"]['decel']
         fear *= tuning["weightings"]['fear']
         wall *= tuning["weightings"]['wall']
+        
+        fear = clamp_magnitude(fear, tuning["max_fear_force"]) # Clamp fear force so it isn't excessive
+
+        # if self.bnum == 0:
+        #     print(
+        #         process_vec(sep),
+        #         process_vec(ali),
+        #         process_vec(decel),
+        #         process_vec(fear),
+        #         process_vec(wall),
+        #         sep="\t"
+        #     )
 
         # Sum weighted components to get acceleration
         self.accel = sep + ali + decel + fear + wall
