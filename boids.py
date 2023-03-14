@@ -217,6 +217,7 @@ class Data():
         self.initBoids(n_boids)
         self.initFears(n_fears, pg.Vector2(100,100))
         self.initWalls(n_walls)
+        self.initFearBlur(TUNING["influence_dist"]["fear"])
 
     def initBoids(self, n_boids):
         # Boids array
@@ -241,6 +242,48 @@ class Data():
 
         self.num_walls = 0
     
+    def initFearBlur(self, radius):
+        diameter = 2 * radius
+        self.fear_blur = pg.Surface((diameter, diameter), pg.SRCALPHA)
+
+        # use this to set the amount of 'segments' we rotate our blend into
+        # this helps stop blends from looking 'boxy' or like a cross.
+        circular_smoothness_steps = 6
+
+        colour_1 = pg.Color((225, 0, 0, 0))
+        colour_1.r = colour_1.r//circular_smoothness_steps
+        colour_1.g = colour_1.g//circular_smoothness_steps
+        colour_1.b = colour_1.b//circular_smoothness_steps
+        colour_1.a = colour_1.a//circular_smoothness_steps
+
+        colour_2 = pg.Color((225, 0, 0, 128))
+        colour_2.r = colour_2.r//circular_smoothness_steps
+        colour_2.g = colour_2.g//circular_smoothness_steps
+        colour_2.b = colour_2.b//circular_smoothness_steps
+        colour_2.a = colour_2.a//circular_smoothness_steps
+
+
+        # 3x3 - starter
+        radial_grad_starter = pg.Surface((3, 3), pg.SRCALPHA)
+        radial_grad_starter.fill(colour_1)
+        radial_grad_starter.fill(colour_2, pg.Rect(1, 1, 1, 1))
+
+
+        radial_grad = pg.transform.smoothscale(radial_grad_starter, (diameter, diameter))
+
+        for i in range(0, circular_smoothness_steps):
+            radial_grad_rot = pg.transform.rotate(radial_grad, (90.0/circular_smoothness_steps) * i)
+
+            pos_rect = pg.Rect((0, 0), (diameter, diameter))
+
+            area_rect = pg.Rect(0, 0, diameter, diameter)
+            area_rect.center = radial_grad_rot.get_width()//2, radial_grad_rot.get_height()//2
+            self.fear_blur.blit(radial_grad_rot, pos_rect,
+                            area=area_rect,
+                            special_flags=pg.BLEND_RGBA_ADD)
+            
+        self.fear_blur_rect = pg.Rect((0, 0), (diameter, diameter))
+
     def makeWall(self, start_point, end_point):
         self.walls[self.num_walls] = [start_point, end_point]
         self.num_walls += 1
@@ -269,14 +312,13 @@ class Data():
 
     def drawFears(self, surface, camera_pos):
         window_size = pg.Vector2(surface.get_size())
-        alpha_surface = pg.Surface((window_size.x, window_size.y))
-        alpha_surface.set_colorkey((0,0,0))
-        alpha_surface.set_alpha(128)
 
         for fear in self.fears:
-            pg.draw.circle(alpha_surface, (100, 0, 0), translate_for_camera(fear, camera_pos, window_size), TUNING["influence_dist"]["fear"]) # Draw big circle at every fear
+            # Draw blurred area
+            self.fear_blur_rect.center = fear[0], fear[1]
 
-        surface.blit(alpha_surface, (0, 0))
+            surface.blit(self.fear_blur, self.fear_blur_rect)
+
 
         for fear in self.fears:
             pg.draw.circle(surface, (255, 0, 0), translate_for_camera(fear, camera_pos, window_size), 5) # Draw dot at avery fear
