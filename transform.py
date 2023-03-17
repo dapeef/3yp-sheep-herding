@@ -1,5 +1,6 @@
 import math
 import pygame as pg
+import boids
 
 REFERENCE_COORD = pg.Vector2(51.6206761736925, -2.514666327940187)
 

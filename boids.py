@@ -9,30 +9,60 @@ import transform as tf
 import sys
 from PIL import Image
 
-
 BGCOLOR = (0, 0, 0)     # Background color in RGB
 FPS = 60                # 30-90
-TUNING = {
-    "max_speed": 150,       # Max movement speed=
+# These are all measured in real units; m, m/s, etc:
+TUNING_REAL = {
+    "max_speed": 11.1,       # Max movement speed=
     "weightings": {         # Force weightings
         'sep': 2,
         'ali': 1,
         'decel': 1,
-        'fear': 2e6,
-        'wall': 2e7
+        'fear': 5,       # Force at edge of fear radius
+        'wall': 10000        # Force as distance from wall -> 0
     },
-    "target_dist": 20,      # Target separation
+    "max_fear_force": 500, # Max force that fear can apply
+    "target_dist": 1,      # Target separation
     "influence_dist": {
-        "boid": 200,        # "visibility" distance for the boids
-        "fear": 200,
-        "wall": 25
+        "boid": 10,        # "visibility" distance for the boids
+        "fear": 30,         # Should be 30?
+        "wall": 1
+    },
+    "decay": { # force is proportional to 1/r^x
+        "boid": 2,
+        "fear": 1.5,
+        "wall": 7
     },
     "target_vel": pg.Vector2(0, 0),  # Speed which the boids tend towards under no other forces
-    "wall_thickness": 5       # Amount of padding given to the wall (x on either side of the wall)
+    "wall_thickness": .5       # Amount of padding given to the wall (x on either side of the wall)
 }
-PIX_PER_METER = 15      # Number of pixels per meter in the real world
 FEAR_SPEED = 300        # Speed of drones
-BOID_SIZE = pg.Vector2(9, 15)/3 * 2
+BOID_SIZE = pg.Vector2(.5, 1)/3*2 # Size of rendered sheep (ovals)
+
+PIX_PER_METER = 15      # Number of pixels per meter in the real world
+
+# These are all in pixels:
+TUNING = {
+    "max_speed": TUNING_REAL["max_speed"] * PIX_PER_METER,       # Max movement speed=
+    "weightings": TUNING_REAL["weightings"],
+    "max_fear_force": TUNING_REAL["max_fear_force"],             # Max force that fear can apply
+    "target_dist": TUNING_REAL["target_dist"] * PIX_PER_METER,      # Target separation
+    "influence_dist": {
+        "boid": TUNING_REAL["influence_dist"]["boid"] * PIX_PER_METER,        # "visibility" distance for the boids
+        "fear": TUNING_REAL["influence_dist"]["fear"] * PIX_PER_METER,
+        "wall": TUNING_REAL["influence_dist"]["wall"] * PIX_PER_METER
+    },
+    "decay": TUNING_REAL["decay"],       # fear force is proportional to 1/r^x
+    "target_vel": TUNING_REAL["target_vel"] * PIX_PER_METER,  # Speed which the boids tend towards under no other forces
+    "wall_thickness": TUNING_REAL["wall_thickness"] * PIX_PER_METER       # Amount of padding given to the wall (x on either side of the wall)
+}
+TUNING["weightings"]["fear"] *= TUNING["influence_dist"]["fear"] ** TUNING["decay"]["fear"]
+# TUNING["weightings"]["wall"] *= 1 ** TUNING["decay"]["wall"]
+
+FEAR_SPEED *= PIX_PER_METER
+BOID_SIZE *= PIX_PER_METER
+
+MAX_FORCE = 0
 
 
 def clamp_magnitude(vector, magnitude):
@@ -66,15 +96,16 @@ class Boid(pg.sprite.Sprite):
 
         self.draw_surf = draw_surf # Main screen surface
 
-        self.image = pg.Surface((15, 15)).convert() # Area to render boid onto
+        surf_size = max(BOID_SIZE.x, BOID_SIZE.y) # To use in size of surface
+        self.image = pg.Surface((surf_size, surf_size)).convert() # Area to render boid onto
         self.image.set_colorkey(0)
         self.color = pg.Color(0)  # preps color so we can use hsva
         # if self.bnum == 0:
-        # self.color.hsva = (randint(0,360), 90, 90)
+        #     self.color.hsva = (randint(0,360), 90, 90)
         # else:
         self.color.hsva = (0, 0, 100)
         # pg.draw.polygon(self.image, self.color, ((7,0), (13,14), (7,11), (1,14), (7,0))) # Arrow shape
-        pg.draw.ellipse(self.image, self.color, pg.Rect((15-BOID_SIZE.x)/2, (15-BOID_SIZE.y)/2, BOID_SIZE.x, BOID_SIZE.y)) # Blob shape
+        pg.draw.ellipse(self.image, self.color, pg.Rect((surf_size-BOID_SIZE.x)/2, (surf_size-BOID_SIZE.y)/2, BOID_SIZE.x, BOID_SIZE.y)) # Blob shape
         self.orig_image = pg.transform.rotate(self.image.copy(), -90)
 
         # maxW, maxH = self.draw_surf.get_size()
@@ -124,8 +155,8 @@ class Boid(pg.sprite.Sprite):
             rel_pos = self.pos - fear_obj # r_{pi} in the paper
 
             if rel_pos.length() <= tuning["influence_dist"]["fear"]:
-                fear += (1 / rel_pos.length()**3) * rel_pos
-        
+                fear += (1 / rel_pos.length()**(tuning["decay"]["fear"] + 1)) * rel_pos
+
         # Loop through walls and sum fear components
         for wall_obj in self.data.walls:
             diff = wall_obj[1] - wall_obj[0]
@@ -148,7 +179,7 @@ class Boid(pg.sprite.Sprite):
 
             if rel_pos.length() <= tuning["influence_dist"]["wall"]:
                 dist = max(rel_pos.length() - tuning["wall_thickness"], 1)
-                fear += (1 / dist**8) * rel_pos
+                wall += (1 / dist**tuning["decay"]["wall"]) * rel_pos / rel_pos.length()
 
         # Apply weights
         sep *= tuning["weightings"]['sep']
@@ -156,6 +187,8 @@ class Boid(pg.sprite.Sprite):
         decel *= tuning["weightings"]['decel']
         fear *= tuning["weightings"]['fear']
         wall *= tuning["weightings"]['wall']
+        
+        fear = clamp_magnitude(fear, tuning["max_fear_force"]) # Clamp fear force so it isn't excessive
 
         # Sum weighted components to get acceleration
         self.accel = sep + ali + decel + fear + wall
@@ -184,6 +217,7 @@ class Data():
         self.initBoids(n_boids)
         self.initFears(n_fears, pg.Vector2(100,100))
         self.initWalls(n_walls)
+        self.initFearBlur(TUNING["influence_dist"]["fear"])
 
     def initBoids(self, n_boids):
         # Boids array
@@ -208,6 +242,48 @@ class Data():
 
         self.num_walls = 0
     
+    def initFearBlur(self, radius):
+        diameter = 2 * radius
+        self.fear_blur = pg.Surface((diameter, diameter), pg.SRCALPHA)
+
+        # use this to set the amount of 'segments' we rotate our blend into
+        # this helps stop blends from looking 'boxy' or like a cross.
+        circular_smoothness_steps = 6
+
+        colour_1 = pg.Color((225, 0, 0, 0))
+        colour_1.r = colour_1.r//circular_smoothness_steps
+        colour_1.g = colour_1.g//circular_smoothness_steps
+        colour_1.b = colour_1.b//circular_smoothness_steps
+        colour_1.a = colour_1.a//circular_smoothness_steps
+
+        colour_2 = pg.Color((225, 0, 0, 128))
+        colour_2.r = colour_2.r//circular_smoothness_steps
+        colour_2.g = colour_2.g//circular_smoothness_steps
+        colour_2.b = colour_2.b//circular_smoothness_steps
+        colour_2.a = colour_2.a//circular_smoothness_steps
+
+
+        # 3x3 - starter
+        radial_grad_starter = pg.Surface((3, 3), pg.SRCALPHA)
+        radial_grad_starter.fill(colour_1)
+        radial_grad_starter.fill(colour_2, pg.Rect(1, 1, 1, 1))
+
+
+        radial_grad = pg.transform.smoothscale(radial_grad_starter, (diameter, diameter))
+
+        for i in range(0, circular_smoothness_steps):
+            radial_grad_rot = pg.transform.rotate(radial_grad, (90.0/circular_smoothness_steps) * i)
+
+            pos_rect = pg.Rect((0, 0), (diameter, diameter))
+
+            area_rect = pg.Rect(0, 0, diameter, diameter)
+            area_rect.center = radial_grad_rot.get_width()//2, radial_grad_rot.get_height()//2
+            self.fear_blur.blit(radial_grad_rot, pos_rect,
+                            area=area_rect,
+                            special_flags=pg.BLEND_RGBA_ADD)
+            
+        self.fear_blur_rect = pg.Rect((0, 0), (diameter, diameter))
+
     def makeWall(self, start_point, end_point):
         self.walls[self.num_walls] = [start_point, end_point]
         self.num_walls += 1
@@ -236,14 +312,13 @@ class Data():
 
     def drawFears(self, surface, camera_pos):
         window_size = pg.Vector2(surface.get_size())
-        alpha_surface = pg.Surface((window_size.x, window_size.y))
-        alpha_surface.set_colorkey((0,0,0))
-        alpha_surface.set_alpha(128)
 
         for fear in self.fears:
-            pg.draw.circle(alpha_surface, (100, 0, 0), translate_for_camera(fear, camera_pos, window_size), TUNING["influence_dist"]["fear"]) # Draw big circle at every fear
+            # Draw blurred area
+            self.fear_blur_rect.center = translate_for_camera(fear, camera_pos, window_size)
 
-        surface.blit(alpha_surface, (0, 0))
+            surface.blit(self.fear_blur, self.fear_blur_rect)
+
 
         for fear in self.fears:
             pg.draw.circle(surface, (255, 0, 0), translate_for_camera(fear, camera_pos, window_size), 5) # Draw dot at avery fear
@@ -406,6 +481,8 @@ class Simulation():
 
                 pg.image.save(self.screen, file_name + ".png") # Save image
 
+                print("Images saved:", self.save_count)
+
             elif self.image_save_type == "hri":
                 if not '.\\temp' in [ f.path for f in os.scandir(".") if f.is_dir() ]:
                     os.mkdir(".\\temp")
@@ -463,17 +540,4 @@ class Simulation():
 
 
 if __name__ == '__main__':
-    sim = Simulation(
-        num_fears=2,
-        num_boids=30,
-        mouse_fear=True,
-        image_save_type="hri",
-        save_rate=1000,
-        spawn_zone=pg.Rect([2397.05, -6989.29], [100,100]),
-        camera_tracking=True
-    )
-    
-    sim.addWallsFromHRI()
-    # sim.addTestWalls()
-
-    sim.mainloop()
+    import boids_validation
