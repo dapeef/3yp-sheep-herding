@@ -13,8 +13,11 @@ BGCOLOR = (0, 0, 0)     # Background color in RGB
 FPS = 60                # 30-90
 # These are all measured in real units; m, m/s, etc:
 TUNING_REAL = {
-    "max_speed": 11.1,       # Max movement speed=
-    "weightings": {         # Force weightings
+    "max_speed": {
+        "boid": 11.1,       # Max movement speed=
+        "fear": 15,
+    },
+    "weighting": {         # Force weighting
         'sep': 2,
         'ali': 1,
         'decel': 1,
@@ -36,15 +39,17 @@ TUNING_REAL = {
     "target_vel": pg.Vector2(0, 0),  # Speed which the boids tend towards under no other forces
     "wall_thickness": .5       # Amount of padding given to the wall (x on either side of the wall)
 }
-FEAR_SPEED = 300        # Speed of drones
 BOID_SIZE = pg.Vector2(.5, 1)/3*2 # Size of rendered sheep (ovals)
 
 PIX_PER_METER = 15      # Number of pixels per meter in the real world
 
 # These are all in pixels:
 TUNING = {
-    "max_speed": TUNING_REAL["max_speed"] * PIX_PER_METER,       # Max movement speed=
-    "weightings": TUNING_REAL["weightings"],
+    "max_speed": {
+        "boid": TUNING_REAL["max_speed"]["boid"] * PIX_PER_METER,       # Max movement speed=
+        "fear": TUNING_REAL["max_speed"]["fear"] * PIX_PER_METER
+    },
+    "weighting": TUNING_REAL["weighting"],
     "max_fear_force": TUNING_REAL["max_fear_force"],             # Max force that fear can apply
     "target_dist": TUNING_REAL["target_dist"] * PIX_PER_METER,      # Target separation
     "influence_dist": {
@@ -56,10 +61,9 @@ TUNING = {
     "target_vel": TUNING_REAL["target_vel"] * PIX_PER_METER,  # Speed which the boids tend towards under no other forces
     "wall_thickness": TUNING_REAL["wall_thickness"] * PIX_PER_METER       # Amount of padding given to the wall (x on either side of the wall)
 }
-TUNING["weightings"]["fear"] *= TUNING["influence_dist"]["fear"] ** TUNING["decay"]["fear"]
-# TUNING["weightings"]["wall"] *= 1 ** TUNING["decay"]["wall"]
+TUNING["weighting"]["fear"] *= TUNING["influence_dist"]["fear"] ** TUNING["decay"]["fear"]
+# TUNING["weighting"]["wall"] *= 1 ** TUNING["decay"]["wall"]
 
-FEAR_SPEED *= PIX_PER_METER
 BOID_SIZE *= PIX_PER_METER
 
 MAX_FORCE = 0
@@ -182,11 +186,11 @@ class Boid(pg.sprite.Sprite):
                 wall += (1 / dist**tuning["decay"]["wall"]) * rel_pos / rel_pos.length()
 
         # Apply weights
-        sep *= tuning["weightings"]['sep']
-        ali *= tuning["weightings"]['ali']
-        decel *= tuning["weightings"]['decel']
-        fear *= tuning["weightings"]['fear']
-        wall *= tuning["weightings"]['wall']
+        sep *= tuning["weighting"]['sep']
+        ali *= tuning["weighting"]['ali']
+        decel *= tuning["weighting"]['decel']
+        fear *= tuning["weighting"]['fear']
+        wall *= tuning["weighting"]['wall']
         
         fear = clamp_magnitude(fear, tuning["max_fear_force"]) # Clamp fear force so it isn't excessive
 
@@ -195,7 +199,7 @@ class Boid(pg.sprite.Sprite):
 
         # Change velocity and position based on acceleration
         self.vel += self.accel * dt
-        self.vel = clamp_magnitude(self.vel, tuning["max_speed"])
+        self.vel = clamp_magnitude(self.vel, tuning["max_speed"]["boid"])
         self.pos += self.vel * dt
 
         # Update data array
@@ -452,11 +456,11 @@ class Simulation():
         for i in range(len(self.data.fears)):
             diff = self.data.fear_targets[i] - self.data.fears[i]
 
-            if diff.length() < dt * FEAR_SPEED:
+            if diff.length() < dt * TUNING["max_speed"]["fear"]:
                 self.data.fears[i] = self.data.fear_targets[i]
             
             else:
-                self.data.fears[i] = self.data.fears[i] +  diff.normalize() * dt * FEAR_SPEED
+                self.data.fears[i] = self.data.fears[i] +  diff.normalize() * dt * TUNING["max_speed"]["fear"]
 
         # Draw
         self.screen.fill(BGCOLOR)
