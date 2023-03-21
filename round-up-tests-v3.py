@@ -3,7 +3,7 @@ import pygame as pg
 # import push
 import math
 import numpy as np
-import roundup2 as roundup
+import roundup3 as roundup
 
 # Initiate simulation
 sim = boids.Simulation(num_fears=2, num_boids=50, spawn_zone=pg.Rect(50, 50, 1100, 700), window_size=pg.Vector2(1200, 800))
@@ -34,10 +34,9 @@ while True:
     # fears = [roundup.scale_parameter(drone1, [x_cg,y_cg], fear, 300, 1000,1.3,1.5),roundup.scale_parameter(drone2, [x_cg,y_cg], fear, 300, 1000,1.3,1.5)]
     # fear = max(fears)
 
-    x_cg,y_cg = roundup.centroid(sheep)
     hull = roundup.GiftWrap.gift_wrapping(sheep)
     hull.append(hull[0])
-    path = roundup.pathfinder(hull,100,x_cg,y_cg)
+    path = roundup.offset_curve(hull,100)
     targets = roundup.get_targets(path)
 
     next_pos1,next_pos2 = roundup.navigate_loop(targets,drone1,drone2)
