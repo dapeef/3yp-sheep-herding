@@ -21,7 +21,7 @@ while True:
         y = float(coords.y)
         new_arr.append([x, y])
     sheep = np.asarray(new_arr)
-    targets = push.Bucket.get_targets(sheep, fear/2, [600, 450], math.pi/6)
+    targets = push.Bucket.get_targets(sheep, fear/3, [600, 450], math.pi/6)
     for i in range(len(targets)):
         sim.data.fear_targets[i] = pg.Vector2(targets[i][0], targets[i][1])
         

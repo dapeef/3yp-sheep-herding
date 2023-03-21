@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+from shapely.geometry import Polygon
 
 class GiftWrap():
 
@@ -50,22 +51,6 @@ def centroid(sheep):
         y_cg = sum(y)/len(y)
         return x_cg,y_cg
 
-def get_points(sheep,r):
-
-    hull = GiftWrap.gift_wrapping(sheep)
-    x_cg,y_cg = centroid(sheep)
-    points = []
-    for i in range(len(hull)):
-        x = hull[i][0]
-        y = hull[i][1]
-        m = (y-y_cg)/(x-x_cg)
-        c = y_cg - m*x_cg
-        s = np.sqrt((x - x_cg)**2 + (y - y_cg)**2)
-        x_new = x_cg +(x-x_cg)*(s+r)/s
-        y_new = m*x_new + c
-        points.append([x_new,y_new])
-    return points
-
 def interpolate(coord1, coord2, n):
 
     x1, y1 = coord1
@@ -93,6 +78,27 @@ def interpolate_points(points, num_points):
         interpolated_points.extend(segment_points)
     return interpolated_points
 
+def offset_curve(points, distance):
+    # Create a Shapely Polygon from the points
+    polygon = Polygon(points)
+    # Compute the offset Polygon using the given distance
+    offset_polygon = polygon.buffer(distance)
+    # Extract the exterior ring of the offset Polygon
+    offset_points = list(offset_polygon.exterior.coords)[:-1]
+    # Return the offset points as a list of tuples
+    return [[p[0], p[1]] for p in offset_points]
+
+def get_targets(path):
+    targets = []
+    for i in range(len(path)):
+        p1 = path[i]
+        p2 = path[(i+1)%len(path)]
+        dist = np.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)
+        num = int(dist // 20) + 2
+        interpolated = interpolate_points([p1,p2],num)
+        targets.extend(interpolated)
+    return targets
+
 def navigate_loop(points, drone1_pos, drone2_pos):
     """Given a loop defined by a list of points, navigate two drones in the same direction"""
     points_arr = np.array(points)
@@ -114,25 +120,3 @@ def navigate_loop(points, drone1_pos, drone2_pos):
     # Return the positions of the two drones
     return next_pos1, next_pos2
 
-def scale_parameter(current_pos, given_pos, fixed_param, dist1, dist2,factor1,factor2):
-    distance = ((current_pos[0] - given_pos[0])**2 + (current_pos[1] - given_pos[1])**2)**0.5
-    
-    if distance < dist1:
-        scale_factor = 1/factor1
-    elif distance < dist2:
-        scale_factor = (1/factor1) - ((distance - dist1) / (dist2 - dist1)) * ((1/factor1) - (1/factor2))
-    else:
-        scale_factor = 1/factor2
-    
-    scaled_param = fixed_param * scale_factor
-    return scaled_param
-
-# testing plots:
-
-# sheep = np.random.rand(50,2)
-# plt.plot(sheep[:,0],sheep[:,1],'co')
-# points = get_points(sheep,0.2)
-# points.append(points[0])
-# points = np.asarray(points)
-# plt.plot(points[:,0],points[:,1])
-# plt.show()

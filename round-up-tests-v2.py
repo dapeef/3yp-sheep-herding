@@ -1,22 +1,17 @@
 import boids
 import pygame as pg
-# import push
-import math
 import numpy as np
 import roundup
 
 # Initiate simulation
 sim = boids.Simulation(num_fears=2, num_boids=50, spawn_zone=pg.Rect(50, 50, 1100, 700), window_size=pg.Vector2(1200, 800))
 fear = boids.TUNING["influence_dist"]["fear"]
-error = 10       # radius of targets required to reach. Just arbitrary for the moment
 
 sim.data.fears[1] = pg.Vector2(50, 800)
 
 # Add some predefined walls
 sim.addTestWalls(add_gate=False)
 
-i = 0
-j = -20
 
 while True:
 
@@ -35,10 +30,10 @@ while True:
     drone2 = [sim.data.fears[1].x,sim.data.fears[1].y]
 
     fear = boids.TUNING["influence_dist"]["fear"]
-    fears = [roundup.scale_parameter(drone1, [x_cg,y_cg], fear, 300, 1000),roundup.scale_parameter(drone2, [x_cg,y_cg], fear, 300, 1000)]
-    fear = max(fears)
+    # fears = [roundup.scale_parameter(drone1, [x_cg,y_cg], fear, 300, 1000,1.3,1.5),roundup.scale_parameter(drone2, [x_cg,y_cg], fear, 300, 1000,1.3,1.5)]
+    # fear = max(fears)
 
-    points = roundup.get_points(sheep,fear)
+    points = roundup.get_points(sheep,0.5*fear)
     points.append(points[0])
     new_points = roundup.interpolate_points(points,10)
     points = new_points
