@@ -1,7 +1,8 @@
 import boids
 import pygame as pg
+import math
 import numpy as np
-import roundup
+import roundup3 as roundup
 
 # Initiate simulation
 sim = boids.Simulation(num_fears=2, num_boids=50, spawn_zone=pg.Rect(50, 50, 1100, 700), window_size=pg.Vector2(1200, 800))
@@ -11,7 +12,6 @@ sim.data.fears[1] = pg.Vector2(50, 800)
 
 # Add some predefined walls
 sim.addTestWalls(add_gate=False)
-
 
 while True:
 
@@ -33,12 +33,12 @@ while True:
     # fears = [roundup.scale_parameter(drone1, [x_cg,y_cg], fear, 300, 1000,1.3,1.5),roundup.scale_parameter(drone2, [x_cg,y_cg], fear, 300, 1000,1.3,1.5)]
     # fear = max(fears)
 
-    points = roundup.get_points(sheep,0.5*fear)
-    points.append(points[0])
-    new_points = roundup.interpolate_points(points,10)
-    points = new_points
+    hull = roundup.GiftWrap.gift_wrapping(sheep)
+    hull.append(hull[0])
+    path = roundup.offset_curve(hull,80)
+    targets = roundup.get_targets(path)
 
-    next_pos1,next_pos2 = roundup.navigate_loop(points,drone1,drone2)
+    next_pos1,next_pos2 = roundup.navigate_loop(targets,drone1,drone2)
     sim.data.fear_targets[0] = pg.Vector2(next_pos1[0],next_pos1[1])
     sim.data.fear_targets[1] = pg.Vector2(next_pos2[0],next_pos2[1])
         

@@ -1,5 +1,5 @@
 import numpy as np
-import roundup2 as roundup
+import legacy.roundup2 as roundup
 from shapely.geometry import Polygon
 
 def offset_curve(points, distance):

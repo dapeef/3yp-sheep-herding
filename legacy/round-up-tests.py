@@ -3,7 +3,7 @@ import pygame as pg
 # import push
 import math
 import numpy as np
-import roundup2 as roundup
+import legacy.roundup2 as roundup
 
 # Initiate simulation
 sim = boids.Simulation(num_fears=2, num_boids=50, spawn_zone=pg.Rect(50, 50, 1100, 700), window_size=pg.Vector2(1200, 800))

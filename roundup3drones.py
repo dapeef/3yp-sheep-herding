@@ -120,25 +120,44 @@ def get_targets(path):
 #     # Return the positions of the two drones
 #     return next_pos1, next_pos2
 
-def navigate_loop(points, drone1_pos, drone2_pos):
+def navigate_loop(points, drone1_pos,drone2_pos,drone3_pos):
     """Given a loop defined by a list of points, navigate two drones in the same direction"""
     points_arr = np.array(points)
     drone1_pos_arr = np.array(drone1_pos)
     drone2_pos_arr = np.array(drone2_pos)
+    drone3_pos_arr = np.array(drone3_pos)
 
     # Find the indices of the current drone positions
     drone1_index = np.argmin(np.sum((points_arr - drone1_pos_arr)**2, axis=1))
-    # drone2_index = np.argmin(np.sum((points_arr - drone2_pos_arr)**2, axis=1))
+    drone2_index = np.argmin(np.sum((points_arr - drone2_pos_arr)**2, axis=1))
+    drone3_index = np.argmin(np.sum((points_arr - drone3_pos_arr)**2, axis=1))
 
-    # Determine the indices of the next points for each drone, wrapping around to the beginning of the loop if necessary
-    next_index1 = (drone1_index + 2) % len(points)
-    # next_index2 = (drone2_index + 2) % len(points)
-    # next_index2 = (next_index1 + len(points)//2) % len(points)
-    next_index2 = next_index1
+    #check desired relative positions and assign targets
+    length = len(points)
+    if drone1_index >= (drone3_index + length//3) % length:
+        next_index1 = (drone1_index + 1) % length
+    else:
+        next_index1 = (drone1_index + 2) % length
+    if drone2_index >= (drone1_index + length//3) % length:
+        next_index2 = (drone2_index + 1) % length
+    else:
+        next_index2 = (drone2_index + 2) % length
+    if drone3_index >= (drone2_index + length//3) % length:
+        next_index3 = (drone3_index + 1) % length
+    else:
+        next_index3 = (drone3_index + 2) % length
+    
+    # # Determine the indices of the next points for each drone, wrapping around to the beginning of the loop if necessary
+    # next_index1 = (drone1_index + 2) % len(points)
+    # # next_index2 = (drone2_index + 2) % len(points)
+    # # next_index2 = (next_index1 + len(points)//2) % len(points)    #for 2 drones
+    # next_index2 = (next_index1 + len(points)//3) % len(points)
+    # next_index3 = (next_index1 + 2*len(points)//3) % len(points)
 
     # Compute the coordinates of the next points
     next_pos1 = tuple(points[next_index1])
     next_pos2 = tuple(points[next_index2])
+    next_pos3 = tuple(points[next_index3])
 
     # Return the positions of the two drones
-    return next_pos1, next_pos2
+    return next_pos1, next_pos2, next_pos3
