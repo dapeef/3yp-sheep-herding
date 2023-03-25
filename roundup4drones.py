@@ -131,13 +131,16 @@ def navigate_loop(points, drone1_pos,drone2_pos,drone3_pos,drone4_pos):
         next_index4 = (drone4_index + 1) % length
     else:
         next_index4 = (drone4_index + 2) % length
-    
-    # # Determine the indices of the next points for each drone, wrapping around to the beginning of the loop if necessary
-    # next_index1 = (drone1_index + 2) % len(points)
-    # # next_index2 = (drone2_index + 2) % len(points)
-    # # next_index2 = (next_index1 + len(points)//2) % len(points)    #for 2 drones
-    # next_index2 = (next_index1 + len(points)//3) % len(points)
-    # next_index3 = (next_index1 + 2*len(points)//3) % len(points)
+
+    target_indices = [next_index1,next_index2,next_index3,next_index4]
+
+    # Check for overlapping drones and adjust target points accordingly
+    for i in range(4):
+        for j in range(i+1, 4):
+            if np.allclose(eval(f"drone{i+1}_pos_arr"), eval(f"drone{j+1}_pos_arr"), atol=0.1):
+                if target_indices[i] == target_indices[j]:
+                    target_indices[j] = (target_indices[j] + 1) % length
+                target_indices[i] = (target_indices[i] - 1) % length
 
     # Compute the coordinates of the next points
     next_pos1 = tuple(points[next_index1])
