@@ -146,13 +146,6 @@ def navigate_loop(points, drone1_pos,drone2_pos,drone3_pos):
         next_index3 = (drone3_index + 1) % length
     else:
         next_index3 = (drone3_index + 2) % length
-    
-    # # Determine the indices of the next points for each drone, wrapping around to the beginning of the loop if necessary
-    # next_index1 = (drone1_index + 2) % len(points)
-    # # next_index2 = (drone2_index + 2) % len(points)
-    # # next_index2 = (next_index1 + len(points)//2) % len(points)    #for 2 drones
-    # next_index2 = (next_index1 + len(points)//3) % len(points)
-    # next_index3 = (next_index1 + 2*len(points)//3) % len(points)
 
     # Compute the coordinates of the next points
     next_pos1 = tuple(points[next_index1])

@@ -5,7 +5,7 @@ import math
 import numpy as np
 
 # Initiate simulation
-sim = boids.Simulation(num_fears=2, num_boids=50, render=True)
+sim = boids.Simulation(num_fears=2, num_boids=50, window_size=pg.Vector2(1200, 800))
 fear = boids.TUNING["influence_dist"]["fear"]
 
 # Add some predefined walls

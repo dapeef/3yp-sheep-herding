@@ -133,7 +133,6 @@ class Bucket():
             return False
         sheep = np.asarray(new_sheep)      
           
-
         hull = GiftWrap.gift_wrapping(sheep)
         x_cg,y_cg = Bucket.centroid(sheep)
         node1,node2 = Bucket.get_nodes(x_cg,y_cg,gate_pos,hull,angle)

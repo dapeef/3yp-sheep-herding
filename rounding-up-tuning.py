@@ -15,7 +15,7 @@ for i in range(50):
     start_time = time.time()
 
     # Initiate simulation
-    sim = boids.Simulation(num_fears=3, num_boids=50, spawn_zone=pg.Rect(50, 50, 1100, 700), window_size=pg.Vector2(1200, 800))
+    sim = boids.Simulation(num_fears=3, num_boids=200, spawn_zone=pg.Rect(50, 50, 1100, 700), window_size=pg.Vector2(1200, 800))
     fear = boids.TUNING["influence_dist"]["fear"]
 
     sim.data.fears[1] = pg.Vector2(50, 800)
@@ -65,7 +65,7 @@ for i in range(50):
         center = np.mean(sheep, axis=0)
         distances = np.linalg.norm(sheep - center, axis=1)
         max_distance= max(distances)   
-        if max_distance <= 60:
+        if max_distance <= 150:
             pg.quit()
             successes += 1
             break
