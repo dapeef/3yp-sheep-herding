@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>895</width>
+    <width>1120</width>
     <height>881</height>
    </rect>
   </property>
@@ -299,6 +299,22 @@ control</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_8">
              <item>
+              <widget class="QPushButton" name="search_area">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font: 18pt;</string>
+               </property>
+               <property name="text">
+                <string>Search area</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QPushButton" name="collect">
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
@@ -450,46 +466,52 @@ ALL</string>
               </widget>
              </item>
              <item>
-              <widget class="QGroupBox" name="groupBox_2">
-               <property name="title">
-                <string>Instructions</string>
-               </property>
-               <layout class="QHBoxLayout" name="horizontalLayout_9">
-                <item>
-                 <widget class="QLabel" name="manual_instructions_label">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>0</width>
-                    <height>85</height>
-                   </size>
-                  </property>
-                  <property name="styleSheet">
-                   <string notr="true">font: 14pt;</string>
-                  </property>
-                  <property name="text">
-                   <string>Either use the buttons, arrow keys or click on the map to control the drone. The drone's camera feed can be seen in the Live View tab.</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignCenter</set>
-                  </property>
-                  <property name="wordWrap">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
               <widget class="QPushButton" name="exit_manual_control">
                <property name="text">
                 <string>Exit manual control</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="home_instructions_box">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="title">
+             <string>Instructions</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_9">
+             <item>
+              <widget class="QLabel" name="home_instructions_label">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>85</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font: 14pt;</string>
+               </property>
+               <property name="text">
+                <string>Press a button to begin</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -1067,7 +1089,7 @@ FOR MAP]</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>895</width>
+     <width>1120</width>
      <height>21</height>
     </rect>
    </property>

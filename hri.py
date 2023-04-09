@@ -172,11 +172,13 @@ class Ui(QMainWindow):
         self.commands_box.setHidden(True)
         self.toggleManualButtonsEnabledHome(False)
         self.manual_controls_box.setTitle("Manually controlling drone " + self.sender().objectName()[-1])
+        self.home_instructions_label.setText("Either use the buttons, arrow keys or click on the map to control the drone. The drone's camera feed can be seen in the Live View tab.")
 
     def manualControlExit(self):
         self.manual_controls_box.setHidden(True)
         self.commands_box.setHidden(False)
         self.toggleManualButtonsEnabledHome(True)
+        self.home_instructions_label.setText("Press a button to begin")
 
     def timeStepHome(self):
         # try:
@@ -251,6 +253,7 @@ class Ui(QMainWindow):
         self.land_button2.setEnabled(value)
         self.land_button3.setEnabled(value)
         self.land_button4.setEnabled(value)
+        self.search_area.setEnabled(value)
         self.start_route.setEnabled(value)
         self.collect.setEnabled(value)
         self.stop_all.setEnabled(value)
