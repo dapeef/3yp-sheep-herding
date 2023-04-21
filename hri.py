@@ -96,7 +96,7 @@ class Ui(QMainWindow):
         self.toggleButtonsEnabledHome(True)
 
         # Draw sheep, herding and monitor drones
-        self.timeStepHome()
+        # self.timeStepHome()
 
     def onLoadFinishedRoute(self):
         print("Route edit map ready!")
