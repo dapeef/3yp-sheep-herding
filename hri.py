@@ -37,6 +37,9 @@ class Ui(QMainWindow):
         # Hide no fly zone menu entirely - decided not to implement this
         self.no_fly_box.setHidden(True)
 
+        # Hide manual controls
+        self.manual_controls_box.setHidden(True)
+
         # Disable buttons until maps are loaded
         self.toggleButtonsEnabledHome(False)
         self.toggleButtonsEnabledRoute(False)
@@ -80,6 +83,11 @@ class Ui(QMainWindow):
 
         # Once map is loaded, connect buttons to functions
         self.stop_all.clicked.connect(self.stopAllClick)
+        self.manual_control_1.clicked.connect(self.manualControl)
+        self.manual_control_2.clicked.connect(self.manualControl)
+        self.manual_control_3.clicked.connect(self.manualControl)
+        self.manual_control_4.clicked.connect(self.manualControl)
+        self.exit_manual_control.clicked.connect(self.manualControlExit)
 
         # Draw infrastructure
         self.drawInfrastructure()
@@ -88,7 +96,7 @@ class Ui(QMainWindow):
         self.toggleButtonsEnabledHome(True)
 
         # Draw sheep, herding and monitor drones
-        self.timeStepHome()
+        # self.timeStepHome()
 
     def onLoadFinishedRoute(self):
         print("Route edit map ready!")
@@ -158,8 +166,19 @@ class Ui(QMainWindow):
     # Home tab
     def stopAllClick(self):
         print("Mmm, clickeroo")
+    
+    def manualControl(self):
+        self.manual_controls_box.setHidden(False)
+        self.commands_box.setHidden(True)
+        self.toggleManualButtonsEnabledHome(False)
+        self.manual_controls_box.setTitle("Manually controlling drone " + self.sender().objectName()[-1])
+        self.home_instructions_label.setText("Either use the buttons, arrow keys or click on the map to control the drone. The drone's camera feed can be seen in the Live View tab.")
 
-        self.timeStepHome()
+    def manualControlExit(self):
+        self.manual_controls_box.setHidden(True)
+        self.commands_box.setHidden(False)
+        self.toggleManualButtonsEnabledHome(True)
+        self.home_instructions_label.setText("Press a button to begin")
 
     def timeStepHome(self):
         # try:
@@ -234,9 +253,20 @@ class Ui(QMainWindow):
         self.land_button2.setEnabled(value)
         self.land_button3.setEnabled(value)
         self.land_button4.setEnabled(value)
+        self.search_area.setEnabled(value)
         self.start_route.setEnabled(value)
         self.collect.setEnabled(value)
         self.stop_all.setEnabled(value)
+        
+    def toggleManualButtonsEnabledHome(self, value):
+        self.manual_control_1.setEnabled(value)
+        self.manual_control_2.setEnabled(value)
+        self.manual_control_3.setEnabled(value)
+        self.manual_control_4.setEnabled(value)
+        self.land_button1.setEnabled(value)
+        self.land_button2.setEnabled(value)
+        self.land_button3.setEnabled(value)
+        self.land_button4.setEnabled(value)
 
 
     # Route tab

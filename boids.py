@@ -32,7 +32,7 @@ TUNING_REAL = {
         "wall": 1
     },
     "decay": { # force is proportional to 1/r^x
-        "boid": 2,
+        "boid": 3,
         "fear": 1.5,
         "wall": 7
     },
@@ -148,7 +148,7 @@ class Boid(pg.sprite.Sprite):
             if rel_pos.length() == 0: # Handle boid being exactly on the line
                     rel_pos = pg.Vector2(choice([-2, -1, 1, 2]), choice([-2, -1, 1, 2]))
 
-            sep += (1 - (tuning["target_dist"] / rel_pos.length())**3) * rel_pos
+            sep += (1 - (tuning["target_dist"] / rel_pos.length())**tuning["decay"]["boid"]) * rel_pos
             ali += rel_vel
         
         # Calculate decel component
@@ -330,7 +330,7 @@ class Data():
 
 class Simulation():
     def __init__(self,
-                 num_fears=2,
+                 num_fears=1,
                  num_boids=50,
                  mouse_fear=False,
                  spawn_zone=pg.Rect(300, 300, 100, 100),
@@ -339,7 +339,7 @@ class Simulation():
                  camera_tracking=False,
                  window_size=pg.Vector2(500, 1000)):
         pg.init()  # prepare window
-        pg.display.set_caption("Sheeeeeeep") # Window title
+        pg.display.set_caption("Boids simulation") # Window title
 
         self.window_size = window_size
 
@@ -422,6 +422,10 @@ class Simulation():
         if add_gate:
             self.data.makeWall(pg.Vector2(600, pad), pg.Vector2(600, 400))
             self.data.makeWall(pg.Vector2(600, 500), pg.Vector2(600, self.window_size.y-pad))
+            
+            # Uncomment to have gap in the centre of the screen
+            # self.data.makeWall(pg.Vector2(self.window_size.x/2, pad), pg.Vector2(self.window_size.x/2, self.window_size.y/2 - 50))
+            # self.data.makeWall(pg.Vector2(self.window_size.x/2, self.window_size.y/2 + 50), pg.Vector2(self.window_size.x/2, self.window_size.y-pad))
 
     def mainloop(self):
         # main loop

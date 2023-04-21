@@ -2,12 +2,15 @@
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>880</width>
-    <height>788</height>
+    <width>1126</width>
+    <height>879</height>
    </rect>
   </property>
   <property name="font">
@@ -77,6 +80,12 @@ FOR MAP]</string>
          <layout class="QVBoxLayout" name="info_group">
           <item>
            <widget class="QGroupBox" name="drone_status_box">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="title">
              <string>Drone status</string>
             </property>
@@ -120,7 +129,7 @@ Drone 3</string>
               <widget class="QLabel" name="drone_label4">
                <property name="text">
                 <string>Monitor
-Drone</string>
+Drone (4)</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignCenter</set>
@@ -258,12 +267,16 @@ control</string>
                </property>
                <property name="text">
                 <string>Manual
-control</string>
+control/
+monitor</string>
                </property>
               </widget>
              </item>
              <item row="0" column="2">
               <widget class="QPushButton" name="manual_control_1">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
                <property name="sizePolicy">
                 <sizepolicy hsizetype="Minimum" vsizetype="Ignored">
                  <horstretch>0</horstretch>
@@ -284,7 +297,23 @@ control</string>
             <property name="title">
              <string>Commands</string>
             </property>
-            <layout class="QVBoxLayout" name="verticalLayout_4">
+            <layout class="QVBoxLayout" name="verticalLayout_8">
+             <item>
+              <widget class="QPushButton" name="search_area">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font: 18pt;</string>
+               </property>
+               <property name="text">
+                <string>Search area</string>
+               </property>
+              </widget>
+             </item>
              <item>
               <widget class="QPushButton" name="collect">
                <property name="sizePolicy">
@@ -331,6 +360,158 @@ control</string>
                <property name="text">
                 <string>STOP
 ALL</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="manual_controls_box">
+            <property name="title">
+             <string>Manual control</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_4">
+             <item>
+              <widget class="QGroupBox" name="groupBox_3">
+               <property name="title">
+                <string>Directional controls</string>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_7">
+                <item row="0" column="0">
+                 <layout class="QGridLayout" name="gridLayout_6">
+                  <item row="0" column="0" rowspan="3">
+                   <widget class="QPushButton" name="up_button">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Up
+(PgUp)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0" rowspan="3">
+                   <widget class="QPushButton" name="down_button">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Down
+(PgDown)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="3" rowspan="2">
+                   <widget class="QPushButton" name="east_button">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>East (→)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="2" rowspan="2">
+                   <widget class="QPushButton" name="south_button">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>South (↓)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2" rowspan="2">
+                   <widget class="QPushButton" name="north_button">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>North (↑)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1" rowspan="2">
+                   <widget class="QPushButton" name="west_button">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>West (←)</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="exit_manual_control">
+               <property name="text">
+                <string>Exit manual control</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="home_instructions_box">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="title">
+             <string>Instructions</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_9">
+             <item>
+              <widget class="QLabel" name="home_instructions_label">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>85</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">font: 14pt;</string>
+               </property>
+               <property name="text">
+                <string>Press a button to begin</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+               <property name="wordWrap">
+                <bool>true</bool>
                </property>
               </widget>
              </item>
@@ -409,12 +590,15 @@ FOR MAP]</string>
                     <height>16777215</height>
                    </size>
                   </property>
+                  <property name="text">
+                   <string>-2.512069</string>
+                  </property>
                  </widget>
                 </item>
                 <item row="0" column="0">
                  <widget class="QLabel" name="label_12">
                   <property name="text">
-                   <string>Long:</string>
+                   <string>Lat:</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -435,12 +619,15 @@ FOR MAP]</string>
                     <height>16777215</height>
                    </size>
                   </property>
+                  <property name="text">
+                   <string>51.625485</string>
+                  </property>
                  </widget>
                 </item>
                 <item row="1" column="0">
                  <widget class="QLabel" name="label_13">
                   <property name="text">
-                   <string>Lat:</string>
+                   <string>Long:</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -484,12 +671,15 @@ new pin</string>
                     <height>16777215</height>
                    </size>
                   </property>
+                  <property name="text">
+                   <string>-2.506653</string>
+                  </property>
                  </widget>
                 </item>
                 <item row="0" column="0">
                  <widget class="QLabel" name="label_14">
                   <property name="text">
-                   <string>Long:</string>
+                   <string>Lat:</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -510,12 +700,15 @@ new pin</string>
                     <height>16777215</height>
                    </size>
                   </property>
+                  <property name="text">
+                   <string>51.622763</string>
+                  </property>
                  </widget>
                 </item>
                 <item row="1" column="0">
                  <widget class="QLabel" name="label_15">
                   <property name="text">
-                   <string>Lat:</string>
+                   <string>Long:</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -908,7 +1101,7 @@ FOR MAP]</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>880</width>
+     <width>1126</width>
      <height>21</height>
     </rect>
    </property>

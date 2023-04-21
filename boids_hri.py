@@ -2,7 +2,7 @@ import boids
 import pygame as pg
 
 sim = boids.Simulation(
-    num_fears=2,
+    num_fears=1,
     num_boids=30,
     mouse_fear=True,
     image_save_type="hri",
